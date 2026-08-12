@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+/* ══════════════════════ LIGHT THEME ══════════════════════ */
+:root {
+  --page-bg:            #f0f0f0;
+  --surface-bg:         #ffffff;
+  --surface-soft:       #f2f2f2;
+  --surface-card:       #ffffff;
+  --surface-input:      #f7f7f7;
+
+  --primary-text:       #121212;
+  --secondary-text:     #5a5d6c;
+  --muted-text:         #6a7282;
+  --label-text:         #535353;
+
+  --border-color:       rgba(18, 18, 18, 0.12);
+  --soft-border-color:  rgba(18, 18, 18, 0.07);
+  --input-border:       #e2e2e2;
+
+  --brand-primary:      #c94545;
+  --brand-accent:       #ef5350;
+  --brand-soft-bg:      #fdecec;
+
+  --icon-color:         #535353;
+  --icon-muted:         #8a8a8a;
+
+  color-scheme: light;
+}
+
+/* ══════════════════════ DARK THEME ══════════════════════ */
+:root[data-theme="dark"] {
+  --page-bg:            #0f0f0f;
+  --surface-bg:         #1a1a1a;
+  --surface-soft:       #252525;
+  --surface-card:       #1e1e1e;
+  --surface-input:      #262626;
+
+  --primary-text:       #f0f0f0;
+  --secondary-text:     #b0b3be;
+  --muted-text:         #767986;
+  --label-text:         #c8c8c8;
+
+  --border-color:       rgba(255, 255, 255, 0.09);
+  --soft-border-color:  rgba(255, 255, 255, 0.05);
+  --input-border:       rgba(255, 255, 255, 0.12);
+
+  --brand-primary:      #c94545;
+  --brand-accent:       #ef5350;
+  --brand-soft-bg:      rgba(197, 57, 56, 0.15);
+
+  --icon-color:         #d0d0d0;
+  --icon-muted:         #767986;
+
+  color-scheme: dark;
+}
+
+/* ══════════════════════ RESET ══════════════════════ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--page-bg);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  min-width: 320px;
+  background-color: var(--page-bg);
+  color: var(--primary-text);
+  font-family: "Poppins", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: var(--page-bg);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* In dark mode, SVG icons loaded as <img> via src= won't auto-invert.
+   We use a CSS filter trick for those that are known dark icons. */
+:root[data-theme="dark"] .icon-invert {
+  filter: invert(1) brightness(1.4);
+}
+
+input,
+textarea,
+select {
+  color: var(--primary-text);
+  background-color: var(--surface-input);
+  border-color: var(--input-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted-text);
+}
+
+::selection {
+  background-color: var(--brand-accent);
+  color: #ffffff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Hide browser-native password reveal/autofill button ── */
+input::-ms-reveal,
+input::-ms-clear { display: none; }
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ══════════════════════ DASHBOARD DARK OVERRIDES ══════════════════════ */
+
+/* Cards / panels that use bg-white need to switch to --surface-card */
+:root[data-theme="dark"] .dash-card {
+  background-color: var(--surface-card);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Preference toggle rows */
+:root[data-theme="dark"] .pref-row {
+  background-color: var(--surface-card);
+  border-color: var(--border-color);
+}
+
+/* Settings sidebar nav tabs */
+:root[data-theme="dark"] .settings-sidebar {
+  background-color: var(--surface-card);
+  border-color: var(--border-color);
+}

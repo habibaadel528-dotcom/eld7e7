@@ -1,0 +1,22 @@
+:root {
+  --color-bg-primary: #121212;
+  --color-bg-secondary: #1e1e1e;
+  --color-bg-card: #110f0f;
+  --color-red-primary: #c94545;
+  --color-red-accent: #ef5350;
+  --color-red-dark: #c53938;
+  --color-text-white: #ffffff;
+  --color-text-light: #f3f4f6;
+  --color-text-muted: #d1d5dc;
+  --color-text-gray: #99a1af;
+  --color-text-placeholder: #6a7282;
+  --color-text-dark: #151515;
+  --color-border-light: rgba(255, 255, 255, 0.05);
+  --color-border-medium: rgba(255, 255, 255, 0.1);
+  --color-overlay: rgba(255, 255, 255, 0.05);
+  --page-max-width: 1440px;
+  --content-max-width: 1280px;
+  --page-padding: 80px;
+  --font-poppins: 'Poppins', sans-serif;
+  --font-akatab: 'Akatab', sans-serif;
+}
