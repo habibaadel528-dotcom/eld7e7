@@ -6,7 +6,7 @@ import Navigation from '../sections/Navigation';
 import Footer from '../sections/Footer';
 import ProductCard from '../components/ProductCard';
 
-import { culturalBooks } from '../data/products';
+import { getProducts } from '../services/api';
 import bannerImage from '../assets/images/cultural-books-banner.png';
 
 const PRODUCTS_PER_PAGE = 15;
@@ -15,6 +15,41 @@ export default function CulturalBooksClearance() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [cartCount, setCartCount] = useState(0);
+
+  const [culturalBooks, setCulturalBooks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function fetchBooks() {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const { data } = await getProducts({ category: 'Cultural Books', limit: 100 });
+
+        if (!isCancelled) {
+          setCulturalBooks(data);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setLoadError(error.message || 'تعذر تحميل المنتجات');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchBooks();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
@@ -32,7 +67,7 @@ export default function CulturalBooksClearance() {
         productCategory.includes(normalizedQuery)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, culturalBooks]);
 
   const totalPages = Math.max(
     1,
@@ -235,7 +270,15 @@ export default function CulturalBooksClearance() {
               </label>
             </div>
 
-            {visibleProducts.length > 0 ? (
+            {isLoading ? (
+              <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
+                <p className="m-0 text-lg font-medium">Loading products…</p>
+              </div>
+            ) : loadError ? (
+              <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
+                <p className="m-0 text-lg font-medium text-[#c53938]">{loadError}</p>
+              </div>
+            ) : visibleProducts.length > 0 ? (
               <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
                 {visibleProducts.map((product) => (
                   <ProductCard

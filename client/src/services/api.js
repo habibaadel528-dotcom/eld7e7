@@ -20,6 +20,65 @@ async function handleResponse(response) {
   return data;
 }
 
+export async function getProducts(params = {}) {
+  const query = new URLSearchParams(
+    Object.fromEntries(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== '' && value !== null)
+    )
+  ).toString();
+
+  const response = await fetch(`${API_BASE}/products${query ? `?${query}` : ''}`);
+
+  return handleResponse(response);
+}
+
+function authHeaders() {
+  const token = localStorage.getItem('authToken');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function uploadImageRequest(file) {
+  const formData = new FormData();
+  formData.append('image', file);
+
+  const response = await fetch(`${API_BASE}/upload`, {
+    method: 'POST',
+    headers: { ...authHeaders() },
+    body: formData,
+  });
+
+  return handleResponse(response);
+}
+
+export async function createProductRequest(product) {
+  const response = await fetch(`${API_BASE}/products`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(product),
+  });
+
+  return handleResponse(response);
+}
+
+export async function updateProductRequest(id, product) {
+  const response = await fetch(`${API_BASE}/products/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(product),
+  });
+
+  return handleResponse(response);
+}
+
+export async function deleteProductRequest(id) {
+  const response = await fetch(`${API_BASE}/products/${id}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  });
+
+  return handleResponse(response);
+}
+
 export async function signupRequest({ name, email, password, phone }) {
   const response = await fetch(`${API_BASE}/auth/signup`, {
     method: 'POST',

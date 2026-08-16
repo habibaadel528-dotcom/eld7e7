@@ -8,7 +8,7 @@ import Footer from '../sections/Footer';
 import StationeryFilters from '../components/StationeryFilters';
 import StationeryProductCard from '../components/StationeryProductCard';
 
-import { stationeryProducts } from '../data/stationeryProducts';
+import { getProducts } from '../services/api';
 
 import bannerImage from '../assets/images/stationery-banner.png';
 
@@ -18,16 +18,51 @@ export default function Stationery() {
   const [cartCount, setCartCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [stationeryProducts, setStationeryProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedColors, setSelectedColors] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState([]);
   const [maxPrice, setMaxPrice] = useState(3500);
 
+  useEffect(() => {
+    let isCancelled = false;
+
+    async function fetchProducts() {
+      setIsLoading(true);
+      setLoadError('');
+
+      try {
+        const { data } = await getProducts({ category: 'Stationery', limit: 100 });
+
+        if (!isCancelled) {
+          setStationeryProducts(data);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          setLoadError(error.message || 'تعذر تحميل المنتجات');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
   const filteredProducts = useMemo(() => {
     return stationeryProducts.filter((product) => {
       const matchesCategory =
         !selectedCategory ||
-        product.category === selectedCategory;
+        product.subCategory === selectedCategory;
 
       const matchesColor =
         selectedColors.length === 0 ||
@@ -51,6 +86,7 @@ export default function Stationery() {
     selectedAvailability,
     selectedCategory,
     selectedColors,
+    stationeryProducts,
   ]);
 
   const totalPages = Math.max(
@@ -255,7 +291,15 @@ export default function Stationery() {
               />
 
               <div>
-                {visibleProducts.length > 0 ? (
+                {isLoading ? (
+                  <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
+                    <p className="m-0 text-lg font-medium">Loading products…</p>
+                  </div>
+                ) : loadError ? (
+                  <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
+                    <p className="m-0 text-lg font-medium text-[#c53938]">{loadError}</p>
+                  </div>
+                ) : visibleProducts.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
                     {visibleProducts.map((product) => (
                       <StationeryProductCard

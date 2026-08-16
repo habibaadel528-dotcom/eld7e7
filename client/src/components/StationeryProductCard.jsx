@@ -48,7 +48,7 @@ export default function StationeryProductCard({
 
       <div className="mt-4 flex flex-1 flex-col">
         <p className="m-0 text-xs leading-5 text-[var(--muted-text)]">
-          {product.category}
+          {product.subCategory || product.category}
         </p>
 
         <Link
