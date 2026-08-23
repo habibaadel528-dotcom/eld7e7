@@ -1,37 +1,30 @@
-export function notFound(req, res, next) {
-  res.status(404);
-  next(new Error(`المسار غير موجود - ${req.originalUrl}`));
-}
-
+/**
+ * Global error handler — must be registered LAST in app.js
+ */
 // eslint-disable-next-line no-unused-vars
 export function errorHandler(err, req, res, next) {
-  let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  let message = err.message;
+  console.error('[Error]', err.message);
 
-  // Mongoose bad ObjectId
-  if (err.name === 'CastError' && err.kind === 'ObjectId') {
-    statusCode = 404;
-    message = 'العنصر المطلوب غير موجود';
-  }
-
-  // Mongoose duplicate key (زي إيميل مسجل قبل كده)
-  if (err.code === 11000) {
-    statusCode = 400;
-    const field = Object.keys(err.keyValue)[0];
-    message = `القيمة دي مستخدمة بالفعل: ${field}`;
-  }
-
-  // Mongoose validation error
+  /* Mongoose validation error */
   if (err.name === 'ValidationError') {
-    statusCode = 400;
-    message = Object.values(err.errors)
-      .map((e) => e.message)
-      .join(', ');
+    const messages = Object.values(err.errors).map((e) => e.message);
+    return res.status(400).json({ success: false, message: messages.join(', ') });
   }
 
-  res.status(statusCode).json({
+  /* Mongoose duplicate key */
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    return res.status(409).json({ success: false, message: `${field} is already in use.` });
+  }
+
+  /* Mongoose cast error (invalid ObjectId) */
+  if (err.name === 'CastError') {
+    return res.status(400).json({ success: false, message: 'Invalid ID format.' });
+  }
+
+  const status = err.status || err.statusCode || 500;
+  res.status(status).json({
     success: false,
-    message,
-    stack: process.env.NODE_ENV === 'production' ? undefined : err.stack,
+    message: err.message || 'Internal server error.',
   });
 }

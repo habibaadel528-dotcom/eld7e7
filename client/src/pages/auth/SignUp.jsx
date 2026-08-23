@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
     Link,
     Navigate,
@@ -10,14 +11,14 @@ import AuthLayout from '../../layouts/AuthLayout';
 import AuthInput from '../../components/auth/AuthInput';
 import SocialLogin from '../../components/auth/SocialLogin';
 
-import logoMascot from '../../assets/icons/logo-mascot.jpg';
+import logoMascot from '../../assets/icons/logo-mascot-transparent.png';
 import logoWordmark from '../../assets/icons/logo-wordmark.png';
 
 import {
     isAuthenticated,
     saveAuthSession,
 } from '../../utils/auth';
-import { signupRequest } from '../../services/api';
+import { authApi } from '../../services/api';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -111,24 +112,20 @@ export default function SignUp() {
         setSubmitError('');
 
         try {
-            const { data, token } = await signupRequest({
-                name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
-                email: formData.email.trim(),
-                password: formData.password,
+            const data = await authApi.register({
+                firstName: formData.firstName.trim(),
+                lastName:  formData.lastName.trim(),
+                email:     formData.email.trim(),
+                password:  formData.password,
             });
 
-            saveAuthSession({
-                user: data,
-                token,
-            });
+            saveAuthSession({ user: data.user, token: data.token });
 
-            navigate('/account/dashboard', {
-                replace: true,
-            });
-        } catch (error) {
-            setSubmitError(
-                error.message || 'Unable to create your account. Please try again.',
-            );
+            toast.success(`Welcome to El-D7E7, ${data.user.firstName}! 🎉`);
+            navigate('/account/dashboard', { replace: true });
+        } catch (err) {
+            setSubmitError(err.message || 'Unable to create your account. Please try again.');
+            toast.error(err.message || 'Registration failed. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -161,7 +158,7 @@ export default function SignUp() {
                     <Link
                         to="/"
                         aria-label="Return to El-D7E7 home page"
-                        className="inline-flex items-center rounded-xl ml-[-12px] "
+                        className="inline-flex items-center gap-1"
                     >
                         <img
                             src={logoMascot}

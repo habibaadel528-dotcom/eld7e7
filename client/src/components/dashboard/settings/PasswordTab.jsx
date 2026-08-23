@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import { userApi } from '../../../services/api';
 
 export default function PasswordTab() {
   const [passwords, setPasswords] = useState({
@@ -14,38 +16,46 @@ export default function PasswordTab() {
     confirm: false,
   });
 
-  const [message, setMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field) => (e) => {
     setPasswords((prev) => ({ ...prev, [field]: e.target.value }));
-    if (message) setMessage(null);
   };
 
   const toggleShow = (field) => () => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
-      setMessage({ type: 'error', text: 'Please fill in all password fields.' });
+      toast.error('Please fill in all password fields.');
       return;
     }
     if (passwords.newPassword.length < 8) {
-      setMessage({ type: 'error', text: 'New password must be at least 8 characters long.' });
+      toast.error('New password must be at least 8 characters long.');
       return;
     }
     if (passwords.newPassword !== passwords.confirmPassword) {
-      setMessage({ type: 'error', text: 'New passwords do not match.' });
+      toast.error('New passwords do not match.');
       return;
     }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setMessage({ type: 'success', text: 'Your password has been updated successfully!' });
+
+    try {
+      await userApi.updatePassword({
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+      });
+
+      toast.success('Password updated successfully!');
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    }, 600);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update password.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClass = `
@@ -74,18 +84,6 @@ export default function PasswordTab() {
           </p>
         </div>
       </div>
-
-      {/* Alert */}
-      {message && (
-        <div className={`mb-6 flex items-center gap-3 rounded-[14px] p-4 text-xs sm:text-sm font-medium ${
-          message.type === 'error'
-            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-        }`}>
-          {message.type === 'success' && <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />}
-          <span>{message.text}</span>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-xl">
         {[

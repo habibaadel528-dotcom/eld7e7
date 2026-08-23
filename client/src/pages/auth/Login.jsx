@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
     Link,
     Navigate,
@@ -12,15 +13,13 @@ import AuthInput from '../../components/auth/AuthInput';
 import SocialLogin from '../../components/auth/SocialLogin';
 import logoWordmark from '../../assets/icons/logo-wordmark.png';
 
-import logoEllipse from '../../assets/icons/logo-ellipse.svg';
-import logoMascot from '../../assets/icons/logo-mascot.jpg';
-const ADMIN_EMAIL = 'admin123@gmail.com';
-const ADMIN_PASSWORD = '123admain';
+import logoMascot from '../../assets/icons/logo-mascot-transparent.png';
 import {
+    getStoredUser,
     isAuthenticated,
     saveAuthSession,
 } from '../../utils/auth';
-import { loginRequest } from '../../services/api';
+import { authApi } from '../../services/api';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,6 +37,10 @@ export default function Login() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     if (isAuthenticated()) {
+        const storedUser = getStoredUser();
+        if (storedUser?.role === 'admin' || localStorage.getItem('isAdminAuthenticated') === 'true') {
+            return <Navigate to="/admin/customers" replace />;
+        }
         return (
             <Navigate
                 to="/account/dashboard"
@@ -94,36 +97,26 @@ export default function Login() {
         setIsSubmitting(true);
         setSubmitError('');
 
-        const email = formData.email.trim();
-        if (email === ADMIN_EMAIL && formData.password === ADMIN_PASSWORD) {
-            localStorage.setItem('isAdminAuthenticated', 'true');
-            setIsSubmitting(false);
-            navigate('/admin/customers', { replace: true });
-            return;
-        }
-
         try {
-            const { data, token } = await loginRequest({
-                email,
+            const data = await authApi.login({
+                email: formData.email.trim(),
                 password: formData.password,
             });
 
-            saveAuthSession({
-                user: data,
-                token,
-            });
+            saveAuthSession({ user: data.user, token: data.token });
 
-            const destination =
-                location.state?.from || '/account/dashboard';
-
-            navigate(destination, {
-                replace: true,
-            });
-        } catch (error) {
-            setSubmitError(
-                error.message ||
-                    'Unable to log in. Please check your details and try again.',
-            );
+            if (data.user.role === 'admin') {
+                localStorage.setItem('isAdminAuthenticated', 'true');
+                toast.success(`Welcome back, ${data.user.firstName || 'Admin'}!`);
+                navigate('/admin/customers', { replace: true });
+            } else {
+                toast.success(`Welcome back, ${data.user.firstName || ''}!`);
+                const destination = location.state?.from || '/account/dashboard';
+                navigate(destination, { replace: true });
+            }
+        } catch (err) {
+            setSubmitError(err.message || 'Unable to log in. Please check your details and try again.');
+            toast.error(err.message || 'Login failed. Please check your details.');
         } finally {
             setIsSubmitting(false);
         }
@@ -155,7 +148,7 @@ export default function Login() {
                     <Link
                         to="/"
                         aria-label="Return to El-D7E7 home page"
-                        className="inline-flex items-center rounded-xl ml-[-12px] "
+                        className="inline-flex items-center gap-1"
                     >
                         <img
                             src={logoMascot}

@@ -8,86 +8,73 @@ import Footer from '../sections/Footer';
 import StationeryFilters from '../components/StationeryFilters';
 import StationeryProductCard from '../components/StationeryProductCard';
 
-import { getProducts } from '../services/api';
+import { useCart } from '../context/CartContext';
+import { productApi } from '../services/api';
 
 import bannerImage from '../assets/images/stationery-banner.png';
 
 const PRODUCTS_PER_PAGE = 12;
 
 export default function Stationery() {
-  const [cartCount, setCartCount] = useState(0);
+  const { addToCart } = useCart();
+  const [productsList, setProductsList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [stationeryProducts, setStationeryProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    productApi.getProducts({ category: 'stationery' })
+      .then((data) => {
+        setProductsList((data.products || []).map(p => ({
+          ...p,
+          id: p.id || p._id,
+          status: p.stock > 0 ? 'in' : 'out',
+          rating: p.rating || 4.5,
+        })));
+      })
+      .catch(() => setProductsList([]))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  // ── Derived values from real products ──
+  const maxProductPrice = useMemo(() => {
+    if (productsList.length === 0) return 3500;
+    return Math.ceil(Math.max(...productsList.map(p => p.price || 0)) / 100) * 100 || 3500;
+  }, [productsList]);
+
+  // dynamic categories from real products
+  const dynamicCategories = useMemo(() => {
+    const map = {};
+    productsList.forEach(p => {
+      const cat = p.subcategory || p.subCategory || '';
+      if (cat) map[cat] = (map[cat] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, count]) => ({ name, count }));
+  }, [productsList]);
 
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedColors, setSelectedColors] = useState([]);
   const [selectedAvailability, setSelectedAvailability] = useState([]);
   const [maxPrice, setMaxPrice] = useState(3500);
 
+  // reset maxPrice when products load
   useEffect(() => {
-    let isCancelled = false;
-
-    async function fetchProducts() {
-      setIsLoading(true);
-      setLoadError('');
-
-      try {
-        const { data } = await getProducts({ category: 'Stationery', limit: 100 });
-
-        if (!isCancelled) {
-          setStationeryProducts(data);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setLoadError(error.message || 'تعذر تحميل المنتجات');
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchProducts();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
+    setMaxPrice(maxProductPrice);
+  }, [maxProductPrice]);
 
   const filteredProducts = useMemo(() => {
-    return stationeryProducts.filter((product) => {
+    return productsList.filter((product) => {
       const matchesCategory =
         !selectedCategory ||
-        product.subCategory === selectedCategory;
-
-      const matchesColor =
-        selectedColors.length === 0 ||
-        selectedColors.includes(product.color);
+        (product.subcategory || product.subCategory || '') === selectedCategory;
 
       const matchesAvailability =
         selectedAvailability.length === 0 ||
         selectedAvailability.includes(product.status);
 
-      const matchesPrice = product.price <= maxPrice;
+      const matchesPrice = (product.price || 0) <= maxPrice;
 
-      return (
-        matchesCategory &&
-        matchesColor &&
-        matchesAvailability &&
-        matchesPrice
-      );
+      return matchesCategory && matchesAvailability && matchesPrice;
     });
-  }, [
-    maxPrice,
-    selectedAvailability,
-    selectedCategory,
-    selectedColors,
-    stationeryProducts,
-  ]);
+  }, [productsList, maxPrice, selectedAvailability, selectedCategory]);
 
   const totalPages = Math.max(
     1,
@@ -105,12 +92,7 @@ export default function Stationery() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    maxPrice,
-    selectedAvailability,
-    selectedCategory,
-    selectedColors,
-  ]);
+  }, [maxPrice, selectedAvailability, selectedCategory]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -126,15 +108,14 @@ export default function Stationery() {
     );
   };
 
-  const handleAddToCart = () => {
-    setCartCount((currentCount) => currentCount + 1);
+  const handleAddToCart = (product) => {
+    addToCart(product);
   };
 
   const clearFilters = () => {
     setSelectedCategory('');
-    setSelectedColors([]);
     setSelectedAvailability([]);
-    setMaxPrice(3500);
+    setMaxPrice(maxProductPrice);
   };
 
   const goToPage = (pageNumber) => {
@@ -203,7 +184,7 @@ export default function Stationery() {
         />
       </Helmet>
 
-      <Header cartCount={cartCount} />
+      <Header />
 
       <Navigation />
 
@@ -272,38 +253,27 @@ export default function Stationery() {
 
             <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
               <StationeryFilters
+                categories={dynamicCategories}
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
-                selectedColors={selectedColors}
-                onColorChange={(color) =>
-                  toggleArrayValue(color, setSelectedColors)
-                }
                 selectedAvailability={selectedAvailability}
-                onAvailabilityChange={(availability) =>
-                  toggleArrayValue(
-                    availability,
-                    setSelectedAvailability,
-                  )
-                }
+                onAvailabilityChange={(av) => toggleArrayValue(av, setSelectedAvailability)}
                 maxPrice={maxPrice}
+                maxProductPrice={maxProductPrice}
                 onMaxPriceChange={setMaxPrice}
                 onClearFilters={clearFilters}
               />
 
               <div>
                 {isLoading ? (
-                  <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
-                    <p className="m-0 text-lg font-medium">Loading products…</p>
-                  </div>
-                ) : loadError ? (
-                  <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
-                    <p className="m-0 text-lg font-medium text-[#c53938]">{loadError}</p>
+                  <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-20 text-center">
+                    <p className="animate-pulse text-base text-[var(--muted-text)]">Loading products…</p>
                   </div>
                 ) : visibleProducts.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
                     {visibleProducts.map((product) => (
                       <StationeryProductCard
-                        key={product.id}
+                        key={product.id || product._id}
                         product={product}
                         onAddToCart={handleAddToCart}
                       />
@@ -312,16 +282,17 @@ export default function Stationery() {
                 ) : (
                   <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
                     <p className="m-0 text-lg font-medium">
-                      No products match your filters.
+                      {productsList.length === 0 ? 'No products available yet.' : 'No products match your filters.'}
                     </p>
-
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="mt-6 rounded-full bg-[#c53938] px-6 py-3 text-sm font-medium text-white"
-                    >
-                      Reset Filters
-                    </button>
+                    {productsList.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="mt-6 rounded-full bg-[#c53938] px-6 py-3 text-sm font-medium text-white"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -384,10 +355,6 @@ export default function Stationery() {
           </div>
         </section>
       </main>
-
-      <p className="sr-only" aria-live="polite">
-        Cart contains {cartCount} items.
-      </p>
 
       <Footer />
     </div>

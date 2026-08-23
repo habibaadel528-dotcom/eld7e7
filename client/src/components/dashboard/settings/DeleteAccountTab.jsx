@@ -1,18 +1,42 @@
 import React, { useState } from 'react';
-import { AlertTriangle, Trash2, ShieldAlert } from 'lucide-react';
+import { toast } from 'sonner';
+import { AlertTriangle, Trash2, ShieldAlert, Eye, EyeOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { userApi } from '../../../services/api';
+import { clearAuthSession } from '../../../utils/auth';
 
 export default function DeleteAccountTab() {
+  const navigate = useNavigate();
   const [confirmInput, setConfirmInput] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [error, setError] = useState(null);
 
-  const isConfirmed = confirmInput.trim() === 'DELETE';
+  const isConfirmed = confirmInput.trim() === 'DELETE' && password.trim().length > 0;
 
-  const handleDelete = (e) => {
+  const handleDelete = async (e) => {
     e.preventDefault();
     if (!isConfirmed) return;
+
     setIsDeleting(true);
-    setTimeout(() => { setIsDeleting(false); setDeleted(true); }, 1200);
+    setError(null);
+
+    try {
+      await userApi.deleteAccount({ password });
+      setDeleted(true);
+      // Clear session and redirect after 2 seconds
+      setTimeout(() => {
+        clearAuthSession();
+        navigate('/');
+      }, 2000);
+    } catch (err) {
+      setError(err.message || 'Failed to delete account. Please try again.');
+      toast.error(err.message || 'Failed to delete account. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -37,9 +61,9 @@ export default function DeleteAccountTab() {
       {deleted ? (
         <div className="p-6 rounded-[18px] bg-red-500/10 border border-red-500/20 text-red-400 space-y-3 text-center">
           <ShieldAlert className="h-10 w-10 text-[#c53938] mx-auto" />
-          <h3 className="text-lg font-bold text-[var(--primary-text)]">Account Deletion Initiated</h3>
+          <h3 className="text-lg font-bold text-[var(--primary-text)]">Account Deleted</h3>
           <p className="text-xs sm:text-sm text-[var(--muted-text)] max-w-md mx-auto">
-            Your request has been processed. You will be signed out shortly.
+            Your account has been permanently deleted. Redirecting you to the homepage...
           </p>
         </div>
       ) : (
@@ -55,8 +79,50 @@ export default function DeleteAccountTab() {
             </p>
           </div>
 
+          {/* Error message */}
+          {error && (
+            <div className="rounded-[14px] border border-red-500/20 bg-red-500/10 p-4 text-xs sm:text-sm font-medium text-red-400">
+              {error}
+            </div>
+          )}
+
           {/* Confirmation form */}
           <form onSubmit={handleDelete} className="space-y-5">
+
+            {/* Password confirmation */}
+            <div className="flex flex-col gap-2">
+              <label htmlFor="deletePassword" className="text-xs sm:text-[13px] font-semibold text-[var(--label-text)]">
+                Enter your password to confirm:
+              </label>
+              <div className="relative">
+                <input
+                  id="deletePassword"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(null); }}
+                  placeholder="Your current password"
+                  className="
+                    h-12 w-full rounded-[14px]
+                    border border-[var(--input-border)]
+                    bg-[var(--surface-input)]
+                    px-4 pr-12 text-sm text-[var(--primary-text)]
+                    outline-none transition-all
+                    focus:border-[#c53938] focus:ring-2 focus:ring-[#c53938]/15
+                    placeholder:text-[var(--muted-text)]
+                  "
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors p-1 cursor-pointer"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Type DELETE */}
             <div className="flex flex-col gap-2">
               <label htmlFor="confirmDelete" className="text-xs sm:text-[13px] font-semibold text-[var(--label-text)]">
                 Type <span className="font-bold text-[#c53938]">DELETE</span> to confirm:

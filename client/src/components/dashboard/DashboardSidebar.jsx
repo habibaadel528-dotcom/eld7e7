@@ -1,14 +1,15 @@
-import { NavLink } from 'react-router-dom';
-import { getStoredUser } from '../../utils/auth';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { getStoredUser, clearAuthSession } from '../../utils/auth';
+import LogoutModal from '../common/LogoutModal';
 
 import dashboardIcon    from '../../assets/icons/dashboard/dashboard.svg';
 import ordersIcon       from '../../assets/icons/dashboard/orders.svg';
 import wishlistIcon     from '../../assets/icons/dashboard/wishlist.svg';
 import addressIcon      from '../../assets/icons/dashboard/address.svg';
 import paymentsIcon     from '../../assets/icons/dashboard/payments.svg';
-import notificationsIcon from '../../assets/icons/dashboard/notifications.svg';
 import settingsIcon     from '../../assets/icons/dashboard/settings.svg';
-import supportIcon      from '../../assets/icons/dashboard/support.svg';
 import logoutIcon       from '../../assets/icons/dashboard/logout.svg';
 
 const mainNav = [
@@ -20,9 +21,7 @@ const mainNav = [
 ];
 
 const secondaryNav = [
-  { to: '/account/notifications', label: 'Notifications', icon: notificationsIcon },
   { to: '/account/settings',      label: 'Settings',      icon: settingsIcon },
-  { to: '/account/support',       label: 'Support',       icon: supportIcon },
 ];
 
 function NavItem({ item, isCollapsed }) {
@@ -64,16 +63,22 @@ function NavItem({ item, isCollapsed }) {
 }
 
 export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
-  const currentUser = getStoredUser();
-  const displayName = currentUser?.name || 'مستخدم';
-  const displayEmail = currentUser?.email || '';
-  const initialLetter = displayName.trim().charAt(0).toUpperCase() || '?';
+  const navigate = useNavigate();
+  const user = getStoredUser();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const handleLogout = () => {
+    clearAuthSession();
+    toast.info('You have been logged out.');
+    navigate('/login', { replace: true });
+  };
+
   return (
-<aside
-  className={`relative flex h-full flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] transition-all duration-300 ease-in-out ${
-    isCollapsed ? 'py-10 px-2 items-center' : 'p-4 sm:p-5'
-  }`}
->
+    <aside
+      className={`relative flex h-full flex-col rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] transition-all duration-300 ease-in-out ${
+        isCollapsed ? 'py-10 px-2 items-center' : 'p-4 sm:p-5'
+      }`}
+    >
       {/* ── Top Header / Sleek Toggle Button ── */}
       <div className={`flex items-center w-full mb-3 ${isCollapsed ? 'justify-center' : 'justify-between px-1'}`}>
         {!isCollapsed && (
@@ -110,12 +115,11 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
       >
         <div className="relative shrink-0">
           <div
-            aria-label={displayName}
-            className={`flex items-center justify-center rounded-full bg-[#d1d5dc] font-semibold text-[#a72626] ring-2 ring-[var(--border-color)] transition-all ${
+            className={`flex shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 ring-2 ring-[var(--border-color)] font-bold text-[#c53938] uppercase transition-all ${
               isCollapsed ? 'h-10 w-10 text-base' : 'h-11 w-11 text-lg'
             }`}
           >
-            {initialLetter}
+            {(user?.name || user?.firstName || 'U').charAt(0)}
           </div>
           {/* Online status indicator */}
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface-bg)] bg-emerald-500" />
@@ -124,10 +128,10 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         {!isCollapsed && (
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-[var(--primary-text)]">
-              {displayName}
+              {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User')}
             </p>
             <p className="truncate text-[11px] text-[var(--secondary-text)]">
-              {displayEmail}
+              {user?.email || 'user@eld7e7.com'}
             </p>
           </div>
         )}
@@ -151,7 +155,8 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         <button
           type="button"
           title={isCollapsed ? 'Logout' : undefined}
-          className={`group flex items-center transition-all hover:bg-[var(--surface-soft)] ${
+          onClick={() => setShowLogoutModal(true)}
+          className={`group flex items-center transition-all hover:bg-[var(--surface-soft)] cursor-pointer ${
             isCollapsed
               ? 'h-10 w-10 justify-center p-0 mx-auto rounded-xl'
               : 'w-full gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#c53938]'
@@ -169,6 +174,16 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
           {!isCollapsed && <span className="text-[#c53938]">Logout</span>}
         </button>
       </div>
+
+      {showLogoutModal && (
+        <LogoutModal
+          onConfirm={() => {
+            setShowLogoutModal(false);
+            handleLogout();
+          }}
+          onCancel={() => setShowLogoutModal(false)}
+        />
+      )}
     </aside>
   );
 }

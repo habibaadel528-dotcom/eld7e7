@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
+import { orderApi, shippingZoneApi, userApi } from '../services/api';
+import { useCart } from '../context/CartContext';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
-import { Truck, CreditCard, Wallet, Check } from 'lucide-react';
+import { Truck, Upload, Check, Copy, CheckCheck, X } from 'lucide-react';
 
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 
-import { useCart } from '../context/CartContext';
-
 import chevronRightIcon from '../assets/icons/cart/chevron-right.svg';
-import visaIcon from '../assets/icons/visa.svg';
-import mastercardIcon from '../assets/icons/mastercard.svg';
-import paymobIcon from '../assets/icons/paymob.png';
+
+/* ── Payment account details ── */
+const INSTAPAY_ACCOUNT   = '01111291542';
+const VODAFONE_CASH_NUM  = '012266251423';
 
 const paymentMethods = [
   {
@@ -21,18 +23,32 @@ const paymentMethods = [
     icon: Truck,
   },
   {
-    id: 'card',
-    label: 'Credit / Debit Card',
-    description: 'Visa & Mastercard accepted',
-    icon: CreditCard,
+    id: 'instapay',
+    label: 'InstaPay',
+    description: 'Transfer via InstaPay then upload proof',
+    icon: () => (
+      <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+        <rect width="40" height="40" rx="10" fill="#5C2D91"/>
+        <path d="M10 28L20 12L30 28H22L20 24L18 28H10Z" fill="white"/>
+      </svg>
+    ),
   },
   {
-    id: 'paymob',
-    label: 'Paymob Wallet',
-    description: 'Pay with your mobile wallet',
-    icon: Wallet,
+    id: 'vodafone_cash',
+    label: 'Vodafone Cash',
+    description: 'Transfer via Vodafone Cash then upload proof',
+    icon: () => (
+      <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+        <rect width="40" height="40" rx="10" fill="#E60000"/>
+        <circle cx="20" cy="20" r="9" stroke="white" strokeWidth="2.5" fill="none"/>
+        <path d="M20 14v6l4 2" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      </svg>
+    ),
   },
 ];
+
+const MANUAL_METHODS = ['instapay', 'vodafone_cash'];
+const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5MB
 
 function FormField({ label, ...inputProps }) {
   return (
@@ -40,7 +56,6 @@ function FormField({ label, ...inputProps }) {
       <span className="mb-2 block text-sm font-medium text-[var(--secondary-text)]">
         {label}
       </span>
-
       <input
         {...inputProps}
         className="h-12 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c53938]"
@@ -49,88 +64,369 @@ function FormField({ label, ...inputProps }) {
   );
 }
 
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title="Copy"
+      className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938]"
+    >
+      {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
+      {copied ? 'Copied!' : 'Copy'}
+    </button>
+  );
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
-  const { cartItems, subtotal } = useCart();
+  const { cartItems, subtotal, clearCart } = useCart();
+  const fileInputRef = useRef(null);
 
   const [selectedPayment, setSelectedPayment] = useState('cod');
   const [formData, setFormData] = useState({
-    fullName: '',
-    phone: '',
-    address: '',
-    city: '',
-    notes: '',
+    fullName: '', phone: '', address: '', city: '', notes: '',
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors]           = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError]   = useState('');
 
-  const discountRate = 0.05;
-  const deliveryFee = 50;
-  const discount = subtotal * discountRate;
-  const total = subtotal - discount + deliveryFee;
+  /* ── Payment proof state ── */
+  const [placedOrder, setPlacedOrder]         = useState(null);   // order returned after creation
+  const [proofFile, setProofFile]             = useState(null);
+  const [proofPreview, setProofPreview]       = useState('');
+  const [proofError, setProofError]           = useState('');
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [proofSubmitted, setProofSubmitted]   = useState(false);
 
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  /* ── Shipping zones ── */
+  const [shippingZones, setShippingZones] = useState([]);
+  const [deliveryFee, setDeliveryFee]     = useState(0);
 
-    setFormData((current) => ({ ...current, [name]: value }));
-    setErrors((current) => ({ ...current, [name]: '' }));
+  useEffect(() => {
+    shippingZoneApi.getZones()
+      .then((data) => { if (data.zones?.length) setShippingZones(data.zones); })
+      .catch(() => {});
+
+    userApi.getAddresses()
+      .then((data) => {
+        if (data.addresses?.length) {
+          const def = data.addresses.find((a) => a.isDefault) || data.addresses[0];
+          setFormData((prev) => ({
+            ...prev,
+            fullName: prev.fullName || def.recipientName || '',
+            phone:    prev.phone    || def.phone         || '',
+            address:  prev.address  || def.street        || '',
+            city:     prev.city     || def.city          || '',
+          }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!shippingZones.length) { setDeliveryFee(35); return; }
+    if (!formData.city.trim()) { setDeliveryFee(shippingZones[0].price); return; }
+    const c = formData.city.toLowerCase().trim();
+    const matched = shippingZones.find((z) => {
+      const zn = z.name.toLowerCase();
+      return zn.includes(c) || c.includes(zn.split(' ')[0]);
+    });
+    setDeliveryFee(matched ? matched.price : shippingZones[0].price);
+  }, [formData.city, shippingZones]);
+
+  const total = subtotal + deliveryFee;
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({ ...p, [name]: value }));
+    setErrors((p) => ({ ...p, [name]: '' }));
   };
 
   const validate = () => {
-    const nextErrors = {};
-
-    if (!formData.fullName.trim()) {
-      nextErrors.fullName = 'Full name is required.';
-    }
-
-    if (!formData.phone.trim()) {
-      nextErrors.phone = 'Phone number is required.';
-    }
-
-    if (!formData.address.trim()) {
-      nextErrors.address = 'Address is required.';
-    }
-
-    if (!formData.city.trim()) {
-      nextErrors.city = 'City is required.';
-    }
-
-    setErrors(nextErrors);
-
-    return Object.keys(nextErrors).length === 0;
+    const errs = {};
+    if (!formData.fullName.trim()) errs.fullName = 'Full name is required.';
+    if (!formData.phone.trim())    errs.phone    = 'Phone number is required.';
+    if (!formData.address.trim())  errs.address  = 'Address is required.';
+    if (!formData.city.trim())     errs.city     = 'City is required.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
-  const handlePlaceOrder = (event) => {
-    event.preventDefault();
+  /* ── Step 1: Place order ── */
+  const handlePlaceOrder = async (e) => {
+    e.preventDefault();
+    if (!cartItems.length || !validate()) return;
 
-    if (cartItems.length === 0) {
+    setIsSubmitting(true);
+    setSubmitError('');
+    try {
+      const data = await orderApi.createOrder({
+        items: cartItems.map((item) => ({
+          product:  item.id || item._id,
+          name:     item.name,
+          price:    item.price,
+          quantity: item.quantity,
+          image:    item.image || '',
+        })),
+        shippingAddress: {
+          recipientName: formData.fullName.trim(),
+          street:        formData.address.trim(),
+          city:          formData.city.trim(),
+          phone:         formData.phone.trim(),
+        },
+        paymentMethod: selectedPayment === 'cod' ? 'cash_on_delivery' : selectedPayment,
+        totalAmount:   total,
+      });
+
+      clearCart();
+
+      if (MANUAL_METHODS.includes(selectedPayment)) {
+        /* Stay on page — show upload section */
+        setPlacedOrder(data.order);
+        toast.success('Order placed! Please upload your payment proof.');
+      } else {
+        toast.success('Order placed successfully!');
+        navigate('/order-success', {
+          state: { orderNumber: data.order.orderNumber, total, fullName: formData.fullName },
+        });
+      }
+    } catch (err) {
+      setSubmitError(err.message || 'Could not place order. Please try again.');
+      toast.error(err.message || 'Could not place order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  /* ── Proof file picker ── */
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      setProofError('Only JPG, JPEG, and PNG images are accepted.');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setProofError('File size must be less than 5MB.');
       return;
     }
 
-    if (!validate()) {
-      return;
-    }
-
-    const orderNumber = `D7E7-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    navigate('/order-success', {
-      state: {
-        orderNumber,
-        total,
-        fullName: formData.fullName,
-      },
-    });
+    setProofError('');
+    setProofFile(file);
+    setProofPreview(URL.createObjectURL(file));
   };
 
+  const handleRemoveFile = () => {
+    setProofFile(null);
+    setProofPreview('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  /* ── Step 2: Submit proof ── */
+  const handleSubmitProof = async (e) => {
+    e.preventDefault();
+    if (!proofFile) { setProofError('Please upload a payment screenshot.'); return; }
+    if (!placedOrder?._id) return;
+
+    setIsUploadingProof(true);
+    setProofError('');
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('proof', proofFile);
+      await orderApi.submitPaymentProof(placedOrder._id, formDataUpload);
+      setProofSubmitted(true);
+      toast.success('Payment proof submitted successfully!');
+    } catch (err) {
+      setProofError(err.message || 'Upload failed. Please try again.');
+      toast.error(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsUploadingProof(false);
+    }
+  };
+
+  /* ── Render helpers ── */
+  const isManual = MANUAL_METHODS.includes(selectedPayment);
+  const paymentAccount = selectedPayment === 'instapay' ? INSTAPAY_ACCOUNT : VODAFONE_CASH_NUM;
+  const paymentLabel   = selectedPayment === 'instapay' ? 'InstaPay Address' : 'Vodafone Cash Number';
+  const paymentName    = selectedPayment === 'instapay' ? 'InstaPay' : 'Vodafone Cash';
+
+  /* ─────────────────────────────────────────────────
+     After order placed for manual payment — show upload UI
+  ───────────────────────────────────────────────── */
+  if (placedOrder) {
+    return (
+      <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
+        <Helmet><title>Upload Payment Proof | El-D7E7</title></Helmet>
+        <DashboardHeader />
+        <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-0">
+          <DashboardSidebar />
+          <main className="min-w-0">
+            {proofSubmitted ? (
+              /* ── Success state ── */
+              <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-12 text-center">
+                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                  <Check size={40} className="text-emerald-600" />
+                </div>
+                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">Payment Proof Submitted!</h1>
+                <p className="mb-2 text-sm font-semibold text-[var(--secondary-text)]">Order #{placedOrder.orderNumber}</p>
+                <p className="mb-8 max-w-md text-sm text-[var(--muted-text)] leading-relaxed">
+                  Your payment proof has been submitted successfully. Your order is currently under review.
+                  We'll notify you once your payment is verified.
+                </p>
+                <Link
+                  to="/account/orders"
+                  className="rounded-full bg-[#c53938] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#ef5350]"
+                >
+                  View My Orders
+                </Link>
+              </div>
+            ) : (
+              /* ── Upload proof state ── */
+              <div className="max-w-xl space-y-6">
+                {/* Order created confirmation */}
+                <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-5">
+                  <p className="text-sm font-semibold text-emerald-700">
+                    ✅ Order #{placedOrder.orderNumber} placed successfully!
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-600">
+                    Now complete your payment and upload the screenshot below.
+                  </p>
+                </div>
+
+                {/* Payment instructions card */}
+                <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
+                  <h2 className="mb-4 text-lg font-bold text-[var(--primary-text)]">
+                    {paymentName} Payment Instructions
+                  </h2>
+
+                  <div className="space-y-4">
+                    {/* Account number row */}
+                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-4">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted-text)]">
+                        {paymentLabel}
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-lg font-bold text-[var(--primary-text)] tracking-wider">
+                          {paymentAccount}
+                        </span>
+                        <CopyButton text={paymentAccount} />
+                      </div>
+                    </div>
+
+                    {/* Amount row */}
+                    <div className="rounded-xl border border-[#c53938]/20 bg-[#c53938]/5 p-4">
+                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#c53938]/70">
+                        Amount to Transfer
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-xl font-bold text-[#c53938]">
+                          EGP {placedOrder.totalAmount?.toFixed(2)}
+                        </span>
+                        <CopyButton text={String(placedOrder.totalAmount)} />
+                      </div>
+                    </div>
+
+                    <p className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-medium text-amber-800 leading-relaxed">
+                      ⚠️ Please transfer the <strong>exact</strong> order amount to the {paymentName} account above, then upload the payment screenshot below.
+                    </p>
+                  </div>
+                </section>
+
+                {/* Upload section */}
+                <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
+                  <h2 className="mb-1 text-lg font-bold text-[var(--primary-text)]">
+                    Upload Payment Screenshot
+                  </h2>
+                  <p className="mb-5 text-xs text-[var(--muted-text)]">
+                    Accepted formats: JPG, JPEG, PNG — Max size: 5MB
+                  </p>
+
+                  {!proofPreview ? (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] py-10 transition hover:border-[#c53938] hover:bg-[#c53938]/5"
+                    >
+                      <Upload size={28} className="text-[var(--muted-text)]" />
+                      <span className="text-sm font-medium text-[var(--secondary-text)]">
+                        Click to upload screenshot
+                      </span>
+                      <span className="text-xs text-[var(--muted-text)]">JPG, JPEG, PNG up to 5MB</span>
+                    </button>
+                  ) : (
+                    <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)]">
+                      <img src={proofPreview} alt="Payment proof preview" className="w-full object-contain max-h-72" />
+                      <button
+                        type="button"
+                        onClick={handleRemoveFile}
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+                        title="Remove"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  )}
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".jpg,.jpeg,.png"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+
+                  {proofError && (
+                    <p className="mt-3 text-xs text-[#c53938] font-medium">{proofError}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleSubmitProof}
+                    disabled={isUploadingProof || !proofFile}
+                    className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#c53938] text-sm font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isUploadingProof ? (
+                      <>
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+                        </svg>
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        Submit Payment Proof
+                      </>
+                    )}
+                  </button>
+                </section>
+              </div>
+            )}
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─────────────────────────────────────────────────
+     Normal checkout form
+  ───────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
       <Helmet>
         <title>Checkout | El-D7E7</title>
-
-        <meta
-          name="description"
-          content="Confirm your delivery details and payment method to place your order."
-        />
-
+        <meta name="description" content="Confirm your delivery details and payment method to place your order." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -140,120 +436,65 @@ export default function Checkout() {
         <DashboardSidebar />
 
         <main className="min-w-0">
-          <nav
-            aria-label="Breadcrumb"
-            className="flex items-center gap-3 text-base"
-          >
-            <Link
-              to="/"
-              className="text-[var(--secondary-text)] transition hover:text-[#c53938]"
-            >
-              Home
-            </Link>
-
-            <img
-              src={chevronRightIcon}
-              alt=""
-              width="16"
-              height="16"
-              className="h-4 w-4 object-contain"
-            />
-
-            <Link
-              to="/cart"
-              className="text-[var(--secondary-text)] transition hover:text-[#c53938]"
-            >
-              Cart
-            </Link>
-
-            <img
-              src={chevronRightIcon}
-              alt=""
-              width="16"
-              height="16"
-              className="h-4 w-4 object-contain"
-            />
-
+          <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
+            <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">Home</Link>
+            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
+            <Link to="/cart" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">Cart</Link>
+            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
             <span aria-current="page">Checkout</span>
           </nav>
 
-          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">
-            Checkout
-          </h1>
+          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">Checkout</h1>
 
-          <form
-            onSubmit={handlePlaceOrder}
-            className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]"
-          >
+          <form onSubmit={handlePlaceOrder} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
             {/* Left column */}
             <div className="space-y-6">
               {/* Delivery address */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">
-                  Delivery Address
-                </h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Delivery Address</h2>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <FormField
-                    label="Full Name"
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    placeholder="Eman Mohamed"
-                    autoComplete="name"
-                  />
-
-                  <FormField
-                    label="Phone Number"
-                    name="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="01xxxxxxxxx"
-                    autoComplete="tel"
-                  />
+                  <FormField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
+                  <FormField label="Phone Number" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
 
                   <div className="sm:col-span-2">
-                    <FormField
-                      label="Street Address"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="Street name, building, floor, apartment"
-                      autoComplete="street-address"
-                    />
+                    <FormField label="Street Address" name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
                   </div>
 
-                  <FormField
-                    label="City"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Cairo"
-                    autoComplete="address-level2"
-                  />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
+                      City / Delivery Zone
+                    </label>
+                    {shippingZones.length > 0 ? (
+                      <select
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 cursor-pointer"
+                      >
+                        <option value="">-- Select your area / city --</option>
+                        {shippingZones.map((z) => (
+                          <option key={z._id || z.id} value={z.name}>
+                            {z.name} — EGP {z.price} ({z.eta})
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <FormField label="City" name="city" value={formData.city} onChange={handleChange} placeholder="Cairo" autoComplete="address-level2" />
+                    )}
+                  </div>
 
-                  <FormField
-                    label="Notes (optional)"
-                    name="notes"
-                    value={formData.notes}
-                    onChange={handleChange}
-                    placeholder="Delivery instructions"
-                  />
+                  <FormField label="Notes (optional)" name="notes" value={formData.notes} onChange={handleChange} placeholder="Delivery instructions" />
                 </div>
 
                 {(errors.fullName || errors.phone || errors.address || errors.city) && (
-                  <p className="mt-4 text-sm text-[#c53938]">
-                    Please fill in all required fields marked above.
-                  </p>
+                  <p className="mt-4 text-sm text-[#c53938]">Please fill in all required fields marked above.</p>
                 )}
               </section>
 
               {/* Payment method */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">
-                  Payment Method
-                </h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Payment Method</h2>
 
                 <div className="mt-5 space-y-3">
                   {paymentMethods.map((method) => {
@@ -271,86 +512,55 @@ export default function Checkout() {
                             : 'border-[var(--border-color)] hover:border-[#c53938]/50'
                         }`}
                       >
-                        <span
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
-                            isSelected
-                              ? 'bg-[#c53938] text-white'
-                              : 'bg-[var(--surface-soft)] text-[var(--secondary-text)]'
-                          }`}
-                        >
+                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                          isSelected ? 'bg-[#c53938] text-white' : 'bg-[var(--surface-soft)] text-[var(--secondary-text)]'
+                        }`}>
                           <Icon size={20} />
                         </span>
 
                         <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold text-[var(--primary-text)]">
-                            {method.label}
-                          </span>
-
-                          <span className="block text-xs text-[var(--muted-text)]">
-                            {method.description}
-                          </span>
+                          <span className="block text-sm font-semibold text-[var(--primary-text)]">{method.label}</span>
+                          <span className="block text-xs text-[var(--muted-text)]">{method.description}</span>
                         </span>
 
-                        {method.id === 'card' && (
-                          <span className="hidden shrink-0 items-center gap-2 sm:flex">
-                            <img src={visaIcon} alt="" className="h-5 w-auto object-contain" />
-                            <img src={mastercardIcon} alt="" className="h-5 w-auto object-contain" />
-                          </span>
-                        )}
-
-                        {method.id === 'paymob' && (
-                          <img
-                            src={paymobIcon}
-                            alt=""
-                            className="hidden h-5 w-auto object-contain sm:block"
-                          />
-                        )}
-
-                        <span
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                            isSelected
-                              ? 'border-[#c53938] bg-[#c53938]'
-                              : 'border-[var(--border-color)]'
-                          }`}
-                        >
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                          isSelected ? 'border-[#c53938] bg-[#c53938]' : 'border-[var(--border-color)]'
+                        }`}>
                           {isSelected && <Check size={12} color="#fff" />}
                         </span>
                       </button>
                     );
                   })}
                 </div>
+
+                {/* Payment preview info for manual methods */}
+                {isManual && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                    <p className="text-xs font-medium text-amber-800 leading-relaxed">
+                      📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
+                    </p>
+                  </div>
+                )}
               </section>
 
               {/* Order items recap */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">
-                  Order Items ({cartItems.length})
-                </h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Order Items ({cartItems.length})</h2>
 
                 <div className="mt-5 divide-y divide-[var(--border-color)]">
                   {cartItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"
-                    >
+                    <div key={item.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
                       <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)]">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-full w-full object-cover"
-                        />
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[var(--muted-text)]">📦</div>
+                        )}
                       </div>
-
                       <div className="min-w-0 flex-1">
-                        <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">
-                          {item.name}
-                        </p>
-
-                        <p className="m-0 text-xs text-[var(--muted-text)]">
-                          Qty: {item.quantity}
-                        </p>
+                        <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">{item.name}</p>
+                        <p className="m-0 text-xs text-[var(--muted-text)]">Qty: {item.quantity}</p>
                       </div>
-
                       <p className="m-0 shrink-0 text-sm font-semibold text-[var(--primary-text)]">
                         EGP {(item.price * item.quantity).toFixed(2)}
                       </p>
@@ -358,72 +568,56 @@ export default function Checkout() {
                   ))}
 
                   {cartItems.length === 0 && (
-                    <p className="py-4 text-sm text-[var(--muted-text)]">
-                      Your cart is empty.
-                    </p>
+                    <p className="py-4 text-sm text-[var(--muted-text)]">Your cart is empty.</p>
                   )}
                 </div>
               </section>
             </div>
 
-            {/* Right column - summary */}
+            {/* Right column — summary */}
             <aside className="h-fit rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 lg:sticky lg:top-8">
-              <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">
-                Order Summary
-              </h2>
+              <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Order Summary</h2>
 
               <dl className="mt-5 space-y-4">
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">
-                    Subtotal
-                  </dt>
-                  <dd className="m-0 text-sm text-[var(--primary-text)]">
-                    EGP {subtotal.toFixed(2)}
-                  </dd>
+                  <dt className="text-sm text-[var(--secondary-text)]">Subtotal</dt>
+                  <dd className="m-0 text-sm text-[var(--primary-text)] font-medium">EGP {subtotal.toFixed(2)}</dd>
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">
-                    Discount (-{discountRate * 100}%)
-                  </dt>
-                  <dd className="m-0 text-sm text-[#359a03]">
-                    -EGP {discount.toFixed(2)}
-                  </dd>
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">
-                    Delivery Fee
-                  </dt>
-                  <dd className="m-0 text-sm font-medium text-[var(--primary-text)]">
-                    EGP {deliveryFee.toFixed(2)}
-                  </dd>
+                  <dt className="text-sm text-[var(--secondary-text)]">Delivery Fee ({formData.city || 'Standard'})</dt>
+                  <dd className="m-0 text-sm font-semibold text-[var(--primary-text)]">EGP {deliveryFee.toFixed(2)}</dd>
                 </div>
 
                 <div className="h-px bg-[var(--border-color)]" />
 
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-base font-semibold text-[var(--primary-text)]">
-                    Total
-                  </dt>
-                  <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">
-                    EGP {total.toFixed(2)}
-                  </dd>
+                  <dt className="text-base font-semibold text-[var(--primary-text)]">Total</dt>
+                  <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</dd>
                 </div>
               </dl>
 
+              {submitError && (
+                <p className="mt-4 rounded-lg bg-[#c53938]/10 px-3 py-2 text-xs text-[#c53938] font-medium">{submitError}</p>
+              )}
+
               <button
                 type="submit"
-                disabled={cartItems.length === 0}
-                className="mt-6 flex h-[54px] w-full items-center justify-center rounded-full bg-[#c94545] text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={cartItems.length === 0 || isSubmitting}
+                className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Place Order
+                {isSubmitting ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+                    </svg>
+                    Placing Order…
+                  </>
+                ) : isManual ? 'Place Order & Pay' : 'Place Order'}
               </button>
 
-              <Link
-                to="/cart"
-                className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]"
-              >
+              <Link to="/cart" className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]">
                 Back to Cart
               </Link>
             </aside>

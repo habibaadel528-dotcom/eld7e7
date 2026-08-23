@@ -1,100 +1,132 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+/* ── Health check ── */
 export async function checkHealth() {
   const response = await fetch(`${API_BASE}/health`);
-
-  if (!response.ok) {
-    throw new Error(`Health check failed: ${response.status}`);
-  }
-
+  if (!response.ok) throw new Error(`Health check failed: ${response.status}`);
   return response.json();
 }
 
-async function handleResponse(response) {
+/* ── Generic authenticated fetch helper ── */
+export async function apiFetch(path, options = {}) {
+  const token = localStorage.getItem('authToken');
+
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || 'حصل خطأ، حاولي تاني');
+    if (response.status === 401) {
+      const token = localStorage.getItem('authToken');
+      if (token === 'temporary-demo-token' || !token) {
+        localStorage.removeItem('authToken');
+      }
+    }
+    const error = new Error(data.message || 'Something went wrong.');
+    error.status = response.status;
+    throw error;
   }
 
   return data;
 }
 
-export async function getProducts(params = {}) {
-  const query = new URLSearchParams(
-    Object.fromEntries(
-      Object.entries(params).filter(([, value]) => value !== undefined && value !== '' && value !== null)
-    )
-  ).toString();
-
-  const response = await fetch(`${API_BASE}/products${query ? `?${query}` : ''}`);
-
-  return handleResponse(response);
-}
-
-function authHeaders() {
+/* ── Authenticated fetch for multipart/form-data (file uploads) ── */
+export async function apiFetchFormData(path, formData) {
   const token = localStorage.getItem('authToken');
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
-export async function uploadImageRequest(file) {
-  const formData = new FormData();
-  formData.append('image', file);
-
-  const response = await fetch(`${API_BASE}/upload`, {
+  const response = await fetch(`${API_BASE}${path}`, {
     method: 'POST',
-    headers: { ...authHeaders() },
+    headers,
     body: formData,
   });
 
-  return handleResponse(response);
+  const data = await response.json();
+  if (!response.ok) {
+    const error = new Error(data.message || 'Upload failed.');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
 }
 
-export async function createProductRequest(product) {
-  const response = await fetch(`${API_BASE}/products`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(product),
-  });
 
-  return handleResponse(response);
-}
+/* ── Auth ── */
+export const authApi = {
+  register: (body) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+  login:    (body) => apiFetch('/auth/login',    { method: 'POST', body: JSON.stringify(body) }),
+  me:       ()     => apiFetch('/auth/me'),
+};
 
-export async function updateProductRequest(id, product) {
-  const response = await fetch(`${API_BASE}/products/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(product),
-  });
+/* ── User ── */
+export const userApi = {
+  getProfile:    ()       => apiFetch('/users/profile'),
+  updateProfile: (body)   => apiFetch('/users/profile',  { method: 'PATCH', body: JSON.stringify(body) }),
+  updatePassword:(body)   => apiFetch('/users/password', { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteAccount: (body)   => apiFetch('/users/account',  { method: 'DELETE', body: JSON.stringify(body) }),
 
-  return handleResponse(response);
-}
+  getAddresses:   ()      => apiFetch('/users/addresses'),
+  addAddress:    (body)   => apiFetch('/users/addresses',    { method: 'POST',   body: JSON.stringify(body) }),
+  updateAddress: (id, body) => apiFetch(`/users/addresses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteAddress: (id)     => apiFetch(`/users/addresses/${id}`,   { method: 'DELETE' }),
 
-export async function deleteProductRequest(id) {
-  const response = await fetch(`${API_BASE}/products/${id}`, {
-    method: 'DELETE',
-    headers: { ...authHeaders() },
-  });
+  getWishlist:          ()          => apiFetch('/users/wishlist'),
+  addToWishlist:        (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'POST' }),
+  removeFromWishlist:   (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'DELETE' }),
 
-  return handleResponse(response);
-}
+  getCart:              ()          => apiFetch('/users/cart'),
+  updateCart:           (cart)      => apiFetch('/users/cart', { method: 'PUT', body: JSON.stringify({ cart }) }),
+  clearCart:            ()          => apiFetch('/users/cart', { method: 'DELETE' }),
+};
 
-export async function signupRequest({ name, email, password, phone }) {
-  const response = await fetch(`${API_BASE}/auth/signup`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, password, phone }),
-  });
+/* ── Orders ── */
+export const orderApi = {
+  createOrder:        (body)   => apiFetch('/orders',    { method: 'POST', body: JSON.stringify(body) }),
+  getMyOrders:        (params) => apiFetch(`/orders?${new URLSearchParams(params || {})}`),
+  getOrderById:       (id)     => apiFetch(`/orders/${id}`),
+  cancelOrder:        (id)     => apiFetch(`/orders/${id}/cancel`, { method: 'PATCH' }),
+  submitPaymentProof: (id, formData) => apiFetchFormData(`/orders/${id}/payment-proof`, formData),
+};
 
-  return handleResponse(response);
-}
 
-export async function loginRequest({ email, password }) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+/* ── Products (public) ── */
+export const productApi = {
+  getProducts:   (params) => apiFetch(`/products?${new URLSearchParams(params || {})}`),
+  getProductById:(id)     => apiFetch(`/products/${id}`),
+};
 
-  return handleResponse(response);
-}
+/* ── Sessions ── */
+export const sessionApi = {
+  getSessions:      ()   => apiFetch('/users/sessions'),
+  revokeSession:    (id) => apiFetch(`/users/sessions/${id}`, { method: 'DELETE' }),
+  revokeAllSessions:()   => apiFetch('/users/sessions',       { method: 'DELETE' }),
+};
+
+/* ── Admin ── */
+export const adminApi = {
+  getStats:           ()           => apiFetch('/admin/stats'),
+  getCustomers:       (params)     => apiFetch(`/admin/customers?${new URLSearchParams(params || {})}`),
+  updateCustomer:     (id, body)   => apiFetch(`/admin/customers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  getOrders:          (params)     => apiFetch(`/admin/orders?${new URLSearchParams(params || {})}`),
+  updateOrderStatus:  (id, status) => apiFetch(`/admin/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+  verifyPayment:      (id, body)   => apiFetch(`/admin/orders/${id}/verify-payment`, { method: 'PATCH', body: JSON.stringify(body) }),
+  getPaymentProofUrl: (id)         => `${API_BASE}/admin/orders/${id}/payment-proof`,
+  getProducts:        (params)     => apiFetch(`/admin/products?${new URLSearchParams(params || {})}`),
+  createProduct:      (body)       => apiFetch('/admin/products',    { method: 'POST',   body: JSON.stringify(body) }),
+  updateProduct:      (id, body)   => apiFetch(`/admin/products/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteProduct:      (id)         => apiFetch(`/admin/products/${id}`, { method: 'DELETE' }),
+};
+
+
+/* ── Shipping Zones ── */
+export const shippingZoneApi = {
+  getZones:   ()           => apiFetch('/shipping-zones'),
+  createZone: (body)       => apiFetch('/shipping-zones',      { method: 'POST',   body: JSON.stringify(body) }),
+  updateZone: (id, body)   => apiFetch(`/shipping-zones/${id}`, { method: 'PATCH',  body: JSON.stringify(body) }),
+  deleteZone: (id)         => apiFetch(`/shipping-zones/${id}`, { method: 'DELETE' }),
+};

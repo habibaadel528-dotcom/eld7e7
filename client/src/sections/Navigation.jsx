@@ -34,7 +34,7 @@ export default function Navigation() {
       aria-label="Main navigation"
       className="border-b border-[var(--soft-border-color)] bg-[var(--page-bg)]"
     >
-      <div className="mx-auto w-full max-w-[1280px] overflow-x-auto px-5 sm:px-8 lg:px-0">
+      <div className="mx-auto w-full max-w-[1280px] overflow-x-auto px-5 sm:px-8 lg:px-8">
         <ul className="m-0 flex min-w-max list-none items-center gap-7 py-4 lg:gap-8">
           {navItems.map((item) => (
             <li key={item.label} className="flex items-center gap-1">

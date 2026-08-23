@@ -12,15 +12,21 @@ export default function CartItem({
     <article className="flex flex-col gap-5 py-5 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 gap-4">
         <div className="h-[124px] w-[124px] shrink-0 overflow-hidden rounded-[9px] bg-[var(--surface-soft)]">
-          <img
-            src={item.image}
-            alt={item.name}
-            width="124"
-            height="124"
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
+          {item.image ? (
+            <img
+              src={item.image}
+              alt={item.name}
+              width="124"
+              height="124"
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-2xl">
+              📦
+            </div>
+          )}
         </div>
 
         <div className="flex min-w-0 flex-col justify-between py-1">
@@ -29,19 +35,11 @@ export default function CartItem({
               {item.name}
             </h2>
 
-            <p className="mb-0 mt-1 text-sm text-[var(--primary-text)]">
-              Size:{' '}
-              <span className="text-[var(--secondary-text)]">
-                {item.size}
-              </span>
-            </p>
-
-            <p className="mb-0 mt-1 text-sm text-[var(--primary-text)]">
-              Color:{' '}
-              <span className="text-[var(--secondary-text)]">
-                {item.color}
-              </span>
-            </p>
+            {item.category && (
+              <p className="mb-0 mt-1 text-sm text-[var(--secondary-text)]">
+                {item.category}
+              </p>
+            )}
           </div>
 
           <p className="mb-0 mt-5 text-2xl text-[var(--primary-text)]">

@@ -1,112 +1,47 @@
-import asyncHandler from 'express-async-handler';
 import Product from '../models/Product.model.js';
 
-// @route   GET /api/products
-// @desc    قائمة المنتجات مع فلترة، بحث، ترتيب، وpagination
-// @query   category, subCategory, search, minPrice, maxPrice, sort, page, limit
-export const getProducts = asyncHandler(async (req, res) => {
-  const {
-    category,
-    subCategory,
-    search,
-    minPrice,
-    maxPrice,
-    sort,
-    page = 1,
-    limit = 20,
-  } = req.query;
+/* ────────────────────────────────
+   GET /api/products
+   Query: category, search, page, limit
+   ──────────────────────────────── */
+export async function getProducts(req, res, next) {
+  try {
+    const page     = Math.max(1, Number(req.query.page)  || 1);
+    const limit    = Math.min(100, Number(req.query.limit) || 20);
+    const skip     = (page - 1) * limit;
+    const category = req.query.category;
+    const search   = req.query.search?.trim();
 
-  const filter = { isActive: true };
+    const filter = { isActive: true };
+    if (category) filter.category = category;
+    if (search)   filter.$text    = { $search: search };
 
-  if (category) filter.category = category;
-  if (subCategory) filter.subCategory = subCategory;
+    const [products, total] = await Promise.all([
+      Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      Product.countDocuments(filter),
+    ]);
 
-  if (minPrice || maxPrice) {
-    filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
+    res.json({
+      success: true,
+      products,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+    });
+  } catch (error) {
+    next(error);
   }
+}
 
-  if (search) {
-    filter.$text = { $search: search };
+/* ────────────────────────────────
+   GET /api/products/:id
+   ──────────────────────────────── */
+export async function getProductById(req, res, next) {
+  try {
+    const product = await Product.findOne({ _id: req.params.id, isActive: true });
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found.' });
+    }
+    res.json({ success: true, product });
+  } catch (error) {
+    next(error);
   }
-
-  const sortOptions = {
-    'price-asc': { price: 1 },
-    'price-desc': { price: -1 },
-    newest: { createdAt: -1 },
-    rating: { rating: -1 },
-  };
-  const sortBy = sortOptions[sort] || { createdAt: -1 };
-
-  const pageNum = Math.max(Number(page), 1);
-  const limitNum = Math.min(Math.max(Number(limit), 1), 100);
-  const skip = (pageNum - 1) * limitNum;
-
-  const [products, total] = await Promise.all([
-    Product.find(filter).sort(sortBy).skip(skip).limit(limitNum),
-    Product.countDocuments(filter),
-  ]);
-
-  res.json({
-    success: true,
-    data: products,
-    pagination: {
-      total,
-      page: pageNum,
-      pages: Math.ceil(total / limitNum),
-      limit: limitNum,
-    },
-  });
-});
-
-// @route   GET /api/products/:slug
-export const getProductBySlug = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({
-    slug: req.params.slug,
-    isActive: true,
-  });
-
-  if (!product) {
-    res.status(404);
-    throw new Error('المنتج غير موجود');
-  }
-
-  res.json({ success: true, data: product });
-});
-
-// @route   POST /api/products
-// @access  Admin only
-export const createProduct = asyncHandler(async (req, res) => {
-  const product = await Product.create(req.body);
-  res.status(201).json({ success: true, data: product });
-});
-
-// @route   PUT /api/products/:id
-// @access  Admin only
-export const updateProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
-
-  if (!product) {
-    res.status(404);
-    throw new Error('المنتج غير موجود');
-  }
-
-  res.json({ success: true, data: product });
-});
-
-// @route   DELETE /api/products/:id
-// @access  Admin only
-export const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findByIdAndDelete(req.params.id);
-
-  if (!product) {
-    res.status(404);
-    throw new Error('المنتج غير موجود');
-  }
-
-  res.json({ success: true, message: 'تم حذف المنتج' });
-});
+}

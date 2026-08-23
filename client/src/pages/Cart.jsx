@@ -8,12 +8,17 @@ import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import CartItem from '../components/cart/CartItem';
 import OrderSummary from '../components/cart/OrderSummary';
 
-import { initialCartItems } from '../data/cartItems';
-
+import { useCart } from '../context/CartContext';
 import chevronRightIcon from '../assets/icons/cart/chevron-right.svg';
 
 export default function Cart() {
-  const [cartItems, setCartItems] = useState(initialCartItems);
+  const {
+    cartItems,
+    increaseQuantity,
+    decreaseQuantity,
+    removeItem,
+    subtotal,
+  } = useCart();
 
   const [isCollapsed, setIsCollapsed] = useState(
     () => localStorage.getItem('sidebar_collapsed') === 'true'
@@ -34,47 +39,6 @@ export default function Cart() {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
-
-  const increaseQuantity = (itemId) => {
-    setCartItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              quantity: Math.min(item.quantity + 1, 99),
-            }
-          : item,
-      ),
-    );
-  };
-
-  const decreaseQuantity = (itemId) => {
-    setCartItems((currentItems) =>
-      currentItems.map((item) =>
-        item.id === itemId
-          ? {
-              ...item,
-              quantity: Math.max(item.quantity - 1, 1),
-            }
-          : item,
-      ),
-    );
-  };
-
-  const removeItem = (itemId) => {
-    setCartItems((currentItems) =>
-      currentItems.filter((item) => item.id !== itemId),
-    );
-  };
-
-  const subtotal = useMemo(
-    () =>
-      cartItems.reduce(
-        (total, item) => total + item.price * item.quantity,
-        0,
-      ),
-    [cartItems],
-  );
 
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">

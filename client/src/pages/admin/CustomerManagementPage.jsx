@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { adminApi } from '../../services/api';
 
-/* ── Mock data — replace with real API data later ── */
+/* ── Mock data — fallback if backend empty ── */
 const initialCustomers = [
   { id: 1, name: 'Eman Mohamed', email: 'eman.m@gmail.com', orders: 24, spent: 89420, status: 'Active', joined: 'Jan 12, 2025', color: 'bg-rose-100 text-rose-600' },
   { id: 2, name: 'Ahmed Sayed', email: 'ahmed.s@outlook.com', orders: 8, spent: 42100, status: 'Active', joined: 'Mar 5, 2025', color: 'bg-amber-100 text-amber-600' },
@@ -65,6 +66,26 @@ function StatCard({ icon, iconBg, value, label }) {
 export default function CustomerManagementPage() {
   const [customers, setCustomers] = useState(initialCustomers);
   const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    adminApi.getCustomers()
+      .then((data) => {
+        if (data.customers && data.customers.length > 0) {
+          const mapped = data.customers.map((c, i) => ({
+            id: c._id,
+            name: `${c.firstName} ${c.lastName}`,
+            email: c.email,
+            orders: 0,
+            spent: 0,
+            status: c.isActive ? 'Active' : 'Inactive',
+            joined: new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            color: ['bg-rose-100 text-rose-600', 'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600'][i % 3],
+          }));
+          setCustomers(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

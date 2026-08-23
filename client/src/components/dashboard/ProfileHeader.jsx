@@ -2,18 +2,18 @@ import React from 'react';
 import { getStoredUser } from '../../utils/auth';
 
 export const ProfileHeader = ({ isEditing, onEditToggle }) => {
-  const currentUser = getStoredUser();
-  const displayName = currentUser?.name || 'مستخدم';
-  const displayEmail = currentUser?.email || '';
-  const initialLetter = displayName.trim().charAt(0).toUpperCase() || '?';
+  const user = getStoredUser();
+  const displayName = user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User');
+  const displayEmail = user?.email || 'user@eld7e7.com';
+  const initial = (displayName).charAt(0).toUpperCase();
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between gap-4 pb-6">
         {/* Profile Info */}
         <div className="flex items-center gap-4">
-          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full bg-[#ffb31f] flex items-center justify-center text-2xl font-semibold text-white">
-            {initialLetter}
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 text-2xl font-bold text-[#c53938] uppercase ring-2 ring-[#c53938]/20">
+            {initial}
           </div>
           <div className="flex flex-col">
             <h2 className="text-lg sm:text-xl font-bold text-[var(--primary-text)]">

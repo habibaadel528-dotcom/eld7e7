@@ -8,9 +8,12 @@ import iconChevronDown from '../assets/icons/icon-chevron-down.svg';
 import iconShoppingCart from '../assets/icons/icon-shopping-cart.svg';
 import iconUser from '../assets/icons/icon-user.svg';
 
+import { useCart } from '../context/CartContext';
 import AccountMenu from './AccountMenu';
 
-export default function Header({ cartCount = 0 }) {
+export default function Header({ cartCount: propCartCount }) {
+  const { cartCount: contextCartCount } = useCart();
+  const cartCount = propCartCount !== undefined && propCartCount !== 0 ? propCartCount : contextCartCount;
   const [searchQuery, setSearchQuery] = useState('');
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
@@ -43,7 +46,7 @@ export default function Header({ cartCount = 0 }) {
 
   return (
     <header className="relative z-50 border-b border-[var(--soft-border-color)] bg-[var(--page-bg)]">
-      <div className="mx-auto w-full max-w-[1280px] px-5 sm:px-8 lg:px-0">
+      <div className="mx-auto w-full max-w-[1280px] px-5 sm:px-8 lg:px-8">
         <div className="flex min-h-[80px] items-center justify-between gap-5">
           {/* Logo */}
           <Link
@@ -121,9 +124,11 @@ export default function Header({ cartCount = 0 }) {
                   className="h-6 w-6 object-contain"
                 />
 
-                <span className="absolute right-0 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full border-2 border-[var(--page-bg)] bg-[#ef5350] px-1 text-[9px] font-bold leading-none text-white">
-                  {cartCount}
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute right-0 top-0 flex min-h-4 min-w-4 items-center justify-center rounded-full border-2 border-[var(--page-bg)] bg-[#ef5350] px-1 text-[9px] font-bold leading-none text-white">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
 
               <span className="hidden h-6 w-px bg-[var(--border-color)] sm:block" />

@@ -6,68 +6,45 @@ import Navigation from '../sections/Navigation';
 import Footer from '../sections/Footer';
 import ProductCard from '../components/ProductCard';
 
-import { getProducts } from '../services/api';
+import { useCart } from '../context/CartContext';
+import { productApi } from '../services/api';
 import bannerImage from '../assets/images/cultural-books-banner.png';
 
 const PRODUCTS_PER_PAGE = 15;
 
 export default function CulturalBooksClearance() {
+  const { addToCart } = useCart();
+  const [productsList, setProductsList] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [cartCount, setCartCount] = useState(0);
-
-  const [culturalBooks, setCulturalBooks] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
-    let isCancelled = false;
-
-    async function fetchBooks() {
-      setIsLoading(true);
-      setLoadError('');
-
-      try {
-        const { data } = await getProducts({ category: 'Cultural Books', limit: 100 });
-
-        if (!isCancelled) {
-          setCulturalBooks(data);
-        }
-      } catch (error) {
-        if (!isCancelled) {
-          setLoadError(error.message || 'تعذر تحميل المنتجات');
-        }
-      } finally {
-        if (!isCancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    fetchBooks();
-
-    return () => {
-      isCancelled = true;
-    };
+    productApi.getProducts({ category: 'cultural-books' })
+      .then((data) => {
+        setProductsList(data.products || []);
+      })
+      .catch(() => setProductsList([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const filteredProducts = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
     if (!normalizedQuery) {
-      return culturalBooks;
+      return productsList;
     }
 
-    return culturalBooks.filter((product) => {
-      const productName = product.name.toLowerCase();
-      const productCategory = product.category.toLowerCase();
+    return productsList.filter((product) => {
+      const productName = (product.name || '').toLowerCase();
+      const productCategory = (product.category || '').toLowerCase();
 
       return (
         productName.includes(normalizedQuery) ||
         productCategory.includes(normalizedQuery)
       );
     });
-  }, [searchQuery, culturalBooks]);
+  }, [searchQuery, productsList]);
 
   const totalPages = Math.max(
     1,
@@ -92,8 +69,8 @@ export default function CulturalBooksClearance() {
     setCurrentPage(1);
   };
 
-  const handleAddToCart = () => {
-    setCartCount((currentCount) => currentCount + 1);
+  const handleAddToCart = (product) => {
+    addToCart(product);
   };
 
   const goToPage = (pageNumber) => {
@@ -171,7 +148,7 @@ export default function CulturalBooksClearance() {
         />
       </Helmet>
 
-      <Header cartCount={cartCount} />
+      <Header />
 
       <Navigation />
 
@@ -271,18 +248,14 @@ export default function CulturalBooksClearance() {
             </div>
 
             {isLoading ? (
-              <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
-                <p className="m-0 text-lg font-medium">Loading products…</p>
-              </div>
-            ) : loadError ? (
-              <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
-                <p className="m-0 text-lg font-medium text-[#c53938]">{loadError}</p>
+              <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-20 text-center">
+                <p className="animate-pulse text-base text-[var(--muted-text)]">Loading products…</p>
               </div>
             ) : visibleProducts.length > 0 ? (
               <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
                 {visibleProducts.map((product) => (
                   <ProductCard
-                    key={product.id}
+                    key={product.id || product._id}
                     product={product}
                     onAddToCart={handleAddToCart}
                   />
@@ -291,23 +264,21 @@ export default function CulturalBooksClearance() {
             ) : (
               <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
                 <p className="m-0 text-lg font-medium text-[var(--primary-text)]">
-                  No books found
+                  {productsList.length === 0 ? 'No products available yet.' : 'No books found'}
                 </p>
 
                 <p className="mb-0 mt-2 text-sm text-[var(--secondary-text)]">
-                  Try searching with another book name.
+                  {productsList.length === 0 ? 'Check back later.' : 'Try searching with another book name.'}
                 </p>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    setCurrentPage(1);
-                  }}
-                  className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#c94545] px-6 text-sm font-medium text-white transition hover:bg-[#ef5350]"
-                >
-                  Clear Search
-                </button>
+                {productsList.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
+                    className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#c94545] px-6 text-sm font-medium text-white transition hover:bg-[#ef5350]"
+                  >
+                    Clear Search
+                  </button>
+                )}
               </div>
             )}
 
@@ -360,13 +331,6 @@ export default function CulturalBooksClearance() {
               </nav>
             )}
 
-            <p
-              className="sr-only"
-              aria-live="polite"
-              aria-atomic="true"
-            >
-              Cart now contains {cartCount} items.
-            </p>
           </div>
         </section>
       </main>

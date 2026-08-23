@@ -4,78 +4,83 @@ import bcrypt from 'bcryptjs';
 const addressSchema = new mongoose.Schema(
   {
     label: { type: String, default: 'Home' },
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
+    recipientName: { type: String, required: true },
     street: { type: String, required: true },
     city: { type: String, required: true },
-    governorate: { type: String, required: true },
-    notes: { type: String },
+    phone: { type: String, required: true },
     isDefault: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { _id: true }
 );
+
+const cartItemSchema = new mongoose.Schema(
+  {
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    name: { type: String },
+    size: { type: String, default: 'Standard' },
+    color: { type: String, default: 'Default' },
+    price: { type: Number, required: true },
+    quantity: { type: Number, default: 1, min: 1 },
+    image: { type: String, default: '' },
+  },
+  { _id: true }
+);
+const sessionSchema = new mongoose.Schema(
+  {
+    token:       { type: String, required: true },
+    deviceName:  { type: String, default: 'Unknown Device' },
+    deviceType:  { type: String, default: 'desktop' },   // desktop | laptop | smartphone | tablet
+    browser:     { type: String, default: 'Unknown Browser' },
+    os:          { type: String, default: '' },
+    ip:          { type: String, default: '' },
+    lastActive:  { type: Date, default: Date.now },
+    isCurrent:   { type: Boolean, default: false },
+  },
+  { _id: true }
+);
+
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: [true, 'الاسم مطلوب'],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, 'البريد الإلكتروني مطلوب'],
-      unique: true,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'البريد الإلكتروني غير صحيح'],
-    },
-    password: {
-      type: String,
-      required: [true, 'كلمة المرور مطلوبة'],
-      minlength: 6,
-      select: false,
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    role: {
-      type: String,
-      enum: ['customer', 'admin'],
-      default: 'customer',
-    },
+    firstName: { type: String, required: true, trim: true },
+    lastName:  { type: String, required: true, trim: true },
+    email:     { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password:  { type: String, required: true, minlength: 8 },
+    role:      { type: String, enum: ['user', 'admin'], default: 'user' },
+    gender:    { type: String, enum: ['male', 'female', 'other'], default: 'male' },
+    country:   { type: String, default: 'Egypt' },
+    language:  { type: String, default: 'english' },
     addresses: [addressSchema],
-    wishlist: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Product',
-      },
-    ],
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+    cart:      [cartItemSchema],
+    wishlist:  [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+    loyaltyPoints: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    sessions: [sessionSchema],
+    passwordResetToken:   { type: String, select: false },
+    passwordResetExpires: { type: Date,   select: false },
   },
   { timestamps: true }
 );
 
-// Hash the password before saving, only if it was modified
-userSchema.pre('save', async function hashPassword() {
+/* Hash password before save */
+userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
-
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+  this.password = await bcrypt.hash(this.password, 12);
 });
 
-userSchema.methods.comparePassword = async function comparePassword(candidatePassword) {
+/* Compare plain password with hash */
+userSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.methods.toSafeObject = function toSafeObject() {
+/* Strip sensitive fields from JSON output */
+userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpires;
   return obj;
 };
 
-export default mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

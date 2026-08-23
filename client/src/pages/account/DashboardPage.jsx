@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { authApi, orderApi, userApi, productApi } from '../../services/api';
 import { getStoredUser } from '../../utils/auth';
 
 import productAirpods from '../../assets/images/dashboard/product-airpods.png';
@@ -13,48 +14,10 @@ import orderBag from '../../assets/images/dashboard/order-bag.png';
 import orderSunglasses from '../../assets/images/dashboard/order-sunglasses.png';
 import orderWatch from '../../assets/images/dashboard/order-watch.png';
 
-/* ── Mock data — replace with real API data later ── */
 
-const stats = [
-  {
-    id: 'orders',
-    icon: 'bag',
-    iconBg: 'bg-indigo-100 text-indigo-500',
-    value: '24',
-    label: 'Total Orders',
-    note: '+3 this month',
-    noteColor: 'text-indigo-500',
-  },
-  {
-    id: 'wishlist',
-    icon: 'heart',
-    iconBg: 'bg-rose-100 text-rose-500',
-    value: '8',
-    label: 'Wishlist Items',
-    note: '2 on sale now',
-    noteColor: 'text-[#c53938]',
-  },
-  {
-    id: 'loyalty',
-    icon: 'check',
-    iconBg: 'bg-amber-100 text-amber-500',
-    value: '1,250',
-    label: 'Loyalty Points',
-    note: '+200 this week',
-    noteColor: 'text-amber-500',
-  },
-  {
-    id: 'wallet',
-    icon: 'wallet',
-    iconBg: 'bg-emerald-100 text-emerald-500',
-    value: 'EGP 450',
-    label: 'Wallet Balance',
-    note: 'Ready to use',
-    noteColor: 'text-emerald-500',
-  },
-];
 
-const recentOrders = [
+
+const fallbackRecentOrders = [
   {
     id: 'ELD-7291',
     status: 'Shipped',
@@ -165,8 +128,124 @@ function StarIcon() {
 }
 
 export default function DashboardPage() {
-  const currentUser = getStoredUser();
-  const userFirstName = currentUser?.name?.split(' ')[0] || 'مستخدم';
+  const [user, setUser] = useState(getStoredUser());
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [orderCount, setOrderCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+  const [productsList, setProductsList] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+
+  useEffect(() => {
+    // Fetch logged in user profile
+    authApi.me()
+      .then((data) => {
+        if (data.user) {
+          setUser(data.user);
+          setWishlistCount(data.user.wishlist?.length || 0);
+        }
+      })
+      .catch(() => {});
+
+    // Fetch user wishlist count if available
+    userApi.getWishlist()
+      .then((data) => {
+        if (data.wishlist) setWishlistCount(data.wishlist.length);
+      })
+      .catch(() => {});
+
+    // Fetch recent 3 orders
+    orderApi.getMyOrders({ limit: 3 })
+      .then((data) => {
+        if (data.orders && data.orders.length > 0) {
+          const mapped = data.orders.map((o) => ({
+            id: o.orderNumber || `#${o._id.slice(-6)}`,
+            rawId: o._id,
+            status: o.status.charAt(0).toUpperCase() + o.status.slice(1),
+            statusColor:
+              o.status === 'delivered'
+                ? 'bg-emerald-100 text-emerald-600'
+                : o.status === 'cancelled'
+                ? 'bg-red-100 text-red-600'
+                : 'bg-amber-100 text-amber-600',
+            date: new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            items: `${o.items?.length || 1} item${(o.items?.length || 1) > 1 ? 's' : ''}`,
+            amount: `EGP ${o.totalAmount?.toLocaleString()}`,
+            action: 'Details',
+            thumbs: o.items?.map((item) => item.image).filter(Boolean).length > 0
+              ? o.items.map((item) => item.image).filter(Boolean)
+              : [orderHeadphones],
+          }));
+          setRecentOrders(mapped);
+        } else {
+          setRecentOrders([]);
+        }
+        setOrderCount(data.pagination?.total || 0);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingOrders(false));
+
+    // Fetch recommended products from DB
+    productApi.getProducts({ limit: 4 })
+      .then((data) => {
+        if (data.products && data.products.length > 0) {
+          const mappedProds = data.products.map((p) => ({
+            id: p._id,
+            name: p.name,
+            price: `EGP ${p.price?.toLocaleString()}`,
+            originalPrice: p.compareAtPrice ? `EGP ${p.compareAtPrice?.toLocaleString()}` : null,
+            rating: p.rating || '4.8',
+            image: p.image || p.images?.[0] || productAirpods,
+          }));
+          setProductsList(mappedProds);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const displayProducts = productsList.length > 0 ? productsList : recommendedProducts;
+  const userFirstName = user?.firstName || user?.name?.split(' ')[0] || 'there';
+  const loyaltyPts = user?.loyaltyPoints || 0;
+  const walletBal = user?.walletBalance || 0;
+
+  const dynamicStats = [
+    {
+      id: 'orders',
+      icon: 'bag',
+      iconBg: 'bg-indigo-100 text-indigo-500',
+      value: orderCount.toString(),
+      label: 'Total Orders',
+      note: orderCount > 0 ? 'Active customer' : 'No orders yet',
+      noteColor: 'text-indigo-500',
+    },
+    {
+      id: 'wishlist',
+      icon: 'heart',
+      iconBg: 'bg-rose-100 text-rose-500',
+      value: wishlistCount.toString(),
+      label: 'Wishlist Items',
+      note: wishlistCount > 0 ? `${wishlistCount} saved` : 'Save items',
+      noteColor: 'text-[#c53938]',
+    },
+    {
+      id: 'loyalty',
+      icon: 'check',
+      iconBg: 'bg-amber-100 text-amber-500',
+      value: loyaltyPts.toLocaleString(),
+      label: 'Loyalty Points',
+      note: `EGP ${Math.floor(loyaltyPts / 10)} value`,
+      noteColor: 'text-amber-500',
+    },
+    {
+      id: 'wallet',
+      icon: 'wallet',
+      iconBg: 'bg-emerald-100 text-emerald-500',
+      value: `EGP ${walletBal.toLocaleString()}`,
+      label: 'Wallet Balance',
+      note: 'Ready to use',
+      noteColor: 'text-emerald-500',
+    },
+  ];
+
   const today = useMemo(
     () =>
       new Date().toLocaleDateString('en-US', {
@@ -200,7 +279,7 @@ export default function DashboardPage() {
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map((s) => (
+        {dynamicStats.map((s) => (
           <div
             key={s.id}
             className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4"
@@ -234,41 +313,61 @@ export default function DashboardPage() {
             </a>
           </div>
 
-          <ul className="flex flex-col divide-y divide-[var(--border-color)]">
-            {recentOrders.map((o) => (
-              <li key={o.id} className="flex items-center gap-3 py-3">
-                <div className="flex -space-x-2">
-                  {o.thumbs.map((src, i) => (
-                    <img
-                      key={i}
-                      src={src}
-                      alt=""
-                      className="h-9 w-9 rounded-full border-2 border-[var(--surface-bg)] object-cover"
-                    />
-                  ))}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-semibold text-[var(--primary-text)]">#{o.id}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${o.statusColor}`}>
-                      {o.status}
-                    </span>
+          {loadingOrders ? (
+            <div className="py-8 text-center text-xs text-[var(--secondary-text)]">
+              Loading recent orders...
+            </div>
+          ) : recentOrders.length > 0 ? (
+            <ul className="flex flex-col divide-y divide-[var(--border-color)]">
+              {recentOrders.map((o) => (
+                <li key={o.id} className="flex items-center gap-3 py-3">
+                  <div className="flex -space-x-2">
+                    {o.thumbs.slice(0, 3).map((src, i) => (
+                      <img
+                        key={i}
+                        src={src}
+                        alt=""
+                        className="h-9 w-9 rounded-full border-2 border-[var(--surface-bg)] object-cover"
+                      />
+                    ))}
                   </div>
-                  <p className="text-[11px] text-[var(--secondary-text)]">
-                    {o.date} · {o.items}
-                  </p>
-                </div>
 
-                <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold text-[var(--primary-text)]">{o.amount}</p>
-                  <button type="button" className="text-[11px] font-medium text-[#c53938] hover:underline">
-                    {o.action}
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-[var(--primary-text)]">{o.id}</p>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${o.statusColor}`}>
+                        {o.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[var(--secondary-text)]">
+                      {o.date} · {o.items}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-sm font-semibold text-[var(--primary-text)]">{o.amount}</p>
+                    <a href="/account/orders" className="text-[11px] font-medium text-[#c53938] hover:underline">
+                      {o.action}
+                    </a>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="py-10 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)]">
+                <StatIcon type="bag" />
+              </div>
+              <p className="text-sm font-semibold text-[var(--primary-text)]">No orders yet</p>
+              <p className="mt-1 text-xs text-[var(--secondary-text)]">When you place orders, they will show up here.</p>
+              <a
+                href="/stationery"
+                className="mt-4 inline-flex items-center rounded-xl bg-[#c53938] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#a82d2c]"
+              >
+                Browse Products
+              </a>
+            </div>
+          )}
         </section>
 
         {/* Loyalty card */}
@@ -279,13 +378,18 @@ export default function DashboardPage() {
           <p className="relative text-[11px] font-semibold uppercase tracking-wider opacity-80">
             Loyalty Points
           </p>
-          <p className="relative mt-1 text-3xl font-bold">1,250</p>
-          <p className="relative mb-4 text-xs opacity-80">= EGP 125 in rewards</p>
+          <p className="relative mt-1 text-3xl font-bold">{loyaltyPts.toLocaleString()}</p>
+          <p className="relative mb-4 text-xs opacity-80">= EGP {Math.floor(loyaltyPts / 10).toLocaleString()} in rewards</p>
 
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-            <div className="h-full w-[62%] rounded-full bg-white" />
+            <div
+              className="h-full rounded-full bg-white transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.max(15, (loyaltyPts / 1000) * 100))}%` }}
+            />
           </div>
-          <p className="relative mt-2 text-[11px] opacity-80">750 pts until Gold tier</p>
+          <p className="relative mt-2 text-[11px] opacity-80">
+            {loyaltyPts >= 1000 ? 'Gold Member' : `${1000 - loyaltyPts} pts until Gold tier`}
+          </p>
         </section>
       </div>
 
@@ -293,7 +397,7 @@ export default function DashboardPage() {
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[var(--primary-text)]">Recommended for You</h2>
-          <a href="#" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
+          <a href="/stationery" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
             Browse all
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
@@ -302,8 +406,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {recommendedProducts.map((p) => (
-            <a key={p.id} href="#" className="group flex flex-col">
+          {displayProducts.map((p) => (
+            <a key={p.id} href="/stationery" className="group flex flex-col">
               <div className="mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[var(--surface-soft)]">
                 <img
                   src={p.image}
@@ -316,7 +420,9 @@ export default function DashboardPage() {
               </p>
               <div className="flex items-center gap-1.5">
                 <span className="text-sm font-bold text-[var(--primary-text)]">{p.price}</span>
-                <span className="text-xs text-[var(--secondary-text)] line-through">{p.originalPrice}</span>
+                {p.originalPrice && (
+                  <span className="text-xs text-[var(--secondary-text)] line-through">{p.originalPrice}</span>
+                )}
               </div>
               <div className="mt-0.5 flex items-center gap-1">
                 <StarIcon />

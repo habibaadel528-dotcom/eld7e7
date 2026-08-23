@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Heart } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 import AnnouncementBar from '../sections/AnnouncementBar';
 import Header from '../sections/Header';
@@ -114,6 +117,8 @@ function formatEGP(n) {
 }
 
 export default function HandcraftSuppliesPage() {
+  const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [activeCategory, setActiveCategory] = useState('paper-crafts');
   const [isSchoolProjectsOpen, setIsSchoolProjectsOpen] = useState(false);
   const activeCategoryLabel = useMemo(
@@ -195,22 +200,39 @@ export default function HandcraftSuppliesPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {products.map((p) => (
-                <div key={p.id} className="flex flex-col">
-                  <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-pink-100 to-pink-200">
-                    {p.badge && (
-                      <span
-                        className={`absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeStyles[p.badge]}`}
+              {products.map((p) => {
+                const isSaved = isInWishlist(p._id || p.id);
+                return (
+                  <div key={p.id} className="group flex flex-col">
+                    <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-pink-100 to-pink-200">
+                      {p.badge && (
+                        <span
+                          className={`absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeStyles[p.badge]}`}
+                        >
+                          {p.badge}
+                        </span>
+                      )}
+
+                      {/* Wishlist Heart Icon */}
+                      <button
+                        type="button"
+                        onClick={() => toggleWishlist(p)}
+                        aria-label={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
+                        title={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
+                        className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:scale-110"
                       >
-                        {p.badge}
-                      </span>
-                    )}
-                    <div className="flex h-full w-full items-center justify-center text-amber-600">
-                      <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8 12 3 3 8m18 0-9 5m9-5v9l-9 5m0-9L3 8m9 5v9M3 8v9l9 5" />
-                      </svg>
+                        <Heart
+                          size={14}
+                          className={isSaved ? "fill-[#c53938] text-[#c53938]" : "text-gray-500 hover:text-[#c53938]"}
+                        />
+                      </button>
+
+                      <div className="flex h-full w-full items-center justify-center text-amber-600">
+                        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8 12 3 3 8m18 0-9 5m9-5v9l-9 5m0-9L3 8m9 5v9M3 8v9l9 5" />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
 
                   <p className="truncate text-xs font-semibold text-[var(--primary-text)]">{p.name}</p>
                   <p className="truncate text-[11px] text-[var(--secondary-text)]">{p.description}</p>
@@ -219,8 +241,9 @@ export default function HandcraftSuppliesPage() {
                     <span className="text-sm font-bold text-[#c53938]">{formatEGP(p.price)}</span>
                     <button
                       type="button"
+                      onClick={() => addToCart(p)}
                       aria-label={`Add ${p.name} to cart`}
-                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--page-bg)] text-[var(--primary-text)] transition hover:bg-[#c53938] hover:text-white"
+                      className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--page-bg)] text-[var(--primary-text)] transition hover:bg-[#c53938] hover:text-white cursor-pointer"
                     >
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" d="M12 5v14M5 12h14" />
@@ -228,7 +251,8 @@ export default function HandcraftSuppliesPage() {
                     </button>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Trust strip */}

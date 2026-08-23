@@ -30,7 +30,7 @@ export default function HeroSection() {
           </p>
 
           <a
-            href="#shop"
+            href="#categories"
             className="mt-8 inline-flex h-[60px] w-[250px] items-center justify-center rounded-full bg-[#c94545] px-6 text-xl font-medium text-[var(--primary-text)] transition hover:bg-[#ef5350]"
           >
             Shop Now

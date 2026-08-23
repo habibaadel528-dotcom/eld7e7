@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Heart } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 import AnnouncementBar from '../sections/AnnouncementBar';
 import Header from '../sections/Header';
@@ -31,6 +34,8 @@ function BookIcon() {
 
 /* ── Reusable grade-level section — each instance owns its own active-tab state ── */
 function GradeLevelSection({ icon, title, subtitle, accent, tabs, booksByTab, defaultTab }) {
+  const { addToCart } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   const [activeTab, setActiveTab] = useState(defaultTab);
   const books = booksByTab[activeTab] ?? [];
 
@@ -75,9 +80,25 @@ function GradeLevelSection({ icon, title, subtitle, accent, tabs, booksByTab, de
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {books.map((book, i) => {
             const palette = CARD_PALETTE[i % CARD_PALETTE.length];
+            const isSaved = isInWishlist(book._id || book.id);
+
             return (
-              <div key={book.id} className="flex flex-col">
+              <div key={book.id} className="group flex flex-col">
                 <div className={`relative mb-2 flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-xl px-2 text-center ${palette.bg} ${palette.text}`}>
+                  {/* Heart Icon */}
+                  <button
+                    type="button"
+                    onClick={() => toggleWishlist(book)}
+                    aria-label={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
+                    title={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
+                    className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:scale-110"
+                  >
+                    <Heart
+                      size={14}
+                      className={isSaved ? "fill-[#c53938] text-[#c53938]" : "text-gray-500 hover:text-[#c53938]"}
+                    />
+                  </button>
+
                   <BookIcon />
                   <span className="text-[11px] font-bold leading-tight">{book.name}</span>
                   <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${accent.tabActive}`}>
@@ -92,8 +113,9 @@ function GradeLevelSection({ icon, title, subtitle, accent, tabs, booksByTab, de
                   <span className={`text-sm font-bold ${accent.priceText}`}>{formatEGP(book.price)}</span>
                   <button
                     type="button"
+                    onClick={() => addToCart(book)}
                     aria-label={`Add ${book.name} to cart`}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--page-bg)] text-[var(--primary-text)] transition hover:opacity-90"
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--page-bg)] text-[var(--primary-text)] transition hover:opacity-90 cursor-pointer"
                   >
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                       <path strokeLinecap="round" d="M12 5v14M5 12h14" />

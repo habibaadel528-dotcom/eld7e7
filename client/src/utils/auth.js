@@ -20,8 +20,12 @@ export function isAuthenticated() {
 }
 
 export function saveAuthSession({ user, token }) {
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+  if (user) {
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  }
+  if (token && token !== 'undefined') {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
 
   window.dispatchEvent(new Event('auth-change'));
 }
@@ -29,6 +33,7 @@ export function saveAuthSession({ user, token }) {
 export function clearAuthSession() {
   localStorage.removeItem(AUTH_USER_KEY);
   localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.removeItem('isAdminAuthenticated');
 
   window.dispatchEvent(new Event('auth-change'));
 }

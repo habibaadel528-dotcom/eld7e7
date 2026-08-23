@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import booksIcon from '../assets/icons/category-books.svg';
 import stationeryIcon from '../assets/icons/category-stationery.svg';
 import schoolIcon from '../assets/icons/category-school.svg';
@@ -9,7 +10,7 @@ const categories = [
     description:
       'Limited quantities of selected cultural books at special prices.',
     buttonLabel: 'View Clearance',
-    href: '#cultural-books-clearance',
+    to: '/cultural-books-clearance',
     icon: booksIcon,
   },
   {
@@ -17,7 +18,7 @@ const categories = [
     description:
       'Pens, notebooks, supplies, and everyday essentials.',
     buttonLabel: 'Shop Stationery',
-    href: '#stationery',
+    to: '/stationery',
     icon: stationeryIcon,
   },
   {
@@ -25,7 +26,7 @@ const categories = [
     description:
       'Popular school books and study guides.',
     buttonLabel: 'Browse Books',
-    href: '#external-school-books',
+    to: '/external-school-books',
     icon: schoolIcon,
   },
   {
@@ -33,7 +34,7 @@ const categories = [
     description:
       'Materials for handmade and creative projects.',
     buttonLabel: 'Explore Supplies',
-    href: '#handcraft-supplies',
+    to: '/handcraft-supplies',
     icon: handcraftIcon,
   },
 ];
@@ -85,12 +86,12 @@ export default function CategorySection() {
                 {category.description}
               </p>
 
-              <a
-                href={category.href}
+              <Link
+                to={category.to}
                 className="mt-8 flex min-h-[52px] w-full items-center justify-center rounded-full bg-[#c94545] px-5 py-[14px] text-base leading-6 text-[var(--primary-text)] transition duration-200 hover:bg-[#ef5350] active:scale-[0.98]"
               >
                 {category.buttonLabel}
-              </a>
+              </Link>
             </article>
           ))}
         </div>

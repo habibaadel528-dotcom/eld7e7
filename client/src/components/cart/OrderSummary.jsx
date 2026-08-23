@@ -4,22 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import tagIcon from '../../assets/icons/cart/tag.svg';
 import arrowRightIcon from '../../assets/icons/cart/arrow-right.svg';
 
-export default function OrderSummary({
-  subtotal,
-  discountRate = 0.05,
-  deliveryFee = 50,
-}) {
+export default function OrderSummary({ subtotal }) {
   const navigate = useNavigate();
 
   const [promoCode, setPromoCode] = useState('');
   const [promoMessage, setPromoMessage] = useState('');
 
-  const discount = subtotal * discountRate;
-  const total = subtotal - discount + deliveryFee;
+  const total = subtotal;
 
   const handlePromoSubmit = (event) => {
     event.preventDefault();
-
     const normalizedCode = promoCode.trim().toUpperCase();
 
     if (!normalizedCode) {
@@ -27,12 +21,7 @@ export default function OrderSummary({
       return;
     }
 
-    if (normalizedCode === 'D7E7') {
-      setPromoMessage('Promo code applied.');
-      return;
-    }
-
-    setPromoMessage('This promo code is invalid.');
+    setPromoMessage('This promo code is invalid or has expired.');
   };
 
   const handleCheckout = () => {
@@ -51,45 +40,29 @@ export default function OrderSummary({
         Order Summary
       </h2>
 
-      <dl className="mt-6 space-y-5">
+      <dl className="mt-6 space-y-4">
         <div className="flex items-center justify-between gap-5">
           <dt className="text-xl text-[var(--secondary-text)]">
             Subtotal
           </dt>
 
-          <dd className="m-0 text-xl text-[var(--primary-text)]">
+          <dd className="m-0 text-xl text-[var(--primary-text)] font-semibold">
             EGP {subtotal.toFixed(2)}
           </dd>
         </div>
 
-        <div className="flex items-center justify-between gap-5">
-          <dt className="text-xl text-[var(--secondary-text)]">
-            Discount (-{discountRate * 100}%)
-          </dt>
-
-          <dd className="m-0 text-xl text-[#359a03]">
-            -EGP {discount.toFixed(2)}
-          </dd>
-        </div>
-
-        <div className="flex items-center justify-between gap-5">
-          <dt className="text-xl text-[var(--secondary-text)]">
-            Delivery Fee
-          </dt>
-
-          <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">
-            EGP {deliveryFee.toFixed(2)}
-          </dd>
+        <div className="rounded-xl bg-[var(--surface-soft)] p-3 text-xs text-[var(--secondary-text)]">
+          💡 Shipping fee will be calculated at Checkout based on your delivery address.
         </div>
 
         <div className="h-px bg-[var(--border-color)]" />
 
         <div className="flex items-center justify-between gap-5">
-          <dt className="text-xl text-[var(--primary-text)]">
+          <dt className="text-xl font-bold text-[var(--primary-text)]">
             Total
           </dt>
 
-          <dd className="m-0 text-2xl text-[var(--primary-text)]">
+          <dd className="m-0 text-2xl font-bold text-[var(--primary-text)]">
             EGP {total.toFixed(2)}
           </dd>
         </div>
@@ -128,7 +101,7 @@ export default function OrderSummary({
 
         <button
           type="submit"
-          className="h-12 rounded-full border border-[#c94545] px-8 text-base text-[#c94545] transition hover:bg-[#c94545] hover:text-white"
+          className="h-12 rounded-full border border-[#c94545] px-8 text-base text-[#c94545] transition hover:bg-[#c94545] hover:text-white cursor-pointer"
         >
           Apply
         </button>
@@ -147,7 +120,7 @@ export default function OrderSummary({
         type="button"
         onClick={handleCheckout}
         disabled={subtotal <= 0}
-        className="mx-auto mt-6 flex h-[60px] w-full max-w-[656px] items-center justify-center gap-3 rounded-full bg-[#c94545] px-8 text-xl font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
+        className="mx-auto mt-6 flex h-[60px] w-full max-w-[656px] items-center justify-center gap-3 rounded-full bg-[#c94545] px-8 text-xl font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-md"
       >
         <span>Go to Checkout</span>
 

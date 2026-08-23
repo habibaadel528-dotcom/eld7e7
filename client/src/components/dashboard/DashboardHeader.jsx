@@ -1,7 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useTheme } from '../../utils/useTheme';
-import { getStoredUser } from '../../utils/auth';
+import { useCart } from '../../context/CartContext';
+import { getStoredUser, clearAuthSession } from '../../utils/auth';
+import { authApi } from '../../services/api';
+import LogoutModal from '../common/LogoutModal';
+
 
 import logoMascot from '../../assets/icons/logo-mascot-transparent.png';
 import logoWordmark from '../../assets/icons/logo-wordmark.png';
@@ -13,17 +18,24 @@ import chevronRightIcon from '../../assets/icons/dashboard/chevron-right.svg';
 export default function DashboardHeader() {
   const navigate = useNavigate();
   const { isDark, toggle: toggleTheme } = useTheme();
-  const currentUser = getStoredUser();
-  const displayName = currentUser?.name || 'مستخدم';
-  const displayEmail = currentUser?.email || '';
-  const initialLetter = displayName.trim().charAt(0).toUpperCase() || '?';
+  const { cartCount } = useCart();
 
+  const [user, setUser] = useState(() => getStoredUser());
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('Cairo, Egypt');
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const dropdownRef = useRef(null);
   const locationRef = useRef(null);
+
+  useEffect(() => {
+    authApi.me()
+      .then((data) => {
+        if (data.user) setUser(data.user);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -37,8 +49,8 @@ export default function DashboardHeader() {
   const locations = ['Cairo, Egypt', 'Giza, Egypt', 'Alexandria, Egypt', 'Mansoura, Egypt'];
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    clearAuthSession();
+    toast.info('You have been logged out.');
     setIsDropdownOpen(false);
     navigate('/login', { replace: true });
   };
@@ -129,11 +141,15 @@ export default function DashboardHeader() {
           {/* Cart */}
           <Link
             to="/cart"
-            aria-label="Shopping cart"
+            aria-label={`Shopping cart with ${cartCount} items`}
             className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] transition hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
           >
             <img src={cartIcon} alt="" aria-hidden="true" width="18" height="18" className="icon-invert" />
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#c53938] text-[9px] font-bold leading-none text-white">3</span>
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#c53938] text-[9px] font-bold leading-none text-white shadow-xs">
+                {cartCount}
+              </span>
+            )}
           </Link>
 
           {/* Notifications */}
@@ -156,15 +172,14 @@ export default function DashboardHeader() {
               aria-label="Account menu"
               className="flex items-center gap-2 rounded-full p-0.5 transition hover:ring-2 hover:ring-[#c53938]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
             >
-              <div
-                aria-label={displayName}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#d1d5dc] text-sm font-semibold text-[#a72626] ring-2 ring-[var(--border-color)] sm:h-10 sm:w-10"
-              >
-                {initialLetter}
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 ring-2 ring-[var(--border-color)] text-base font-bold text-[#c53938] uppercase">
+                {(user?.name || user?.firstName || 'U').charAt(0)}
               </div>
               <div className="hidden text-left sm:block">
-                <p className="text-sm font-semibold leading-tight text-[var(--primary-text)]">{displayName}</p>
-                <p className="text-[11px] text-[var(--secondary-text)]">My Account</p>
+                <p className="text-sm font-semibold leading-tight text-[var(--primary-text)]">
+                  {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'My Account')}
+                </p>
+                <p className="text-[11px] text-[var(--secondary-text)]">{user?.role === 'admin' ? 'Super Admin' : 'Customer Account'}</p>
               </div>
               <img
                 src={chevronRightIcon}
@@ -191,15 +206,16 @@ export default function DashboardHeader() {
                   onClick={() => setIsDropdownOpen(false)}
                   className="flex items-center gap-3 px-5 py-4 transition hover:bg-[var(--surface-soft)]"
                 >
-                  <div
-                    aria-label={displayName}
-                    className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-[#d1d5dc] text-xl font-semibold text-[#a72626]"
-                  >
-                    {initialLetter}
+                  <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 text-2xl font-bold text-[#c53938] uppercase">
+                    {(user?.name || user?.firstName || 'U').charAt(0)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="m-0 truncate text-[17px] font-medium leading-6 text-[var(--primary-text)]">{displayName}</p>
-                    <p className="m-0 truncate text-[14px] leading-6 text-[var(--secondary-text)]">{displayEmail}</p>
+                    <p className="m-0 truncate text-[17px] font-medium leading-6 text-[var(--primary-text)]">
+                      {user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'User')}
+                    </p>
+                    <p className="m-0 truncate text-[14px] leading-6 text-[var(--secondary-text)]">
+                      {user?.email || 'user@eld7e7.com'}
+                    </p>
                   </div>
                   <span aria-hidden="true" className="text-xl text-[var(--secondary-text)]">›</span>
                 </Link>
@@ -256,7 +272,10 @@ export default function DashboardHeader() {
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={handleLogout}
+                  onClick={() => {
+                    setIsDropdownOpen(false);
+                    setShowLogoutModal(true);
+                  }}
                   className="flex w-full items-center gap-3 px-5 py-4 text-left text-[16px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350]"
                 >
                   <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl">⇥</span>
@@ -268,6 +287,16 @@ export default function DashboardHeader() {
 
         </div>
       </div>
+
+      {showLogoutModal && (
+        <LogoutModal
+          onConfirm={() => {
+            setShowLogoutModal(false);
+            handleLogout();
+          }}
+          onCancel={() => setShowLogoutModal(false)}
+        />
+      )}
     </header>
   );
 }

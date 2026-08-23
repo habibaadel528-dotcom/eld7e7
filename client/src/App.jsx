@@ -7,6 +7,7 @@ import Cart from './pages/Cart';
 import Wishlist from "./pages/account/Wishlist";
 import Login from './pages/auth/Login';
 import SignUp from './pages/auth/SignUp';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import DashboardLayout from './layouts/DashboardLayout';
 import DashboardPage from './pages/account/DashboardPage';
 import AccountPlaceholderPage from './pages/account/AccountPlaceholderPage';
@@ -25,15 +26,6 @@ import HandcraftSuppliesPage from './pages/HandcraftSuppliesPage';
 import ExternalSchoolBooksPage from './pages/ExternalSchoolBooksPage';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
-function PlaceholderPage({ title }) {
-  return (
-    <main className="min-h-screen bg-[var(--page-bg)] px-6 py-24 text-center text-[var(--primary-text)]">
-      <h1 className="text-4xl font-bold">
-        {title}
-      </h1>
-    </main>
-  );
-}
 
 export default function App() {
   return (
@@ -55,8 +47,17 @@ export default function App() {
       />
 
       <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
+
+      <Route
         path="/cart"
-        element={<Cart />}
+        element={
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/checkout"
