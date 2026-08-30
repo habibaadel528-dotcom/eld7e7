@@ -3,17 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { Filter, Search, ChevronDown, X, Package, Clock, CheckCircle2, Truck, AlertCircle, ShoppingBag } from 'lucide-react';
 import { orderApi } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 import orderHeadphones from '../../assets/images/dashboard/order-headphones.png';
-
-const ORDER_STATUS_CONFIG = [
-  { key: 'all',        label: 'All Orders' },
-  { key: 'processing', label: 'Processing' },
-  { key: 'shipped',    label: 'Shipped' },
-  { key: 'delivered',  label: 'Delivered' },
-  { key: 'cancelled',  label: 'Cancelled' },
-  { key: 'returned',   label: 'Returned' },
-];
 
 function StatusPill({ tone, children }) {
   const styles = {
@@ -34,7 +26,7 @@ function StatusPill({ tone, children }) {
 }
 
 /* ── Order Details Modal ── */
-function OrderDetailsModal({ order, onClose, onCancelClick }) {
+function OrderDetailsModal({ order, onClose, onCancelClick, tr }) {
   if (!order) return null;
 
   return (
@@ -55,7 +47,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
           <div>
             <h3 className="text-lg font-bold">Order #{order.orderNumber || order._id?.slice(-6)}</h3>
             <p className="text-xs text-[var(--secondary-text)]">
-              Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              {tr.placedOn} {new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </p>
           </div>
           <div className="ml-auto">
@@ -65,7 +57,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
 
         {/* Items list */}
         <div className="my-4 space-y-3">
-          <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--secondary-text)]">Order Items</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--secondary-text)]">{tr.orderItems}</h4>
           <div className="divide-y divide-[var(--border-color)] rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
             {order.items?.map((item, idx) => (
               <div key={idx} className="flex items-center justify-between py-2 first:pt-0 last:pb-0">
@@ -77,7 +69,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
                   />
                   <div>
                     <p className="text-sm font-semibold">{item.name}</p>
-                    <p className="text-xs text-[var(--secondary-text)]">Qty: {item.quantity} × EGP {item.price?.toLocaleString()}</p>
+                    <p className="text-xs text-[var(--secondary-text)]">{tr.qty}: {item.quantity} × EGP {item.price?.toLocaleString()}</p>
                   </div>
                 </div>
                 <p className="text-sm font-bold">EGP {(item.price * item.quantity).toLocaleString()}</p>
@@ -89,15 +81,15 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
         {/* Shipping address & Payment info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4 p-3 rounded-xl bg-[var(--surface-soft)] border border-[var(--border-color)] text-xs">
           <div>
-            <span className="font-semibold text-[var(--secondary-text)] block mb-1">Shipping Address</span>
+            <span className="font-semibold text-[var(--secondary-text)] block mb-1">{tr.shippingAddress}</span>
             <p className="font-medium text-[var(--primary-text)]">{order.shippingAddress?.recipientName}</p>
             <p className="text-[var(--secondary-text)]">{order.shippingAddress?.street}, {order.shippingAddress?.city}</p>
-            <p className="text-[var(--secondary-text)]">Phone: {order.shippingAddress?.phone}</p>
+            <p className="text-[var(--secondary-text)]">{tr.phone}: {order.shippingAddress?.phone}</p>
           </div>
           <div>
-            <span className="font-semibold text-[var(--secondary-text)] block mb-1">Payment Method</span>
+            <span className="font-semibold text-[var(--secondary-text)] block mb-1">{tr.paymentMethod}</span>
             <p className="font-medium text-[var(--primary-text)] capitalize">{order.paymentMethod?.replace(/_/g, ' ') || 'Cash on Delivery'}</p>
-            <span className="font-semibold text-[var(--secondary-text)] block mt-2 mb-0.5">Total Amount</span>
+            <span className="font-semibold text-[var(--secondary-text)] block mt-2 mb-0.5">{tr.totalAmount}</span>
             <p className="text-base font-bold text-[#c83738]">EGP {order.totalAmount?.toLocaleString()}</p>
           </div>
         </div>
@@ -113,7 +105,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
               }}
               className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-100"
             >
-              Cancel Order
+              {tr.cancelOrder}
             </button>
           )}
           <button
@@ -121,7 +113,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
             onClick={onClose}
             className="rounded-xl bg-[#c83738] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#b72f30]"
           >
-            Close
+            {tr.close}
           </button>
         </div>
       </div>
@@ -130,7 +122,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick }) {
 }
 
 /* ── Cancel Order Modal ── */
-function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting }) {
+function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting, tr }) {
   if (!order) return null;
 
   return (
@@ -139,9 +131,11 @@ function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting }) {
         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
           <AlertCircle size={24} />
         </div>
-        <h3 className="text-base font-bold text-[var(--primary-text)]">Cancel Order #{order.orderNumber || order._id?.slice(-6)}?</h3>
+        <h3 className="text-base font-bold text-[var(--primary-text)]">
+          {tr.cancelTitle(order.orderNumber || order._id?.slice(-6))}
+        </h3>
         <p className="mt-2 text-xs text-[var(--secondary-text)]">
-          Are you sure you want to cancel this order? This action cannot be undone.
+          {tr.cancelWarning}
         </p>
 
         <div className="mt-5 flex items-center justify-center gap-3">
@@ -151,7 +145,7 @@ function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting }) {
             disabled={isSubmitting}
             className="rounded-xl border border-[var(--border-color)] px-4 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)]"
           >
-            Keep Order
+            {tr.keepOrder}
           </button>
           <button
             type="button"
@@ -159,7 +153,7 @@ function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting }) {
             disabled={isSubmitting}
             className="rounded-xl bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:opacity-50"
           >
-            {isSubmitting ? 'Cancelling...' : 'Yes, Cancel Order'}
+            {isSubmitting ? tr.cancelling : tr.yesCancelOrder}
           </button>
         </div>
       </div>
@@ -167,7 +161,7 @@ function CancelConfirmModal({ order, onClose, onConfirm, isSubmitting }) {
   );
 }
 
-function OrderCard({ order, onViewDetails, onCancelClick }) {
+function OrderCard({ order, onViewDetails, onCancelClick, tr }) {
   const isProcessing = order.status === 'processing';
   const itemImage = order.items?.[0]?.image || orderHeadphones;
 
@@ -229,7 +223,7 @@ function OrderCard({ order, onViewDetails, onCancelClick }) {
                 onClick={() => onCancelClick(order)}
                 className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[11px] font-medium text-red-600 transition hover:bg-red-100"
               >
-                Cancel
+                {tr.cancel}
               </button>
             )}
 
@@ -238,7 +232,7 @@ function OrderCard({ order, onViewDetails, onCancelClick }) {
               onClick={() => onViewDetails(order)}
               className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] px-3 py-1.5 text-[11px] font-medium text-[var(--secondary-text)] transition hover:border-[#c83738] hover:text-[#c83738]"
             >
-              Details
+              {tr.details}
             </button>
 
             <button
@@ -261,17 +255,24 @@ export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
   const [rawOrders, setRawOrders] = useState([]);
   const [statusCounts, setStatusCounts] = useState({
-    all: 0,
-    processing: 0,
-    shipped: 0,
-    delivered: 0,
-    cancelled: 0,
-    returned: 0,
+    all: 0, processing: 0, shipped: 0, delivered: 0, cancelled: 0, returned: 0,
   });
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [cancelModalOrder, setCancelModalOrder] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+
+  const { t } = useLanguage();
+  const tr = t('myOrders');
+
+  const ORDER_STATUS_CONFIG = [
+    { key: 'all',        label: tr.tabs.all },
+    { key: 'processing', label: tr.tabs.processing },
+    { key: 'shipped',    label: tr.tabs.shipped },
+    { key: 'delivered',  label: tr.tabs.delivered },
+    { key: 'cancelled',  label: tr.tabs.cancelled },
+    { key: 'returned',   label: tr.tabs.returned },
+  ];
 
   const fetchOrders = () => {
     setLoading(true);
@@ -329,10 +330,7 @@ export default function MyOrders() {
     <>
       <Helmet>
         <title>My Orders | El-D7E7</title>
-        <meta
-          name="description"
-          content="Track and manage all your orders in your El-D7E7 account."
-        />
+        <meta name="description" content="Track and manage all your orders in your El-D7E7 account." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -340,21 +338,21 @@ export default function MyOrders() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-[19px] font-semibold leading-[26px] text-[var(--primary-text)]">
-              My Orders
+              {tr.title}
             </h1>
             <p className="mt-1 text-[13px] text-[var(--secondary-text)]">
-              {statusCounts.all} total {statusCounts.all === 1 ? 'order' : 'orders'} placed
+              {tr.totalOrders(statusCounts.all)}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <label className="relative w-full sm:w-auto">
-              <span className="sr-only">Search orders</span>
+              <span className="sr-only">{tr.searchPlaceholder}</span>
               <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--secondary-text)]" size={18} />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by order # or product name..."
+                placeholder={tr.searchPlaceholder}
                 className="h-[41px] w-full sm:w-[320px] rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] pl-10 pr-4 text-[13px] text-[var(--primary-text)] outline-none placeholder:text-[var(--secondary-text)] focus:border-[#c83738]"
               />
             </label>
@@ -391,7 +389,7 @@ export default function MyOrders() {
         {/* Order Cards / Empty State */}
         {loading ? (
           <div className="py-16 text-center text-sm text-[var(--secondary-text)]">
-            Loading your orders...
+            {tr.loadingOrders}
           </div>
         ) : filteredOrders.length > 0 ? (
           <div className="space-y-3">
@@ -401,6 +399,7 @@ export default function MyOrders() {
                 order={order}
                 onViewDetails={setSelectedOrder}
                 onCancelClick={setCancelModalOrder}
+                tr={tr}
               />
             ))}
           </div>
@@ -409,19 +408,19 @@ export default function MyOrders() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)]">
               <ShoppingBag size={28} />
             </div>
-            <h3 className="text-base font-bold text-[var(--primary-text)]">No orders found</h3>
+            <h3 className="text-base font-bold text-[var(--primary-text)]">{tr.noOrdersFound}</h3>
             <p className="mt-1 text-xs text-[var(--secondary-text)] max-w-sm mx-auto">
               {search
-                ? `No orders match "${search}". Try clearing your search.`
+                ? tr.noOrdersSearch(search)
                 : activeTab !== 'all'
-                ? `You don't have any orders with status "${activeTab}".`
-                : "You haven't placed any orders yet. Explore our store and place your first order!"}
+                ? tr.noOrdersStatus(activeTab)
+                : tr.noOrdersEmpty}
             </p>
             <a
               href="/stationery"
               className="mt-5 inline-flex items-center rounded-xl bg-[#c83738] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#b72f30]"
             >
-              Start Shopping
+              {tr.startShopping}
             </a>
           </div>
         )}
@@ -432,6 +431,7 @@ export default function MyOrders() {
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
         onCancelClick={setCancelModalOrder}
+        tr={tr}
       />
 
       <CancelConfirmModal
@@ -439,6 +439,7 @@ export default function MyOrders() {
         onClose={() => setCancelModalOrder(null)}
         onConfirm={handleCancelConfirm}
         isSubmitting={isCancelling}
+        tr={tr}
       />
     </>
   );

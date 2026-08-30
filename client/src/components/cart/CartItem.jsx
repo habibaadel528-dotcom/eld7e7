@@ -1,13 +1,12 @@
 import minusIcon from '../../assets/icons/cart/minus.svg';
 import plusIcon from '../../assets/icons/cart/plus.svg';
 import trashIcon from '../../assets/icons/cart/trash.svg';
+import { useLanguage } from '../../context/LanguageContext';
 
-export default function CartItem({
-  item,
-  onIncrease,
-  onDecrease,
-  onRemove,
-}) {
+export default function CartItem({ item, onIncrease, onDecrease, onRemove }) {
+  const { t } = useLanguage();
+  const tr = t('cart');
+
   return (
     <article className="flex flex-col gap-5 py-5 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 gap-4">
@@ -23,28 +22,18 @@ export default function CartItem({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-2xl">
-              📦
-            </div>
+            <div className="flex h-full w-full items-center justify-center text-2xl">📦</div>
           )}
         </div>
 
         <div className="flex min-w-0 flex-col justify-between py-1">
           <div>
-            <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">
-              {item.name}
-            </h2>
-
+            <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{item.name}</h2>
             {item.category && (
-              <p className="mb-0 mt-1 text-sm text-[var(--secondary-text)]">
-                {item.category}
-              </p>
+              <p className="mb-0 mt-1 text-sm text-[var(--secondary-text)]">{item.category}</p>
             )}
           </div>
-
-          <p className="mb-0 mt-5 text-2xl text-[var(--primary-text)]">
-            EGP {item.price.toFixed(2)}
-          </p>
+          <p className="mb-0 mt-5 text-2xl text-[var(--primary-text)]">EGP {item.price.toFixed(2)}</p>
         </div>
       </div>
 
@@ -52,16 +41,10 @@ export default function CartItem({
         <button
           type="button"
           onClick={() => onRemove(item.id)}
-          aria-label={`Remove ${item.name} from cart`}
+          aria-label={tr.removeItem(item.name)}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#ef5350] text-[#c53938] transition hover:bg-[#c53938] hover:text-white"
         >
-          <img
-            src={trashIcon}
-            alt=""
-            width="20"
-            height="20"
-            className="h-5 w-5 object-contain"
-          />
+          <img src={trashIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
         </button>
 
         <div className="flex items-center gap-5 rounded-full bg-[var(--surface-soft)] px-5 py-3">
@@ -69,38 +52,23 @@ export default function CartItem({
             type="button"
             onClick={() => onDecrease(item.id)}
             disabled={item.quantity <= 1}
-            aria-label={`Decrease ${item.name} quantity`}
+            aria-label={tr.decreaseQty(item.name)}
             className="flex h-5 w-5 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <img
-              src={minusIcon}
-              alt=""
-              width="20"
-              height="20"
-              className="h-5 w-5 object-contain"
-            />
+            <img src={minusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
           </button>
 
-          <span
-            aria-live="polite"
-            className="min-w-4 text-center text-sm text-[var(--primary-text)]"
-          >
+          <span aria-live="polite" className="min-w-4 text-center text-sm text-[var(--primary-text)]">
             {item.quantity}
           </span>
 
           <button
             type="button"
             onClick={() => onIncrease(item.id)}
-            aria-label={`Increase ${item.name} quantity`}
+            aria-label={tr.increaseQty(item.name)}
             className="flex h-5 w-5 items-center justify-center"
           >
-            <img
-              src={plusIcon}
-              alt=""
-              width="20"
-              height="20"
-              className="h-5 w-5 object-contain"
-            />
+            <img src={plusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
           </button>
         </div>
       </div>

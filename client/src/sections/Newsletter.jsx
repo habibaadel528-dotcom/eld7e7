@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import newsletterBackground from '../assets/images/newsletter-bg.png';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Newsletter() {
+  const { t } = useLanguage();
+  const tr = t('newsletter');
+
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
@@ -11,19 +15,20 @@ export default function Newsletter() {
     const cleanEmail = email.trim();
 
     if (!cleanEmail) {
-      setMessage('Please enter your email address.');
+      setMessage(tr.errorEmpty);
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setMessage('Please enter a valid email address.');
+      setMessage(tr.errorInvalid);
       return;
     }
 
-    // مؤقت لحد ما نوصلها بالـbackend.
-    setMessage('Thank you for subscribing!');
+    setMessage(tr.successMessage);
     setEmail('');
   };
+
+  const isSuccess = message === tr.successMessage;
 
   return (
     <section
@@ -50,11 +55,11 @@ export default function Newsletter() {
               id="newsletter-title"
               className="m-0 text-[32px] font-medium leading-tight tracking-[-0.96px] text-[var(--primary-text)] sm:text-[40px] lg:text-[48px]"
             >
-              Ready to Shop Smarter ?
+              {tr.title}
             </h2>
 
             <p className="mt-5 max-w-[600px] text-base leading-7 tracking-[-0.36px] text-[var(--secondary-text)] sm:text-[18px]">
-              Discover Quality Stationary and Handcraft Supplies today.
+              {tr.subtitle}
             </p>
 
             <form
@@ -63,7 +68,7 @@ export default function Newsletter() {
               className="mt-8 w-full max-w-[450px]"
             >
               <label htmlFor="newsletter-email" className="sr-only">
-                Email address
+                {tr.emailLabel}
               </label>
 
               <div className="flex h-16 overflow-hidden rounded-full bg-white">
@@ -81,7 +86,7 @@ export default function Newsletter() {
                     name="email"
                     autoComplete="email"
                     inputMode="email"
-                    placeholder="Your email address"
+                    placeholder={tr.placeholder}
                     value={email}
                     onChange={(event) => {
                       setEmail(event.target.value);
@@ -96,9 +101,9 @@ export default function Newsletter() {
 
                 <button
                   type="submit"
-                  className="w-[145px] shrink-0 rounded-full bg-[#c94545] px-5 text-base font-bold tracking-[0.5px] text-[var(--primary-text)] transition hover:bg-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] focus-visible:ring-inset sm:w-[160px]"
+                  className="w-[145px] shrink-0 rounded-full bg-[#c94545] px-5 text-base font-bold tracking-[0.5px] text-white transition hover:bg-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] focus-visible:ring-inset sm:w-[160px]"
                 >
-                  Subscribe
+                  {tr.subscribe}
                 </button>
               </div>
 
@@ -106,9 +111,7 @@ export default function Newsletter() {
                 id="newsletter-message"
                 aria-live="polite"
                 className={`mt-3 min-h-6 text-sm ${
-                  message === 'Thank you for subscribing!'
-                    ? 'text-green-400'
-                    : 'text-[#ef5350]'
+                  isSuccess ? 'text-green-400' : 'text-[#ef5350]'
                 }`}
               >
                 {message}

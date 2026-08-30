@@ -1,34 +1,19 @@
 import { NavLink } from 'react-router-dom';
-
+import { useLanguage } from '../context/LanguageContext';
 import iconChevronDown from '../assets/icons/icon-chevron-down.svg';
 
-const navItems = [
-  {
-    label: 'Home',
-    to: '/',
-  },
-  {
-    label: 'Cultural Books Clearance',
-    to: '/cultural-books-clearance',
-  },
-  {
-    label: 'Stationery',
-    to: '/stationery',
-    hasDropdown: true,
-  },
-  {
-    label: 'External School Books',
-    to: '/external-school-books',
-    hasDropdown: true,
-  },
-  {
-    label: 'Handcraft Supplies',
-    to: '/handcraft-supplies',
-    hasDropdown: true,
-  },
-];
-
 export default function Navigation() {
+  const { t } = useLanguage();
+  const tr = t('nav');
+
+  const navItems = [
+    { label: tr.home, to: '/' },
+    { label: tr.culturalBooks, to: '/cultural-books-clearance' },
+    { label: tr.stationery, to: '/stationery', hasDropdown: true },
+    { label: tr.externalBooks, to: '/external-school-books', hasDropdown: true },
+    { label: tr.handcraft, to: '/handcraft-supplies', hasDropdown: true },
+  ];
+
   return (
     <nav
       aria-label="Main navigation"

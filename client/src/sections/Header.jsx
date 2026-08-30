@@ -9,10 +9,13 @@ import iconShoppingCart from '../assets/icons/icon-shopping-cart.svg';
 import iconUser from '../assets/icons/icon-user.svg';
 
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import AccountMenu from './AccountMenu';
 
 export default function Header({ cartCount: propCartCount }) {
   const { cartCount: contextCartCount } = useCart();
+  const { lang, toggleLang, t } = useLanguage();
+  const tr = t('header');
   const cartCount = propCartCount !== undefined && propCartCount !== 0 ? propCartCount : contextCartCount;
   const [searchQuery, setSearchQuery] = useState('');
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
@@ -51,7 +54,7 @@ export default function Header({ cartCount: propCartCount }) {
           {/* Logo */}
           <Link
             to="/"
-            aria-label="Go to home page"
+            aria-label={tr.logoAriaLabel}
             className="flex shrink-0 items-center gap-2.5 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
           >
             <img
@@ -75,17 +78,17 @@ export default function Header({ cartCount: propCartCount }) {
             <img
               src={iconSearch}
               alt=""
-              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain"
+              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain ltr:left-4 rtl:right-4 rtl:left-auto"
             />
 
             <input
               type="search"
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search..."
-              aria-label="Search products"
+              placeholder={tr.searchPlaceholder}
+              aria-label={tr.searchAriaLabel}
               autoComplete="off"
-              className="h-[52px] w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] py-3 pl-[49px] pr-6 text-base text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#ef5350]"
+              className="h-[52px] w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] py-3 pl-[49px] pr-6 text-base text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#ef5350] rtl:pr-[49px] rtl:pl-6"
             />
           </div>
 
@@ -102,7 +105,7 @@ export default function Header({ cartCount: propCartCount }) {
                 className="h-4 w-4 object-contain"
               />
 
-              <span>Your Location</span>
+              <span>{tr.yourLocation}</span>
 
               <img
                 src={iconChevronDown}
@@ -111,11 +114,23 @@ export default function Header({ cartCount: propCartCount }) {
               />
             </button>
 
+            {/* Language Toggle */}
+            <button
+              type="button"
+              onClick={toggleLang}
+              aria-label={lang === 'en' ? 'Switch to Arabic' : 'التبديل للإنجليزية'}
+              className="hidden h-9 items-center gap-1 rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] px-3 text-xs font-semibold text-[var(--secondary-text)] transition hover:border-[#ef5350] hover:text-[#ef5350] sm:flex"
+            >
+              <span className={lang === 'en' ? 'text-[#c94545]' : 'text-[var(--muted-text)]'}>EN</span>
+              <span className="text-[var(--border-color)]">|</span>
+              <span className={lang === 'ar' ? 'text-[#c94545]' : 'text-[var(--muted-text)]'}>AR</span>
+            </button>
+
             <div className="flex items-center gap-2 sm:gap-4">
               {/* Cart */}
               <Link
                 to="/cart"
-                aria-label={`Open shopping cart with ${cartCount} items`}
+                aria-label={tr.openCartLabel(cartCount)}
                 className="relative flex h-10 w-10 items-center justify-center rounded-lg"
               >
                 <img
@@ -137,7 +152,7 @@ export default function Header({ cartCount: propCartCount }) {
               <div ref={accountMenuRef} className="relative">
                 <button
                   type="button"
-                  aria-label="Open account menu"
+                  aria-label={tr.openAccountLabel}
                   aria-expanded={isAccountMenuOpen}
                   aria-controls="account-menu"
                   onClick={() =>
@@ -174,18 +189,28 @@ export default function Header({ cartCount: propCartCount }) {
           <img
             src={iconSearch}
             alt=""
-            className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain"
+            className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain rtl:right-4 rtl:left-auto"
           />
 
           <input
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search..."
-            aria-label="Search products"
+            placeholder={tr.searchPlaceholder}
+            aria-label={tr.searchAriaLabel}
             autoComplete="off"
-            className="h-12 w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] pl-12 pr-5 text-sm text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#ef5350]"
+            className="h-12 w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] pl-12 pr-5 text-sm text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#ef5350] rtl:pr-12 rtl:pl-5"
           />
+
+          {/* Mobile Language Toggle */}
+          <button
+            type="button"
+            onClick={toggleLang}
+            aria-label={lang === 'en' ? 'Switch to Arabic' : 'التبديل للإنجليزية'}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] px-2 py-1 text-[10px] font-bold text-[var(--secondary-text)] rtl:left-3 rtl:right-auto"
+          >
+            {lang === 'en' ? 'AR' : 'EN'}
+          </button>
         </div>
       </div>
     </header>

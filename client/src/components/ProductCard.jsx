@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const FALLBACK_IMG = 'https://placehold.co/200x200/f5f5f5/9ca3af?text=No+Image';
 
 export default function ProductCard({ product, onAddToCart }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { lang, t } = useLanguage();
+  const tr = t('products');
+
   const productId = product._id || product.id;
   const isSaved = isInWishlist(productId);
   const imageSrc =
@@ -39,18 +43,18 @@ export default function ProductCard({ product, onAddToCart }) {
             e.stopPropagation();
             toggleWishlist(product);
           }}
-          aria-label={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
-          title={isSaved ? "Remove from Wishlist" : "Add to Wishlist"}
-          className="absolute right-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition hover:scale-110 active:scale-95"
+          aria-label={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
+          title={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
+          className="absolute ltr:right-2.5 rtl:left-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm backdrop-blur-sm transition hover:scale-110 active:scale-95"
         >
           <Heart
             size={16}
-            className={isSaved ? "fill-[#c53938] text-[#c53938]" : "text-gray-500 hover:text-[#c53938]"}
+            className={isSaved ? 'fill-[#c53938] text-[#c53938]' : 'text-gray-500 hover:text-[#c53938]'}
           />
         </button>
       </div>
 
-      <div className="mt-4 flex flex-1 flex-col">
+      <div className="mt-4 flex flex-1 flex-col text-start">
         <p className="m-0 text-xs leading-5 text-[var(--muted-text)]">
           {product.category}
         </p>
@@ -93,7 +97,7 @@ export default function ProductCard({ product, onAddToCart }) {
           className="mt-auto flex h-[34px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] px-5 text-sm font-medium text-white transition hover:bg-[#ef5350] active:scale-[0.98]"
         >
           <span aria-hidden="true">🛒</span>
-          <span>Add</span>
+          <span>{tr.addToCart || (lang === 'ar' ? 'أضف' : 'Add')}</span>
           <span aria-hidden="true">+</span>
         </button>
       </div>

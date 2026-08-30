@@ -10,6 +10,7 @@ import StationeryProductCard from '../components/StationeryProductCard';
 
 import { useCart } from '../context/CartContext';
 import { productApi } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 import bannerImage from '../assets/images/stationery-banner.png';
 
@@ -17,6 +18,8 @@ const PRODUCTS_PER_PAGE = 12;
 
 export default function Stationery() {
   const { addToCart } = useCart();
+  const { t } = useLanguage();
+  const tr = t('products');
   const [productsList, setProductsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -216,16 +219,14 @@ export default function Stationery() {
                 </h1>
 
                 <p className="mt-6 max-w-[540px] text-base leading-7 text-[#505050] dark:text-[#d1d5dc] sm:text-[18px]">
-                  Find all your premium stationery supplies in one
-                  place. Organized filters help you discover what
-                  you need faster.
+                  {tr.stationeryDesc}
                 </p>
 
                 <a
                   href="#stationery-products"
                   className="mt-8 inline-flex h-[60px] w-[250px] items-center justify-center rounded-full bg-[#c94545] text-xl font-medium text-white transition hover:bg-[#ef5350]"
                 >
-                  Shop Now
+                  {tr.shopNow}
                 </a>
               </div>
             </div>
@@ -247,8 +248,8 @@ export default function Stationery() {
 
             <p className="mb-10 text-center text-[var(--secondary-text)]">
               {filteredProducts.length > 0
-                ? `Showing ${firstVisibleItem}–${lastVisibleItem} out of ${filteredProducts.length} Stationery Products`
-                : 'No stationery products found'}
+                ? tr.showing(firstVisibleItem, lastVisibleItem, filteredProducts.length, 'Stationery')
+                : tr.noProductsFound}
             </p>
 
             <div className="grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)]">
@@ -267,7 +268,7 @@ export default function Stationery() {
               <div>
                 {isLoading ? (
                   <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-20 text-center">
-                    <p className="animate-pulse text-base text-[var(--muted-text)]">Loading products…</p>
+                    <p className="animate-pulse text-base text-[var(--muted-text)]">{tr.loading}</p>
                   </div>
                 ) : visibleProducts.length > 0 ? (
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
@@ -282,7 +283,7 @@ export default function Stationery() {
                 ) : (
                   <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
                     <p className="m-0 text-lg font-medium">
-                      {productsList.length === 0 ? 'No products available yet.' : 'No products match your filters.'}
+                      {productsList.length === 0 ? tr.noProductsAvailable : tr.noProductsFilters}
                     </p>
                     {productsList.length > 0 && (
                       <button
@@ -290,7 +291,7 @@ export default function Stationery() {
                         onClick={clearFilters}
                         className="mt-6 rounded-full bg-[#c53938] px-6 py-3 text-sm font-medium text-white"
                       >
-                        Reset Filters
+                        {tr.resetFilters}
                       </button>
                     )}
                   </div>

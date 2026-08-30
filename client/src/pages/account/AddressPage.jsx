@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { X, Plus, Edit2, Trash2, MapPin, Check, Home, Briefcase } from 'lucide-react';
 import { userApi } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* Icon colours cycling by index */
 const ICON_STYLES = [
@@ -42,7 +43,7 @@ function AddressIcon({ type }) {
 }
 
 /* ── Address Form Modal (Add & Edit) ── */
-function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
+function AddressModal({ address, isOpen, onClose, onSave, isSubmitting, tr, lang }) {
   const [formData, setFormData] = useState({
     label: 'Home',
     recipientName: '',
@@ -80,10 +81,10 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
 
   const validate = () => {
     const errs = {};
-    if (!formData.recipientName.trim()) errs.recipientName = 'Recipient Name is required';
-    if (!formData.street.trim()) errs.street = 'Street Address is required';
-    if (!formData.city.trim()) errs.city = 'City is required';
-    if (!formData.phone.trim()) errs.phone = 'Phone Number is required';
+    if (!formData.recipientName.trim()) errs.recipientName = lang === 'ar' ? 'اسم المستلم مطلوب' : 'Recipient Name is required';
+    if (!formData.street.trim()) errs.street = lang === 'ar' ? 'العنوان مطلوب' : 'Street Address is required';
+    if (!formData.city.trim()) errs.city = lang === 'ar' ? 'المدينة مطلوبة' : 'City is required';
+    if (!formData.phone.trim()) errs.phone = lang === 'ar' ? 'رقم الهاتف مطلوب' : 'Phone Number is required';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -94,41 +95,47 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
     onSave(formData);
   };
 
+  const labelOptions = [
+    { value: 'Home', label: tr.home },
+    { value: 'Work', label: tr.work },
+    { value: 'Other', label: tr.other },
+  ];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 shadow-xl text-[var(--primary-text)]">
+      <div className="relative w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 shadow-xl text-[var(--primary-text)] text-start">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)] transition hover:text-[var(--primary-text)]"
+          className="absolute ltr:right-4 rtl:left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)] transition hover:text-[var(--primary-text)]"
         >
           <X size={18} />
         </button>
 
         <h3 className="text-lg font-bold">
-          {address ? 'Edit Address' : 'Add New Address'}
+          {address ? tr.editAddress : tr.addNew}
         </h3>
         <p className="text-xs text-[var(--secondary-text)] mt-1">
-          {address ? 'Update your delivery address details' : 'Enter your new delivery address details'}
+          {address ? tr.addressDetails : tr.newAddressDetails}
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4 text-xs">
           {/* Label selector */}
           <div>
-            <label className="block font-semibold text-[var(--secondary-text)] mb-1">Address Label</label>
+            <label className="block font-semibold text-[var(--secondary-text)] mb-1">{tr.label}</label>
             <div className="flex gap-2">
-              {['Home', 'Work', 'Other'].map((l) => (
+              {labelOptions.map((l) => (
                 <button
-                  key={l}
+                  key={l.value}
                   type="button"
-                  onClick={() => setFormData({ ...formData, label: l })}
-                  className={`rounded-xl px-4 py-2 text-xs font-medium border transition ${
-                    formData.label === l
+                  onClick={() => setFormData({ ...formData, label: l.value })}
+                  className={`rounded-xl px-4 py-2 text-xs font-medium border transition cursor-pointer ${
+                    formData.label === l.value
                       ? 'border-[#c53938] bg-[#c53938] text-white'
                       : 'border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)]'
                   }`}
                 >
-                  {l}
+                  {l.label}
                 </button>
               ))}
             </div>
@@ -136,12 +143,12 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
 
           {/* Recipient Name */}
           <div>
-            <label className="block font-semibold text-[var(--secondary-text)] mb-1">Recipient Full Name *</label>
+            <label className="block font-semibold text-[var(--secondary-text)] mb-1">{tr.recipientName}</label>
             <input
               type="text"
               value={formData.recipientName}
               onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-              placeholder="e.g. Rawan Ahmed"
+              placeholder={lang === 'ar' ? 'مثال: روان أحمد' : 'e.g. Rawan Ahmed'}
               className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--primary-text)] outline-none focus:border-[#c53938]"
             />
             {errors.recipientName && <p className="mt-1 text-[11px] text-red-500">{errors.recipientName}</p>}
@@ -149,12 +156,12 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
 
           {/* Phone */}
           <div>
-            <label className="block font-semibold text-[var(--secondary-text)] mb-1">Phone Number *</label>
+            <label className="block font-semibold text-[var(--secondary-text)] mb-1">{tr.phone}</label>
             <input
               type="tel"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="e.g. 01012345678"
+              placeholder={lang === 'ar' ? 'مثال: 01012345678' : 'e.g. 01012345678'}
               className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--primary-text)] outline-none focus:border-[#c53938]"
             />
             {errors.phone && <p className="mt-1 text-[11px] text-red-500">{errors.phone}</p>}
@@ -162,12 +169,12 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
 
           {/* Street */}
           <div>
-            <label className="block font-semibold text-[var(--secondary-text)] mb-1">Street Address *</label>
+            <label className="block font-semibold text-[var(--secondary-text)] mb-1">{tr.street}</label>
             <input
               type="text"
               value={formData.street}
               onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-              placeholder="e.g. 123 El-Tahrir Street, Apt 4B"
+              placeholder={lang === 'ar' ? 'مثال: شارع التحرير، عمارة ٤، شقة ب' : 'e.g. 123 El-Tahrir Street, Apt 4B'}
               className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--primary-text)] outline-none focus:border-[#c53938]"
             />
             {errors.street && <p className="mt-1 text-[11px] text-red-500">{errors.street}</p>}
@@ -175,12 +182,12 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
 
           {/* City */}
           <div>
-            <label className="block font-semibold text-[var(--secondary-text)] mb-1">City / Region *</label>
+            <label className="block font-semibold text-[var(--secondary-text)] mb-1">{tr.city}</label>
             <input
               type="text"
               value={formData.city}
               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              placeholder="e.g. Cairo"
+              placeholder={lang === 'ar' ? 'مثال: القاهرة' : 'e.g. Cairo'}
               className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs text-[var(--primary-text)] outline-none focus:border-[#c53938]"
             />
             {errors.city && <p className="mt-1 text-[11px] text-red-500">{errors.city}</p>}
@@ -194,7 +201,7 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
               onChange={(e) => setFormData({ ...formData, isDefault: e.target.checked })}
               className="h-4 w-4 rounded border-gray-300 text-[#c53938] focus:ring-[#c53938]"
             />
-            <span className="text-xs font-medium text-[var(--primary-text)]">Set as default shipping address</span>
+            <span className="text-xs font-medium text-[var(--primary-text)]">{tr.setDefault}</span>
           </label>
 
           {/* Buttons */}
@@ -202,16 +209,16 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-[var(--border-color)] px-4 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)]"
+              className="rounded-xl border border-[var(--border-color)] px-4 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] cursor-pointer"
             >
-              Cancel
+              {tr.cancel}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-xl bg-[#c53938] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#a82d2c] disabled:opacity-50"
+              className="rounded-xl bg-[#c53938] px-5 py-2 text-xs font-semibold text-white transition hover:bg-[#a82d2c] disabled:opacity-50 cursor-pointer"
             >
-              {isSubmitting ? 'Saving...' : 'Save Address'}
+              {isSubmitting ? tr.saving : tr.saveAddress}
             </button>
           </div>
         </form>
@@ -220,9 +227,11 @@ function AddressModal({ address, isOpen, onClose, onSave, isSubmitting }) {
   );
 }
 
-function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
+function AddressCard({ address, onSetDefault, onEdit, onDelete, tr, lang }) {
+  const displayLabel = address.label === 'Home' ? tr.home : address.label === 'Work' ? tr.work : address.label;
+
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 shadow-sm transition hover:shadow-md">
+    <div className="flex flex-col justify-between rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 shadow-sm transition hover:shadow-md text-start">
       <div>
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -231,7 +240,7 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
               <AddressIcon type={address.icon} />
             </span>
             <div>
-              <p className="text-sm font-semibold text-[var(--primary-text)]">{address.label}</p>
+              <p className="text-sm font-semibold text-[var(--primary-text)]">{displayLabel}</p>
               <p className="text-xs text-[var(--secondary-text)]">{address.person}</p>
             </div>
           </div>
@@ -239,7 +248,7 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
           {address.isDefault && (
             <span className="flex items-center gap-1 rounded-full bg-[#c53938] px-3 py-1 text-[11px] font-semibold text-white">
               <Check size={12} />
-              Default
+              {tr.defaultBadge}
             </span>
           )}
         </div>
@@ -251,10 +260,10 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
         </div>
 
         <p className="mt-2 flex items-center gap-1.5 text-xs text-[var(--secondary-text)]">
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 0 1 2-2h2.28a1 1 0 0 1 .97.76l1 4a1 1 0 0 1-.29 1L7.4 10.3a12 12 0 0 0 6.3 6.3l1.54-1.56a1 1 0 0 1 1-.29l4 1a1 1 0 0 1 .76.97V19a2 2 0 0 1-2 2h-1C10.6 21 3 13.4 3 4V5Z" />
           </svg>
-          {address.phone}
+          <span dir="ltr">{address.phone}</span>
         </p>
       </div>
 
@@ -264,9 +273,9 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
           <button
             type="button"
             onClick={() => onSetDefault(address.id)}
-            className="text-[#c53938] hover:underline"
+            className="text-[#c53938] hover:underline cursor-pointer"
           >
-            Set as Default
+            {tr.makeDefault}
           </button>
         ) : (
           <span />
@@ -276,20 +285,20 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
           <button
             type="button"
             onClick={() => onEdit(address)}
-            className="flex items-center gap-1 text-[var(--secondary-text)] hover:text-[var(--primary-text)]"
+            className="flex items-center gap-1 text-[var(--secondary-text)] hover:text-[var(--primary-text)] cursor-pointer"
           >
             <Edit2 size={14} />
-            Edit
+            {tr.edit}
           </button>
 
           {!address.isDefault && (
             <button
               type="button"
               onClick={() => onDelete(address.id)}
-              className="flex items-center gap-1 text-[var(--secondary-text)] hover:text-[#c53938]"
+              className="flex items-center gap-1 text-[var(--secondary-text)] hover:text-[#c53938] cursor-pointer"
             >
               <Trash2 size={14} />
-              Delete
+              {tr.delete}
             </button>
           )}
         </div>
@@ -298,17 +307,17 @@ function AddressCard({ address, onSetDefault, onEdit, onDelete }) {
   );
 }
 
-function AddNewAddressCard({ onClick }) {
+function AddNewAddressCard({ onClick, label }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border-color)] text-[var(--secondary-text)] transition hover:border-[#c53938]/50 hover:text-[#c53938]"
+      className="flex min-h-[180px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[var(--border-color)] text-[var(--secondary-text)] transition hover:border-[#c53938]/50 hover:text-[#c53938] cursor-pointer"
     >
       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--surface-soft)]">
         <Plus size={18} />
       </span>
-      <span className="text-sm font-medium">Add New Address</span>
+      <span className="text-sm font-medium">{label}</span>
     </button>
   );
 }
@@ -319,6 +328,8 @@ export default function AddressPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { lang, t } = useLanguage();
+  const tr = t('addresses');
 
   const refresh = () => {
     setLoading(true);
@@ -349,15 +360,15 @@ export default function AddressPage() {
     try {
       if (editingAddress) {
         await userApi.updateAddress(editingAddress.id, formData);
-        toast.success('Address updated successfully');
+        toast.success(lang === 'ar' ? 'تم تحديث العنوان بنجاح' : 'Address updated successfully');
       } else {
         await userApi.addAddress(formData);
-        toast.success('Address added successfully');
+        toast.success(lang === 'ar' ? 'تمت إضافة العنوان بنجاح' : 'Address added successfully');
       }
       setIsModalOpen(false);
       refresh();
     } catch (err) {
-      toast.error(err.message || 'Failed to save address.');
+      toast.error(err.message || (lang === 'ar' ? 'فشل حفظ العنوان.' : 'Failed to save address.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -366,38 +377,38 @@ export default function AddressPage() {
   const handleSetDefault = async (id) => {
     try {
       await userApi.updateAddress(id, { isDefault: true });
-      toast.success('Default address updated');
+      toast.success(lang === 'ar' ? 'تم تحديث العنوان الافتراضي' : 'Default address updated');
       refresh();
     } catch {
-      toast.error('Failed to update default address.');
+      toast.error(lang === 'ar' ? 'فشل تحديث العنوان الافتراضي.' : 'Failed to update default address.');
     }
   };
 
   const handleDelete = async (id) => {
     try {
       await userApi.deleteAddress(id);
-      toast.success('Address deleted');
+      toast.success(lang === 'ar' ? 'تم حذف العنوان' : 'Address deleted');
       refresh();
     } catch {
-      toast.error('Failed to delete address.');
+      toast.error(lang === 'ar' ? 'فشل حذف العنوان.' : 'Failed to delete address.');
     }
   };
 
   return (
     <>
       <Helmet>
-        <title>My Addresses | El-D7E7</title>
+        <title>{tr.title} | El-D7E7</title>
         <meta name="description" content="Manage your saved shipping and billing addresses." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="flex flex-col gap-1">
         {/* ── Page header ── */}
-        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3 text-start">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--primary-text)]">My Addresses</h1>
+            <h1 className="text-2xl font-bold text-[var(--primary-text)]">{tr.title}</h1>
             <p className="text-sm text-[var(--secondary-text)]">
-              {addresses.length} saved address{addresses.length !== 1 ? 'es' : ''}
+              {tr.savedAddresses(addresses.length)}
             </p>
           </div>
 
@@ -407,14 +418,14 @@ export default function AddressPage() {
             className="flex items-center gap-1.5 rounded-full bg-[#c53938] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
           >
             <Plus size={16} />
-            Add New Address
+            {tr.addNew}
           </button>
         </div>
 
         {/* ── Address grid ── */}
         {loading ? (
           <div className="py-16 text-center text-sm text-[var(--secondary-text)]">
-            Loading your addresses...
+            {tr.loading}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -425,10 +436,12 @@ export default function AddressPage() {
                 onSetDefault={handleSetDefault}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}
+                tr={tr}
+                lang={lang}
               />
             ))}
 
-            <AddNewAddressCard onClick={handleOpenAdd} />
+            <AddNewAddressCard onClick={handleOpenAdd} label={tr.addNew} />
           </div>
         )}
 
@@ -439,6 +452,8 @@ export default function AddressPage() {
           onClose={() => setIsModalOpen(false)}
           onSave={handleSaveAddress}
           isSubmitting={isSubmitting}
+          tr={tr}
+          lang={lang}
         />
       </div>
     </>

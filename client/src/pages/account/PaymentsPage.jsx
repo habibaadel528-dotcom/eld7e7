@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { orderApi } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* ── Payment methods supported by El-D7E7 ── */
 const PAYMENT_METHODS = [
@@ -44,18 +45,11 @@ const PAYMENT_METHODS = [
   },
 ];
 
-const paymentStatusConfig = {
-  pending:              { label: 'Pending',              className: 'bg-gray-100 text-gray-600' },
-  pending_verification: { label: 'Pending Verification', className: 'bg-amber-100 text-amber-700' },
-  paid:                 { label: 'Paid',                 className: 'bg-emerald-100 text-emerald-700' },
-  rejected:             { label: 'Rejected',             className: 'bg-red-100 text-[#c53938]' },
-};
-
 function formatEGP(n) {
   return `EGP ${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function TxnIcon({ method, paymentStatus }) {
+function TxnIcon({ method }) {
   const base = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm';
   if (method === 'instapay') {
     return (
@@ -78,7 +72,6 @@ function TxnIcon({ method, paymentStatus }) {
       </span>
     );
   }
-  // COD
   return (
     <span className={`${base} bg-[#c53938]/10 text-[#c53938]`}>
       <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -105,6 +98,8 @@ export default function PaymentsPage() {
   const [orders, setOrders]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [totalSpent, setTotalSpent] = useState(0);
+  const { t } = useLanguage();
+  const tr = t('payments');
 
   useEffect(() => {
     orderApi.getMyOrders({ limit: 50 })
@@ -120,7 +115,6 @@ export default function PaymentsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  /* split orders for display */
   const pendingVerification = orders.filter((o) => o.paymentStatus === 'pending_verification');
   const recentOrders        = orders.slice(0, 8);
 
@@ -131,12 +125,19 @@ export default function PaymentsPage() {
     return m || 'N/A';
   };
 
+  const paymentStatusConfig = {
+    pending:              { label: tr.statusPending,      className: 'bg-gray-100 text-gray-600' },
+    pending_verification: { label: tr.statusVerification, className: 'bg-amber-100 text-amber-700' },
+    paid:                 { label: tr.statusPaid,         className: 'bg-emerald-100 text-emerald-700' },
+    rejected:             { label: tr.statusRejected,     className: 'bg-red-100 text-[#c53938]' },
+  };
+
   return (
     <div className="flex flex-col gap-1">
       {/* ── Page header ── */}
-      <h1 className="text-2xl font-bold text-[var(--primary-text)]">Payments</h1>
+      <h1 className="text-2xl font-bold text-[var(--primary-text)]">{tr.title}</h1>
       <p className="mb-5 text-sm text-[var(--secondary-text)]">
-        Your payment methods, order history and payment status
+        {tr.subtitle}
       </p>
 
       {/* ── Pending Verification Alert ── */}
@@ -146,10 +147,10 @@ export default function PaymentsPage() {
             <span className="mt-0.5 text-lg">⏳</span>
             <div>
               <p className="text-sm font-bold text-amber-800">
-                {pendingVerification.length} order{pendingVerification.length > 1 ? 's' : ''} awaiting payment verification
+                {tr.awaitingVerification(pendingVerification.length)}
               </p>
               <p className="mt-0.5 text-xs text-amber-700">
-                Our team is reviewing your payment proof. You'll receive an email once it's verified.
+                {tr.verificationText}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {pendingVerification.map((o) => (
@@ -170,8 +171,8 @@ export default function PaymentsPage() {
           {/* ── Order Payment History ── */}
           <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[var(--primary-text)]">Order Payment History</h2>
-              <span className="text-xs text-[var(--muted-text)]">{orders.length} orders</span>
+              <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.orderPaymentHistory}</h2>
+              <span className="text-xs text-[var(--muted-text)]">{tr.ordersCount(orders.length)}</span>
             </div>
 
             <ul className="flex flex-col divide-y divide-[var(--border-color)]">
@@ -179,7 +180,7 @@ export default function PaymentsPage() {
 
               {!loading && recentOrders.length === 0 && (
                 <li className="py-10 text-center text-sm text-[var(--muted-text)]">
-                  No orders yet.
+                  {tr.noOrders}
                 </li>
               )}
 
@@ -231,7 +232,7 @@ export default function PaymentsPage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3m-6 0V5a2 2 0 0 1 4 0v2m-4 0h4" />
               </svg>
-              Total Spent
+              {tr.totalSpent}
             </div>
 
             {loading ? (
@@ -239,13 +240,15 @@ export default function PaymentsPage() {
             ) : (
               <p className="relative mt-2 text-3xl font-bold">{formatEGP(totalSpent)}</p>
             )}
-            <p className="relative mb-1 mt-0.5 text-xs opacity-70">Across {orders.filter(o => !['cancelled','returned'].includes(o.status)).length} orders</p>
+            <p className="relative mb-1 mt-0.5 text-xs opacity-70">
+              {tr.acrossOrders(orders.filter(o => !['cancelled','returned'].includes(o.status)).length)}
+            </p>
           </section>
 
           {/* ── Available Payment Methods ── */}
           <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
-            <h2 className="mb-1 text-sm font-semibold text-[var(--primary-text)]">Available Payment Methods</h2>
-            <p className="mb-4 text-[11px] text-[var(--muted-text)]">Methods accepted at checkout</p>
+            <h2 className="mb-1 text-sm font-semibold text-[var(--primary-text)]">{tr.availablePaymentMethods}</h2>
+            <p className="mb-4 text-[11px] text-[var(--muted-text)]">{tr.acceptedAtCheckout}</p>
 
             <ul className="flex flex-col gap-3">
               {PAYMENT_METHODS.map((m) => (
@@ -258,7 +261,7 @@ export default function PaymentsPage() {
                     <p className="truncate text-[11px] text-[var(--muted-text)]">{m.description}</p>
                   </div>
                   <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
-                    Active
+                    {tr.active}
                   </span>
                 </li>
               ))}
@@ -267,7 +270,7 @@ export default function PaymentsPage() {
 
           {/* ── Payment Status Legend ── */}
           <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
-            <h2 className="mb-3 text-sm font-semibold text-[var(--primary-text)]">Payment Status Guide</h2>
+            <h2 className="mb-3 text-sm font-semibold text-[var(--primary-text)]">{tr.paymentStatusGuide}</h2>
             <ul className="flex flex-col gap-2.5">
               {Object.entries(paymentStatusConfig).map(([key, val]) => (
                 <li key={key} className="flex items-center gap-2.5">
@@ -275,10 +278,10 @@ export default function PaymentsPage() {
                     {val.label}
                   </span>
                   <span className="text-[11px] text-[var(--muted-text)]">
-                    {key === 'pending'              && 'COD — paid on delivery'}
-                    {key === 'pending_verification' && 'Proof uploaded — awaiting admin review'}
-                    {key === 'paid'                 && 'Payment confirmed by admin'}
-                    {key === 'rejected'             && 'Proof rejected — re-upload required'}
+                    {key === 'pending'              && tr.legendPending}
+                    {key === 'pending_verification' && tr.legendVerification}
+                    {key === 'paid'                 && tr.legendPaid}
+                    {key === 'rejected'             && tr.legendRejected}
                   </span>
                 </li>
               ))}

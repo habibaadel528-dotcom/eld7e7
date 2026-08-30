@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { userApi } from '../../../services/api';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export default function PasswordTab() {
+  const { lang, t } = useLanguage();
+  const tr = t('settings').passwordTab;
+
   const [passwords, setPasswords] = useState({
     currentPassword: '',
     newPassword: '',
@@ -29,15 +33,15 @@ export default function PasswordTab() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!passwords.currentPassword || !passwords.newPassword || !passwords.confirmPassword) {
-      toast.error('Please fill in all password fields.');
+      toast.error(lang === 'ar' ? 'يرجى ملء جميع حقول كلمة المرور.' : 'Please fill in all password fields.');
       return;
     }
     if (passwords.newPassword.length < 8) {
-      toast.error('New password must be at least 8 characters long.');
+      toast.error(lang === 'ar' ? 'يجب أن تتكون كلمة المرور الجديدة من 8 أحرف على الأقل.' : 'New password must be at least 8 characters long.');
       return;
     }
     if (passwords.newPassword !== passwords.confirmPassword) {
-      toast.error('New passwords do not match.');
+      toast.error(lang === 'ar' ? 'كلمات المرور الجديدة غير متطابقة.' : 'New passwords do not match.');
       return;
     }
 
@@ -49,10 +53,10 @@ export default function PasswordTab() {
         newPassword: passwords.newPassword,
       });
 
-      toast.success('Password updated successfully!');
+      toast.success(lang === 'ar' ? 'تم تحديث كلمة المرور بنجاح!' : 'Password updated successfully!');
       setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
-      toast.error(err.message || 'Failed to update password.');
+      toast.error(err.message || (lang === 'ar' ? 'فشل تحديث كلمة المرور.' : 'Failed to update password.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -62,7 +66,7 @@ export default function PasswordTab() {
     h-12 w-full rounded-[14px]
     border border-[var(--input-border)]
     bg-[var(--surface-input)]
-    px-4 pr-12
+    px-4 ltr:pr-12 rtl:pl-12
     text-sm text-[var(--primary-text)]
     outline-none transition-all
     focus:border-[#c53938] focus:ring-2 focus:ring-[#c53938]/10
@@ -77,21 +81,21 @@ export default function PasswordTab() {
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--brand-soft-bg)] text-[#c53938]">
           <Lock className="h-5 w-5" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-[var(--primary-text)]">Password</h2>
+        <div className="text-start">
+          <h2 className="text-xl font-bold text-[var(--primary-text)]">{tr.title}</h2>
           <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-0.5">
-            Update your password to keep your account secure.
+            {tr.subtitle}
           </p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 max-w-xl">
         {[
-          { id: 'currentPassword', label: 'Current Password', field: 'current' },
-          { id: 'newPassword',     label: 'New Password',     field: 'new',     hint: 'Must be at least 8 characters with numbers & symbols.' },
-          { id: 'confirmPassword', label: 'Confirm New Password', field: 'confirm' },
+          { id: 'currentPassword', label: tr.currentPassword, field: 'current' },
+          { id: 'newPassword',     label: tr.newPassword,     field: 'new', hint: lang === 'ar' ? 'يجب أن لا تقل عن 8 أحرف وتحتوي على أرقام ورموز.' : 'Must be at least 8 characters with numbers & symbols.' },
+          { id: 'confirmPassword', label: tr.confirmPassword, field: 'confirm' },
         ].map(({ id, label, field, hint }) => (
-          <div key={id} className="flex flex-col gap-2">
+          <div key={id} className="flex flex-col gap-2 text-start">
             <label htmlFor={id} className="text-xs sm:text-[13px] font-semibold text-[var(--label-text)]">
               {label}
             </label>
@@ -99,31 +103,40 @@ export default function PasswordTab() {
               <input
                 id={id}
                 type={showPasswords[field] ? 'text' : 'password'}
-                value={passwords[id]}
-                onChange={handleChange(id)}
-                placeholder="••••••••••••"
+                value={passwords[`${field}Password`]}
+                onChange={handleChange(`${field}Password`)}
+                placeholder={label}
                 className={inputClass}
               />
               <button
                 type="button"
                 onClick={toggleShow(field)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors p-1 cursor-pointer"
+                className="absolute ltr:right-3.5 rtl:left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors p-1 cursor-pointer"
                 aria-label="Toggle password visibility"
               >
                 {showPasswords[field] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {hint && <p className="text-[11px] text-[var(--muted-text)]">{hint}</p>}
+            {hint && (
+              <p className="text-[11px] text-[var(--muted-text)] leading-tight">{hint}</p>
+            )}
           </div>
         ))}
 
-        <div className="mt-3">
+        <div className="pt-2 text-start">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-full bg-[#c53938] px-7 py-3 text-xs sm:text-sm font-bold text-white transition-all hover:bg-[#a83130] active:scale-[0.98] shadow-xs disabled:opacity-60 cursor-pointer"
+            className="
+              inline-flex items-center justify-center
+              h-11 px-8 rounded-full
+              bg-[#c53938] text-white text-xs sm:text-sm font-semibold
+              transition-all duration-200 hover:opacity-90 active:scale-[0.98]
+              shadow-xs disabled:opacity-50 disabled:cursor-not-allowed
+              cursor-pointer
+            "
           >
-            {isSubmitting ? 'Updating...' : 'Update Password'}
+            {isSubmitting ? tr.updating : tr.updatePassword}
           </button>
         </div>
       </form>

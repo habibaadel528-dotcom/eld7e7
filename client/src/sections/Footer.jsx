@@ -8,54 +8,12 @@ import twitterIcon from '../assets/icons/twitter.svg';
 import phoneIcon from '../assets/icons/phone.svg';
 
 import paymentMethods from '../assets/icons/payment-methods.png';
-
-const aboutLinks = [
-  { label: 'Our Story', href: '/about' },
-  { label: 'Blogs', href: '/blogs' },
-  { label: 'Contact Us', href: '/contact' },
-];
-
-const supportLinks = [
-  { label: 'FAQs', href: '/faqs' },
-  { label: 'Shipping & Returns', href: '/shipping-returns' },
-  { label: 'Payment Methods', href: '/payment-methods' },
-];
-
-const categoryLinks = [
-  {
-    label: 'Cultural Books Clearance',
-    href: '/categories/cultural-books-clearance',
-  },
-  {
-    label: 'Stationery',
-    href: '/categories/stationery',
-  },
-  {
-    label: 'External School Books',
-    href: '/categories/external-school-books',
-  },
-  {
-    label: 'Handcraft Supplies',
-    href: '/categories/handcraft-supplies',
-  },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 const socialLinks = [
-  {
-    name: 'Facebook',
-    href: 'https://www.facebook.com/',
-    icon: facebookIcon,
-  },
-  {
-    name: 'Instagram',
-    href: 'https://www.instagram.com/',
-    icon: instagramIcon,
-  },
-  {
-    name: 'Twitter',
-    href: 'https://twitter.com/',
-    icon: twitterIcon,
-  },
+  { name: 'Facebook',  href: 'https://www.facebook.com/',  icon: facebookIcon },
+  { name: 'Instagram', href: 'https://www.instagram.com/', icon: instagramIcon },
+  { name: 'Twitter',   href: 'https://twitter.com/',       icon: twitterIcon },
 ];
 
 function FooterLinks({ title, links }) {
@@ -82,6 +40,8 @@ function FooterLinks({ title, links }) {
 }
 
 export default function Footer() {
+  const { t } = useLanguage();
+  const tr = t('footer');
   const currentYear = new Date().getFullYear();
 
   return (
@@ -120,17 +80,9 @@ export default function Footer() {
             </a>
           </div>
 
-          <FooterLinks title="About Us" links={aboutLinks} />
-
-          <FooterLinks
-            title="Help and Support"
-            links={supportLinks}
-          />
-
-          <FooterLinks
-            title="Categories"
-            links={categoryLinks}
-          />
+          <FooterLinks title={tr.aboutUs}      links={tr.aboutLinks} />
+          <FooterLinks title={tr.helpSupport}  links={tr.supportLinks} />
+          <FooterLinks title={tr.categories}   links={tr.categoryLinks} />
 
           {/* Install app */}
           <section aria-labelledby="install-app-title">
@@ -138,7 +90,7 @@ export default function Footer() {
               id="install-app-title"
               className="m-0 text-[13px] font-semibold leading-5 text-[var(--primary-text)]"
             >
-              Install App
+              {tr.installApp}
             </h2>
 
             <div className="mt-2.5 flex flex-wrap gap-2">
@@ -172,7 +124,7 @@ export default function Footer() {
             </div>
 
             <p className="mb-0 mt-2.5 text-[11px] leading-4 text-[#253d4e]">
-              Secured Payment Gateways
+              {tr.securedPayment}
             </p>
 
             <img
@@ -193,16 +145,14 @@ export default function Footer() {
           {/* Copyright */}
           <div className="text-[10px] leading-[18px] text-[var(--primary-text)]">
             <p className="m-0">
-              © {currentYear},{' '}
+              {tr.copyright(currentYear)}{' '}
               <span className="font-semibold text-[#c53938]">
-                El D7e7
+                {tr.brandName}
               </span>{' '}
-              - HTML Ecommerce Template
+              {tr.tagline}
             </p>
 
-            <p className="m-0">
-              All rights reserved
-            </p>
+            <p className="m-0">{tr.allRights}</p>
           </div>
 
           {/* Hotline */}
@@ -217,17 +167,17 @@ export default function Footer() {
                 className="h-[24px] w-[24px] object-contain opacity-45"
               />
 
-              <span className=" text-[#c53938]">01005535668</span>
+              <span className="text-[#c53938]">01005535668</span>
             </a>
 
             <p className="mt-3 text-[10px] leading-[11px] tracking-[0.75px] text-[var(--primary-text)]">
-              Working 10:00 AM - 11:00 PM
+              {tr.workingHours}
               <br />
               <br />
-              <strong>Except</strong>{' '}
-              <u>Thursday</u> Close on 5 PM
+              <strong>{tr.exceptNote}</strong>{' '}
+              <u>{tr.thursdayNote}</u> {tr.thursdayClose}
               <br />
-              <u>Friday</u> Open on 2 PM
+              <u>{tr.fridayNote}</u> {tr.fridayOpen}
             </p>
           </div>
 
@@ -235,7 +185,7 @@ export default function Footer() {
           <div className="md:text-right">
             <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
               <span className="text-[12px] font-bold">
-                Follow Us
+                {tr.followUs}
               </span>
 
               {socialLinks.map((social) => (
@@ -257,7 +207,7 @@ export default function Footer() {
             </div>
 
             <p className="mb-0 mt-2 text-[10px] leading-4 text-[var(--primary-text)]">
-              Up to 10% discount on your first subscribe
+              {tr.discount}
             </p>
           </div>
         </div>

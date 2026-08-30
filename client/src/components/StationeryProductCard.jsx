@@ -1,29 +1,24 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const FALLBACK_IMG = 'https://placehold.co/200x200/f5f5f5/9ca3af?text=No+Image';
-
-const statusConfig = {
-  in: {
-    label: 'In',
-    className: 'bg-[#82c988]',
-  },
-  out: {
-    label: 'Out',
-    className: 'bg-[#c53938]',
-  },
-  soon: {
-    label: 'Soon',
-    className: 'bg-[#ffc62a]',
-  },
-};
 
 export default function StationeryProductCard({
   product,
   onAddToCart,
 }) {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const { t } = useLanguage();
+  const tr = t('products');
+
+  const statusConfig = {
+    in:   { label: tr.inStock,    className: 'bg-[#82c988]' },
+    out:  { label: tr.outOfStock, className: 'bg-[#c53938]' },
+    soon: { label: 'Soon',        className: 'bg-[#ffc62a]' },
+  };
+
   const status = statusConfig[product.status] ?? statusConfig.in;
   const canAddToCart = product.status === 'in';
   const productId = product._id || product.id;
@@ -123,10 +118,8 @@ export default function StationeryProductCard({
           <span aria-hidden="true">🛒</span>
 
           <span>
-            {canAddToCart ? 'Add' : product.status === 'soon' ? 'Coming Soon' : 'Unavailable'}
+            {canAddToCart ? `+ ${tr.addToCart || 'Add'}` : product.status === 'soon' ? 'Coming Soon' : tr.outOfStock}
           </span>
-
-          {canAddToCart && <span aria-hidden="true">+</span>}
         </button>
       </div>
     </article>

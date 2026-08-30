@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getStoredUser, clearAuthSession } from '../utils/auth';
 import LogoutModal from '../components/common/LogoutModal';
+import { useLanguage } from '../context/LanguageContext';
+import { formatUserName } from '../utils/arabicNames';
 
 function getInitialTheme() {
   return document.documentElement.dataset.theme || 'light';
@@ -9,11 +11,15 @@ function getInitialTheme() {
 
 export default function AccountMenu({ onClose }) {
   const navigate = useNavigate();
+  const { lang, t } = useLanguage();
+  const tr = t('accountMenu');
+
   const [theme, setTheme] = useState(getInitialTheme);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const user = getStoredUser();
 
-  const displayName = user?.name || (user?.firstName ? `${user.firstName} ${user.lastName || ''}` : null);
+  const formatted = formatUserName(user, lang);
+  const displayName = user ? formatted.fullName : null;
   const displayEmail = user?.email || null;
   const isAdmin = user?.role === 'admin';
   const isLoggedIn = Boolean(user);
@@ -41,16 +47,16 @@ export default function AccountMenu({ onClose }) {
   const menuItems = isLoggedIn
     ? [
         isAdmin
-          ? { label: 'Admin Panel', to: '/admin/dashboard', icon: '🛡' }
-          : { label: 'Dashboard', to: '/account/dashboard', icon: '⌂' },
+          ? { label: tr.adminPanel, to: '/admin/dashboard', icon: '🛡' }
+          : { label: tr.dashboard, to: '/account/dashboard', icon: '⌂' },
         ...(!isAdmin ? [
-          { label: 'My Orders',       to: '/account/orders',    icon: '▣' },
-          { label: 'Account Settings', to: '/account/settings', icon: '⚙' },
+          { label: tr.myOrders,        to: '/account/orders',    icon: '▣' },
+          { label: tr.accountSettings, to: '/account/settings',  icon: '⚙' },
         ] : []),
       ]
     : [
-        { label: 'Login',   to: '/login',  icon: '↪' },
-        { label: 'Sign Up', to: '/signup', icon: '♙' },
+        { label: tr.login,   to: '/login',  icon: '↪' },
+        { label: tr.signUp,  to: '/signup', icon: '♙' },
       ];
 
   return (
@@ -58,7 +64,7 @@ export default function AccountMenu({ onClose }) {
       id="account-menu"
       role="menu"
       aria-label="Account menu"
-      className="absolute right-0 top-[52px] z-[100] w-[min(400px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-[var(--page-bg)] shadow-[0_12px_35px_rgba(0,0,0,0.35)]"
+      className="absolute ltr:right-0 rtl:left-0 top-[52px] z-[100] w-[min(380px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-[var(--page-bg)] shadow-[0_12px_35px_rgba(0,0,0,0.35)]"
     >
       {/* ── Profile row ── */}
       <Link
@@ -68,19 +74,19 @@ export default function AccountMenu({ onClose }) {
         className="flex items-center gap-3 px-5 py-4 transition hover:bg-[var(--surface-soft)]"
       >
         <div className="flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 text-2xl text-[#c53938] font-bold">
-          {displayName ? displayName.charAt(0).toUpperCase() : isAdmin ? '👑' : '●'}
+          {displayName ? formatted.initial : isAdmin ? '👑' : '●'}
         </div>
 
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 text-start">
           <p className="m-0 truncate text-[17px] font-medium leading-6 text-[var(--primary-text)]">
-            {displayName || (isLoggedIn ? 'My Account' : 'Guest')}
+            {displayName || (isLoggedIn ? tr.myAccount : tr.guest)}
           </p>
           <p className="m-0 truncate text-[13px] leading-6 text-[var(--secondary-text)]">
             {displayEmail
               ? displayEmail
               : isLoggedIn
-              ? (isAdmin ? 'Super Admin' : 'Customer')
-              : 'Not logged in'}
+              ? (isAdmin ? tr.superAdmin : tr.customer)
+              : tr.notLoggedIn}
           </p>
           {isAdmin && (
             <span className="mt-0.5 inline-block rounded-full bg-[#c53938] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
@@ -89,7 +95,7 @@ export default function AccountMenu({ onClose }) {
           )}
         </div>
 
-        <span aria-hidden="true" className="text-xl text-[var(--secondary-text)]">›</span>
+        <span aria-hidden="true" className="text-xl text-[var(--secondary-text)] rtl:rotate-180">›</span>
       </Link>
 
       <div className="h-px bg-[var(--border-color)]" />
@@ -102,7 +108,7 @@ export default function AccountMenu({ onClose }) {
             to={item.to}
             role="menuitem"
             onClick={onClose}
-            className="flex items-center gap-3 px-5 py-3 text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350]"
+            className="flex items-center gap-3 px-5 py-3 text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350] text-start"
           >
             <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl">
               {item.icon}
@@ -117,10 +123,10 @@ export default function AccountMenu({ onClose }) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={onClose}
-          className="flex items-center gap-3 px-5 py-3 text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350]"
+          className="flex items-center gap-3 px-5 py-3 text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350] text-start"
         >
           <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl">◉</span>
-          <span>Contact (WhatsApp)</span>
+          <span>{tr.contact}</span>
         </a>
       </div>
 
@@ -130,20 +136,20 @@ export default function AccountMenu({ onClose }) {
       <button
         type="button"
         role="menuitem"
-        aria-label={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
+        aria-label={isDarkMode ? tr.switchToLight : tr.switchToDark}
         aria-pressed={isDarkMode}
         onClick={toggleTheme}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)]"
+        className="flex w-full items-center gap-3 px-5 py-4 text-start text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)]"
       >
         <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl">
           {isDarkMode ? '☾' : '☀'}
         </span>
-        <span className="flex-1">{isDarkMode ? 'Dark Mode' : 'Light Mode'}</span>
+        <span className="flex-1">{isDarkMode ? tr.darkMode : tr.lightMode}</span>
         <span
           aria-hidden="true"
           className={`relative h-6 w-10 rounded-full transition-colors ${isDarkMode ? 'bg-[#c94545]' : 'bg-[#d1d5dc]'}`}
         >
-          <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${isDarkMode ? 'left-5' : 'left-1'}`} />
+          <span className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-all ${isDarkMode ? 'ltr:left-5 rtl:right-5' : 'ltr:left-1 rtl:right-1'}`} />
         </span>
       </button>
 
@@ -155,10 +161,10 @@ export default function AccountMenu({ onClose }) {
             type="button"
             role="menuitem"
             onClick={() => setShowLogoutModal(true)}
-            className="flex w-full items-center gap-3 px-5 py-4 text-left text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350] cursor-pointer"
+            className="flex w-full items-center gap-3 px-5 py-4 text-start text-[17px] font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#ef5350] cursor-pointer"
           >
-            <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl">⇥</span>
-            <span>Logout</span>
+            <span aria-hidden="true" className="flex h-6 w-6 items-center justify-center text-xl rtl:rotate-180">⇥</span>
+            <span>{tr.logout}</span>
           </button>
         </>
       )}

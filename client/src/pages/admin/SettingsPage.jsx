@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { userApi, authApi, shippingZoneApi } from '../../services/api';
 import { getStoredUser, saveAuthSession, getAuthToken } from '../../utils/auth';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* ── Mock shipping zones ── */
 const initialZones = [
@@ -11,12 +12,7 @@ const initialZones = [
   { id: 4, name: 'Upper Egypt', eta: '5-7 days', price: 65 },
 ];
 
-const tabs = [
-  { id: 'profile', label: 'Profile', icon: 'user' },
-  { id: 'shipping', label: 'Shipping Zones', icon: 'pin' },
-];
-
-/* ── Small icon set (no extra deps) ── */
+/* ── Small icon set ── */
 function TabIcon({ type }) {
   const paths = {
     user: (
@@ -60,7 +56,7 @@ function TabIcon({ type }) {
 function PasswordField({ label, value, onChange, placeholder, hint, disabled }) {
   const [visible, setVisible] = useState(false);
   return (
-    <div>
+    <div className="text-start">
       <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">{label}</label>
       <div className="relative">
         <input
@@ -69,14 +65,14 @@ function PasswordField({ label, value, onChange, placeholder, hint, disabled }) 
           onChange={onChange}
           placeholder={placeholder}
           disabled={disabled}
-          className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 pr-11 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] ltr:pl-4 ltr:pr-11 rtl:pr-4 rtl:pl-11 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
           disabled={disabled}
           aria-label={visible ? 'Hide password' : 'Show password'}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--secondary-text)] hover:text-[var(--primary-text)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute ltr:right-3 rtl:left-3 top-1/2 -translate-y-1/2 text-[var(--secondary-text)] hover:text-[var(--primary-text)] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
         >
           <TabIcon type={visible ? 'eyeOff' : 'eye'} />
         </button>
@@ -97,6 +93,7 @@ function ProfileSection() {
 
   const [message, setMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { lang } = useLanguage();
 
   useEffect(() => {
     authApi.me()
@@ -138,13 +135,13 @@ function ProfileSection() {
       /* Update Password if requested */
       if (newPassword) {
         if (!currentPassword) {
-          throw new Error('Current password is required to set a new password.');
+          throw new Error(lang === 'ar' ? 'كلمة المرور الحالية مطلوبة لتعيين كلمة مرور جديدة.' : 'Current password is required to set a new password.');
         }
         if (newPassword.length < 8) {
-          throw new Error('New password must be at least 8 characters.');
+          throw new Error(lang === 'ar' ? 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.' : 'New password must be at least 8 characters.');
         }
         if (newPassword !== confirmPassword) {
-          throw new Error('New passwords do not match.');
+          throw new Error(lang === 'ar' ? 'كلمتا المرور غير متطابقتين.' : 'New passwords do not match.');
         }
 
         await userApi.updatePassword({
@@ -153,20 +150,20 @@ function ProfileSection() {
         });
       }
 
-      setMessage({ type: 'success', text: 'Admin credentials updated in database!' });
+      setMessage({ type: 'success', text: lang === 'ar' ? 'تم تحديث بيانات المدير بنجاح!' : 'Admin credentials updated in database!' });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       setIsEditing(false);
     } catch (err) {
-      setMessage({ type: 'error', text: err.message || 'Failed to update settings.' });
+      setMessage({ type: 'error', text: err.message || (lang === 'ar' ? 'فشل تحديث الإعدادات.' : 'Failed to update settings.') });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSave} className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 sm:p-8">
+    <form onSubmit={handleSave} className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 sm:p-8 text-start">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
@@ -174,9 +171,11 @@ function ProfileSection() {
             <TabIcon type="user" />
           </span>
           <div>
-            <h2 className="text-lg font-bold text-[var(--primary-text)]">Admin Profile & Security</h2>
+            <h2 className="text-lg font-bold text-[var(--primary-text)]">
+              {lang === 'ar' ? 'الملف الشخصي والأمان' : 'Admin Profile & Security'}
+            </h2>
             <p className="text-sm text-[var(--secondary-text)]">
-              Update your name, email, and password directly in the database.
+              {lang === 'ar' ? 'تحديث الاسم والبريد الإلكتروني وكلمة المرور في قاعدة البيانات.' : 'Update your name, email, and password directly in the database.'}
             </p>
           </div>
         </div>
@@ -185,10 +184,10 @@ function ProfileSection() {
           <button
             type="button"
             onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 rounded-full bg-[#c53938] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+            className="flex items-center gap-2 rounded-full bg-[#c53938] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
           >
             <TabIcon type="edit" />
-            Edit Profile
+            {lang === 'ar' ? 'تعديل البيانات' : 'Edit Profile'}
           </button>
         )}
       </div>
@@ -206,29 +205,35 @@ function ProfileSection() {
       {/* ── Name + Email ── */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">First Name</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">
+            {lang === 'ar' ? 'الاسم الأول' : 'First Name'}
+          </label>
           <input
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            placeholder="First name"
+            placeholder={lang === 'ar' ? 'الاسم الأول' : 'First name'}
             disabled={!isEditing}
             className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">Last Name</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">
+            {lang === 'ar' ? 'اسم العائلة' : 'Last Name'}
+          </label>
           <input
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            placeholder="Last name"
+            placeholder={lang === 'ar' ? 'اسم العائلة' : 'Last name'}
             disabled={!isEditing}
             className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 disabled:cursor-not-allowed disabled:opacity-60"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">Email Address</label>
+          <label className="mb-1.5 block text-sm font-semibold text-[var(--primary-text)]">
+            {lang === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}
+          </label>
           <input
             type="email"
             value={email}
@@ -244,31 +249,31 @@ function ProfileSection() {
 
       {/* ── Password ── */}
       <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[var(--secondary-text)]">
-        Change Password
+        {lang === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}
       </h3>
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <PasswordField
-            label="Current Password"
+            label={lang === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
-            placeholder="Enter current password"
+            placeholder={lang === 'ar' ? 'أدخل كلمة المرور الحالية' : 'Enter current password'}
             disabled={!isEditing}
           />
         </div>
         <PasswordField
-          label="New Password"
+          label={lang === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
-          placeholder="Enter new password"
-          hint="Must be at least 8 characters."
+          placeholder={lang === 'ar' ? 'أدخل كلمة المرور الجديدة' : 'Enter new password'}
+          hint={lang === 'ar' ? 'يجب أن لا تقل عن 8 أحرف.' : 'Must be at least 8 characters.'}
           disabled={!isEditing}
         />
         <PasswordField
-          label="Confirm New Password"
+          label={lang === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Re-enter new password"
+          placeholder={lang === 'ar' ? 'أعد إدخال كلمة المرور الجديدة' : 'Re-enter new password'}
           disabled={!isEditing}
         />
       </div>
@@ -279,16 +284,16 @@ function ProfileSection() {
           <button
             type="button"
             onClick={() => setIsEditing(false)}
-            className="rounded-full border border-[var(--border-color)] px-6 py-2.5 text-sm font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)]"
+            className="rounded-full border border-[var(--border-color)] px-6 py-2.5 text-sm font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer"
           >
-            Cancel
+            {lang === 'ar' ? 'إلغاء' : 'Cancel'}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-full bg-[#c53938] px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
+            className="rounded-full bg-[#c53938] px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60 cursor-pointer"
           >
-            {isSubmitting ? 'Saving...' : 'Save Changes'}
+            {isSubmitting ? (lang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...') : (lang === 'ar' ? 'حفظ التغييرات' : 'Save Changes')}
           </button>
         </div>
       )}
@@ -296,7 +301,7 @@ function ProfileSection() {
   );
 }
 
-function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
+function ShippingZoneModal({ isOpen, onClose, onSave, initialData, lang }) {
   const [formData, setFormData] = useState({
     name: '',
     eta: '',
@@ -322,15 +327,15 @@ function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.name.trim()) {
-      setError('Zone name is required.');
+      setError(lang === 'ar' ? 'اسم المنطقة مطلوب.' : 'Zone name is required.');
       return;
     }
     if (!formData.eta.trim()) {
-      setError('Estimated delivery time (ETA) is required.');
+      setError(lang === 'ar' ? 'وقت التوصيل المتوقع مطلوب.' : 'Estimated delivery time (ETA) is required.');
       return;
     }
     if (formData.price === '' || isNaN(formData.price) || Number(formData.price) < 0) {
-      setError('Please enter a valid shipping price.');
+      setError(lang === 'ar' ? 'يرجى إدخال سعر شحن صحيح.' : 'Please enter a valid shipping price.');
       return;
     }
 
@@ -345,15 +350,15 @@ function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 shadow-2xl animate-[fadeIn_0.15s_ease-out]">
+      <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 shadow-2xl animate-[fadeIn_0.15s_ease-out] text-start">
         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4 mb-4">
           <h3 className="text-lg font-bold text-[var(--primary-text)]">
-            {initialData ? 'Edit Shipping Zone' : 'Add New Shipping Zone'}
+            {initialData ? (lang === 'ar' ? 'تعديل منطقة الشحن' : 'Edit Shipping Zone') : (lang === 'ar' ? 'إضافة منطقة شحن جديدة' : 'Add New Shipping Zone')}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition"
+            className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition cursor-pointer"
           >
             ✕
           </button>
@@ -368,33 +373,33 @@ function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-              Zone Name
+              {lang === 'ar' ? 'اسم المنطقة' : 'Zone Name'}
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Cairo & Giza, Red Sea..."
+              placeholder={lang === 'ar' ? 'مثال: القاهرة والجيزة، البحر الأحمر...' : 'e.g. Cairo & Giza, Red Sea...'}
               className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
             />
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-              Estimated Delivery Time (ETA)
+              {lang === 'ar' ? 'وقت التوصيل المتوقع (ETA)' : 'Estimated Delivery Time (ETA)'}
             </label>
             <input
               type="text"
               value={formData.eta}
               onChange={(e) => setFormData({ ...formData, eta: e.target.value })}
-              placeholder="e.g. 1-2 days, 3-5 business days"
+              placeholder={lang === 'ar' ? 'مثال: 1-2 أيام، 3-5 أيام عمل' : 'e.g. 1-2 days, 3-5 business days'}
               className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
             />
           </div>
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-              Shipping Price (EGP)
+              {lang === 'ar' ? 'سعر الشحن (ج.م)' : 'Shipping Price (EGP)'}
             </label>
             <input
               type="number"
@@ -402,7 +407,7 @@ function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
               step="1"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              placeholder="e.g. 35"
+              placeholder="35"
               className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
             />
           </div>
@@ -411,15 +416,15 @@ function ShippingZoneModal({ isOpen, onClose, onSave, initialData }) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-[var(--border-color)] px-5 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)]"
+              className="rounded-full border border-[var(--border-color)] px-5 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer"
             >
-              Cancel
+              {lang === 'ar' ? 'إلغاء' : 'Cancel'}
             </button>
             <button
               type="submit"
-              className="rounded-full bg-[#c53938] px-6 py-2 text-xs font-semibold text-white transition hover:opacity-90 shadow-sm"
+              className="rounded-full bg-[#c53938] px-6 py-2 text-xs font-semibold text-white transition hover:opacity-90 shadow-sm cursor-pointer"
             >
-              {initialData ? 'Update Zone' : 'Add Zone'}
+              {initialData ? (lang === 'ar' ? 'تحديث المنطقة' : 'Update Zone') : (lang === 'ar' ? 'إضافة المنطقة' : 'Add Zone')}
             </button>
           </div>
         </form>
@@ -433,6 +438,7 @@ function ShippingZonesSection() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingZone, setEditingZone] = useState(null);
+  const { lang } = useLanguage();
 
   const fetchZones = async () => {
     try {
@@ -440,7 +446,6 @@ function ShippingZonesSection() {
       const data = await shippingZoneApi.getZones();
       let fetched = data.zones || [];
 
-      // If DB has no zones yet, seed initial mock zones into DB automatically
       if (fetched.length === 0) {
         for (const iz of initialZones) {
           try {
@@ -479,9 +484,9 @@ function ShippingZonesSection() {
     try {
       await shippingZoneApi.deleteZone(id);
       setZones((prev) => prev.filter((z) => (z._id || z.id) !== id));
-      toast.success('Shipping zone deleted');
+      toast.success(lang === 'ar' ? 'تم حذف منطقة الشحن' : 'Shipping zone deleted');
     } catch (err) {
-      toast.error(err.message || 'Failed to delete shipping zone.');
+      toast.error(err.message || (lang === 'ar' ? 'فشل حذف منطقة الشحن.' : 'Failed to delete shipping zone.'));
     }
   };
 
@@ -497,7 +502,7 @@ function ShippingZonesSection() {
         setZones((prev) =>
           prev.map((z) => ((z._id || z.id) === id ? updated.zone || zoneData : z))
         );
-        toast.success(`Shipping zone "${zoneData.name}" updated`);
+        toast.success(lang === 'ar' ? `تم تحديث منطقة "${zoneData.name}"` : `Shipping zone "${zoneData.name}" updated`);
       } else {
         const created = await shippingZoneApi.createZone({
           name: zoneData.name,
@@ -505,15 +510,15 @@ function ShippingZonesSection() {
           price: zoneData.price,
         });
         setZones((prev) => [...prev, created.zone]);
-        toast.success(`Shipping zone "${zoneData.name}" added`);
+        toast.success(lang === 'ar' ? `تمت إضافة منطقة "${zoneData.name}"` : `Shipping zone "${zoneData.name}" added`);
       }
     } catch (err) {
-      toast.error(err.message || 'Failed to save shipping zone.');
+      toast.error(err.message || (lang === 'ar' ? 'فشل حفظ منطقة الشحن.' : 'Failed to save shipping zone.'));
     }
   };
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 sm:p-8">
+    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 sm:p-8 text-start">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-start gap-4">
@@ -521,9 +526,11 @@ function ShippingZonesSection() {
             <TabIcon type="pin" />
           </span>
           <div>
-            <h2 className="text-lg font-bold text-[var(--primary-text)]">Shipping Zones & Rates</h2>
+            <h2 className="text-lg font-bold text-[var(--primary-text)]">
+              {lang === 'ar' ? 'مناطق وأسعار الشحن' : 'Shipping Zones & Rates'}
+            </h2>
             <p className="text-sm text-[var(--secondary-text)]">
-              Manage delivery areas, timeframes, and prices saved directly in MongoDB.
+              {lang === 'ar' ? 'إدارة مناطق التوصيل، المواعيد المتوقعة، والأسعار المحفوظة مباشرة في قاعدة البيانات.' : 'Manage delivery areas, timeframes, and prices saved directly in MongoDB.'}
             </p>
           </div>
         </div>
@@ -533,7 +540,7 @@ function ShippingZonesSection() {
           className="flex items-center gap-2 rounded-full bg-[#c53938] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer shadow-sm"
         >
           <TabIcon type="plus" />
-          Add Zone
+          {lang === 'ar' ? 'إضافة منطقة' : 'Add Zone'}
         </button>
       </div>
 
@@ -542,11 +549,11 @@ function ShippingZonesSection() {
       {/* ── Zones list ── */}
       {loading ? (
         <div className="p-8 text-center text-sm text-[var(--secondary-text)] animate-pulse">
-          Loading shipping zones from database...
+          {lang === 'ar' ? 'جارٍ تحميل مناطق الشحن من قاعدة البيانات...' : 'Loading shipping zones from database...'}
         </div>
       ) : zones.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border-color)] p-8 text-center text-sm text-[var(--secondary-text)]">
-          No shipping zones added yet. Click "Add Zone" above to create your first delivery area.
+          {lang === 'ar' ? 'لا توجد مناطق شحن مضافة بعد. اضغط على "إضافة منطقة" أعلاه لإنشاء أول منطقة توصيل.' : 'No shipping zones added yet. Click "Add Zone" above to create your first delivery area.'}
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -571,7 +578,7 @@ function ShippingZonesSection() {
                   <button
                     type="button"
                     onClick={() => handleEditClick(zone)}
-                    title="Edit zone"
+                    title={lang === 'ar' ? 'تعديل المنطقة' : 'Edit zone'}
                     className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-bg)] hover:text-[var(--primary-text)] cursor-pointer"
                   >
                     <TabIcon type="edit" />
@@ -579,10 +586,10 @@ function ShippingZonesSection() {
                   <button
                     type="button"
                     onClick={() => handleDelete(id)}
-                    title="Delete zone"
+                    title={lang === 'ar' ? 'حذف المنطقة' : 'Delete zone'}
                     className="text-xs font-semibold text-[#c53938] hover:underline cursor-pointer"
                   >
-                    Delete
+                    {lang === 'ar' ? 'حذف' : 'Delete'}
                   </button>
                 </div>
               </div>
@@ -597,6 +604,7 @@ function ShippingZonesSection() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveZone}
         initialData={editingZone}
+        lang={lang}
       />
     </div>
   );
@@ -604,25 +612,35 @@ function ShippingZonesSection() {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  const { lang } = useLanguage();
+
+  const localTabs = [
+    { id: 'profile', label: lang === 'ar' ? 'الملف الشخصي' : 'Profile', icon: 'user' },
+    { id: 'shipping', label: lang === 'ar' ? 'مناطق الشحن' : 'Shipping Zones', icon: 'pin' },
+  ];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 text-start">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--primary-text)]">Settings</h1>
-        <p className="text-sm text-[var(--secondary-text)]">Manage your account and store preferences</p>
+        <h1 className="text-2xl font-bold text-[var(--primary-text)]">
+          {lang === 'ar' ? 'الإعدادات' : 'Settings'}
+        </h1>
+        <p className="text-sm text-[var(--secondary-text)]">
+          {lang === 'ar' ? 'إدارة بيانات حسابك وتفضيلات المتجر ومناطق الشحن' : 'Manage your account and store preferences'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[240px_1fr]">
         {/* ── Sidebar tabs ── */}
         <div className="flex h-fit flex-row gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-2 lg:flex-col">
-          {tabs.map((tab) => (
+          {localTabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-1 items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition lg:flex-none ${
+              className={`flex flex-1 items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition lg:flex-none cursor-pointer text-start ${
                 activeTab === tab.id
-                  ? 'bg-[#c53938]/10 text-[#c53938]'
+                  ? 'bg-[#c53938]/10 text-[#c53938] font-bold'
                   : 'text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)]'
               }`}
             >

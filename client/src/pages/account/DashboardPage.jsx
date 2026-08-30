@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { authApi, orderApi, userApi, productApi } from '../../services/api';
 import { getStoredUser } from '../../utils/auth';
+import { useLanguage } from '../../context/LanguageContext';
+import { formatUserName } from '../../utils/arabicNames';
 
 import productAirpods from '../../assets/images/dashboard/product-airpods.png';
 import productS24 from '../../assets/images/dashboard/product-s24.png';
@@ -134,6 +136,10 @@ export default function DashboardPage() {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [productsList, setProductsList] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const { lang, t } = useLanguage();
+  const tr = t('dashboard');
+  const formattedUser = formatUserName(user, lang);
+  const userFirstName = formattedUser.firstName;
 
   useEffect(() => {
     // Fetch logged in user profile
@@ -203,7 +209,6 @@ export default function DashboardPage() {
   }, []);
 
   const displayProducts = productsList.length > 0 ? productsList : recommendedProducts;
-  const userFirstName = user?.firstName || user?.name?.split(' ')[0] || 'there';
   const loyaltyPts = user?.loyaltyPoints || 0;
   const walletBal = user?.walletBalance || 0;
 
@@ -213,8 +218,8 @@ export default function DashboardPage() {
       icon: 'bag',
       iconBg: 'bg-indigo-100 text-indigo-500',
       value: orderCount.toString(),
-      label: 'Total Orders',
-      note: orderCount > 0 ? 'Active customer' : 'No orders yet',
+      label: tr.totalOrders,
+      note: orderCount > 0 ? tr.activeCustomer : tr.noOrdersYet,
       noteColor: 'text-indigo-500',
     },
     {
@@ -222,8 +227,8 @@ export default function DashboardPage() {
       icon: 'heart',
       iconBg: 'bg-rose-100 text-rose-500',
       value: wishlistCount.toString(),
-      label: 'Wishlist Items',
-      note: wishlistCount > 0 ? `${wishlistCount} saved` : 'Save items',
+      label: tr.wishlistItems,
+      note: wishlistCount > 0 ? tr.saved(wishlistCount) : tr.saveItems,
       noteColor: 'text-[#c53938]',
     },
     {
@@ -231,8 +236,8 @@ export default function DashboardPage() {
       icon: 'check',
       iconBg: 'bg-amber-100 text-amber-500',
       value: loyaltyPts.toLocaleString(),
-      label: 'Loyalty Points',
-      note: `EGP ${Math.floor(loyaltyPts / 10)} value`,
+      label: tr.loyaltyPoints,
+      note: tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString()),
       noteColor: 'text-amber-500',
     },
     {
@@ -240,24 +245,24 @@ export default function DashboardPage() {
       icon: 'wallet',
       iconBg: 'bg-emerald-100 text-emerald-500',
       value: `EGP ${walletBal.toLocaleString()}`,
-      label: 'Wallet Balance',
-      note: 'Ready to use',
+      label: tr.walletBalance,
+      note: tr.readyToUse,
       noteColor: 'text-emerald-500',
     },
   ];
 
   const today = useMemo(
     () =>
-      new Date().toLocaleDateString('en-US', {
+      new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
         weekday: 'long',
         month: 'long',
         day: 'numeric',
         year: 'numeric',
       }),
-    []
+    [lang]
   );
-  const [weekday, ...rest] = today.split(', ');
-  const restDate = rest.join(', ');
+  const [weekday, ...rest] = today.split(lang === 'ar' ? '، ' : ', ');
+  const restDate = rest.join(lang === 'ar' ? '، ' : ', ') || today;
 
   return (
     <div className="flex flex-col gap-5">
@@ -265,13 +270,13 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--primary-text)]">
-            Good morning, {userFirstName}! <span>👋</span>
+            {tr.greeting(userFirstName)} <span>👋</span>
           </h1>
           <p className="text-sm text-[var(--secondary-text)]">
-            Here's what's happening with your account today.
+            {tr.greetingSubtitle}
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-start ltr:text-right rtl:text-left">
           <p className="text-xs text-[var(--secondary-text)]">{weekday}</p>
           <p className="text-sm font-semibold text-[var(--primary-text)]">{restDate}</p>
         </div>
@@ -304,9 +309,9 @@ export default function DashboardPage() {
         {/* Recent Orders */}
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--primary-text)]">Recent Orders</h2>
+            <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.recentOrders}</h2>
             <a href="/account/orders" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
-              View all
+              {tr.viewAll}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
               </svg>
@@ -315,7 +320,7 @@ export default function DashboardPage() {
 
           {loadingOrders ? (
             <div className="py-8 text-center text-xs text-[var(--secondary-text)]">
-              Loading recent orders...
+              {tr.loadingOrders}
             </div>
           ) : recentOrders.length > 0 ? (
             <ul className="flex flex-col divide-y divide-[var(--border-color)]">
@@ -358,13 +363,13 @@ export default function DashboardPage() {
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)]">
                 <StatIcon type="bag" />
               </div>
-              <p className="text-sm font-semibold text-[var(--primary-text)]">No orders yet</p>
-              <p className="mt-1 text-xs text-[var(--secondary-text)]">When you place orders, they will show up here.</p>
+              <p className="text-sm font-semibold text-[var(--primary-text)]">{tr.noOrdersTitle}</p>
+              <p className="mt-1 text-xs text-[var(--secondary-text)]">{tr.noOrdersSubtitle}</p>
               <a
                 href="/stationery"
                 className="mt-4 inline-flex items-center rounded-xl bg-[#c53938] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#a82d2c]"
               >
-                Browse Products
+                {tr.browseProducts}
               </a>
             </div>
           )}
@@ -376,10 +381,10 @@ export default function DashboardPage() {
           <span className="pointer-events-none absolute -bottom-12 -right-4 h-28 w-28 rounded-full bg-white/5" />
 
           <p className="relative text-[11px] font-semibold uppercase tracking-wider opacity-80">
-            Loyalty Points
+            {tr.loyaltyPointsCard}
           </p>
           <p className="relative mt-1 text-3xl font-bold">{loyaltyPts.toLocaleString()}</p>
-          <p className="relative mb-4 text-xs opacity-80">= EGP {Math.floor(loyaltyPts / 10).toLocaleString()} in rewards</p>
+          <p className="relative mb-4 text-xs opacity-80">{tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString())}</p>
 
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/20">
             <div
@@ -388,7 +393,7 @@ export default function DashboardPage() {
             />
           </div>
           <p className="relative mt-2 text-[11px] opacity-80">
-            {loyaltyPts >= 1000 ? 'Gold Member' : `${1000 - loyaltyPts} pts until Gold tier`}
+            {loyaltyPts >= 1000 ? tr.goldMember : tr.untilGold(1000 - loyaltyPts)}
           </p>
         </section>
       </div>
@@ -396,9 +401,9 @@ export default function DashboardPage() {
       {/* ── Recommended for You ── */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[var(--primary-text)]">Recommended for You</h2>
+          <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.recommendedForYou}</h2>
           <a href="/stationery" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
-            Browse all
+            {tr.browseAll}
             <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
             </svg>

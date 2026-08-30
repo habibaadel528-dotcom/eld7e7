@@ -5,37 +5,19 @@ import PasswordTab from '../../components/dashboard/settings/PasswordTab';
 import PreferencesTab from '../../components/dashboard/settings/PreferencesTab';
 import SecurityTab from '../../components/dashboard/settings/SecurityTab';
 import DeleteAccountTab from '../../components/dashboard/settings/DeleteAccountTab';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'password' | 'preferences' | 'security' | 'delete'
+  const [activeTab, setActiveTab] = useState('profile');
+  const { t } = useLanguage();
+  const tr = t('settings');
 
   const settingsTabs = [
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: User,
-    },
-    {
-      id: 'password',
-      label: 'Password',
-      icon: Lock,
-    },
-    {
-      id: 'preferences',
-      label: 'Preferences',
-      icon: Sliders,
-    },
-    {
-      id: 'security',
-      label: 'Security',
-      icon: Shield,
-    },
-    {
-      id: 'delete',
-      label: 'Delete Account',
-      icon: Trash2,
-      isDanger: true,
-    },
+    { id: 'profile',     label: tr.profile,        icon: User },
+    { id: 'password',    label: tr.password,        icon: Lock },
+    { id: 'preferences', label: tr.preferences,     icon: Sliders },
+    { id: 'security',    label: tr.security,        icon: Shield },
+    { id: 'delete',      label: tr.deleteAccount,   icon: Trash2, isDanger: true },
   ];
 
   return (
@@ -43,10 +25,10 @@ export default function SettingsPage() {
       {/* Page Title & Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-[var(--primary-text)]">
-          Settings
+          {tr.title}
         </h1>
         <p className="text-sm text-[var(--muted-text)] mt-1">
-          Manage your account credentials, security preferences, and localization settings.
+          {tr.subtitle}
         </p>
       </div>
 
@@ -88,14 +70,14 @@ export default function SettingsPage() {
           </nav>
         </div>
 
-        {/* Tab Content Container with 200ms Fade+Slide transition */}
+        {/* Tab Content Container */}
         <div className="flex-1 w-full min-w-0">
           <div key={activeTab} className="transition-all duration-200 ease-in-out animate-in fade-in-50 slide-in-from-bottom-2">
-            {activeTab === 'profile' && <ProfileTab />}
-            {activeTab === 'password' && <PasswordTab />}
+            {activeTab === 'profile'     && <ProfileTab />}
+            {activeTab === 'password'    && <PasswordTab />}
             {activeTab === 'preferences' && <PreferencesTab />}
-            {activeTab === 'security' && <SecurityTab />}
-            {activeTab === 'delete' && <DeleteAccountTab />}
+            {activeTab === 'security'    && <SecurityTab />}
+            {activeTab === 'delete'      && <DeleteAccountTab />}
           </div>
         </div>
       </div>

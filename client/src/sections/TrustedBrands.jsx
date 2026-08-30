@@ -2,31 +2,19 @@ import visaLogo from '../assets/icons/visa.svg';
 import mastercardLogo from '../assets/icons/mastercard.svg';
 import paymobLogo from '../assets/icons/paymob.png';
 import whatsappLogo from '../assets/icons/whatsapp.svg';
+import { useLanguage } from '../context/LanguageContext';
 
 const trustedBrands = [
-  {
-    name: 'Visa',
-    logo: visaLogo,
-    className: 'h-[23px] w-[72px]',
-  },
-  {
-    name: 'Mastercard',
-    logo: mastercardLogo,
-    className: 'h-[49px] w-[63px]',
-  },
-  {
-    name: 'Paymob',
-    logo: paymobLogo,
-    className: 'h-[39px] w-[152px]',
-  },
-  {
-    name: 'WhatsApp',
-    logo: whatsappLogo,
-    className: 'h-[49px] w-[49px]',
-  },
+  { name: 'Visa',       logo: visaLogo,       className: 'h-[23px] w-[72px]' },
+  { name: 'Mastercard', logo: mastercardLogo,  className: 'h-[49px] w-[63px]' },
+  { name: 'Paymob',     logo: paymobLogo,      className: 'h-[39px] w-[152px]' },
+  { name: 'WhatsApp',   logo: whatsappLogo,    className: 'h-[49px] w-[49px]' },
 ];
 
 export default function TrustedBrands() {
+  const { t } = useLanguage();
+  const tr = t('trustedBrands');
+
   return (
     <section
       aria-labelledby="trusted-brands-title"
@@ -39,11 +27,11 @@ export default function TrustedBrands() {
             className="m-0 text-center text-[22px] leading-8 sm:text-[28px]"
           >
             <span className="font-bold text-[var(--primary-text)]">
-              Trusted by Students, Creatives
+              {tr.title1}
             </span>
 
             <span className="font-light text-[#9a9797]">
-              , and Small Businesses
+              {tr.title2}
             </span>
           </h2>
 

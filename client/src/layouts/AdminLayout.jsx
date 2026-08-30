@@ -3,9 +3,13 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import AdminHeader from '../components/admin/AdminHeader';
 import AdminSidebar from '../components/admin/AdminSidebar';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function AdminLayout() {
   const location = useLocation();
+  const { lang, t } = useLanguage();
+  const tr = t('admin').sidebar;
+
   const [isCollapsed, setIsCollapsed] = useState(
     () => localStorage.getItem('sidebar_collapsed') === 'true'
   );
@@ -64,15 +68,15 @@ export default function AdminLayout() {
             />
 
             {/* Slide-in Menu Panel */}
-            <div className="fixed inset-y-0 left-0 z-50 w-[290px] max-w-[85vw] bg-[var(--surface-bg)] p-4 shadow-2xl border-r border-[var(--border-color)] overflow-y-auto animate-in slide-in-from-left duration-300">
+            <div className="fixed inset-y-0 ltr:left-0 rtl:right-0 z-50 w-[290px] max-w-[85vw] bg-[var(--surface-bg)] p-4 shadow-2xl ltr:border-r rtl:border-l border-[var(--border-color)] overflow-y-auto animate-in ltr:slide-in-from-left rtl:slide-in-from-right duration-300">
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--secondary-text)]">
-                  Account Navigation
+                  {tr.accountNav}
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition"
+                  className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition cursor-pointer"
                   aria-label="Close mobile menu"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -8,12 +8,16 @@ import ProductCard from '../components/ProductCard';
 
 import { useCart } from '../context/CartContext';
 import { productApi } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 import bannerImage from '../assets/images/cultural-books-banner.png';
 
 const PRODUCTS_PER_PAGE = 15;
 
 export default function CulturalBooksClearance() {
   const { addToCart } = useCart();
+  const { lang, t } = useLanguage();
+  const tr = t('products');
+
   const [productsList, setProductsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -58,12 +62,6 @@ export default function CulturalBooksClearance() {
     return filteredProducts.slice(startIndex, endIndex);
   }, [filteredProducts, currentPage]);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
-
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
     setCurrentPage(1);
@@ -74,11 +72,14 @@ export default function CulturalBooksClearance() {
   };
 
   const goToPage = (pageNumber) => {
-    const safePage = Math.min(Math.max(pageNumber, 1), totalPages);
+    const targetPage = Math.min(
+      Math.max(pageNumber, 1),
+      totalPages,
+    );
 
-    setCurrentPage(safePage);
+    setCurrentPage(targetPage);
 
-    window.requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
       document.getElementById('products')?.scrollIntoView({
         behavior: 'smooth',
         block: 'start',
@@ -97,59 +98,17 @@ export default function CulturalBooksClearance() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
+    <div className="min-h-screen overflow-x-hidden bg-[var(--page-bg)] text-[var(--primary-text)]">
       <Helmet>
-        <title>Cultural Books Clearance | El-D7E7</title>
-
+        <title>{tr.clearanceBooksTitle} | El-D7E7</title>
         <meta
           name="description"
-          content="Shop discounted cultural books from El-D7E7. Discover selected books at special clearance prices."
+          content={lang === 'ar' ? 'تسوق كتباً ثقافية نادرة بأسعار مخفضة مميزة من الدحيح.' : 'Shop rare cultural books at special discounted prices from El-D7E7.'}
         />
-
-        <meta
-          name="keywords"
-          content="cultural books, clearance books, discounted books, El-D7E7, books Egypt"
-        />
-
-        <meta name="robots" content="index, follow" />
-
-        <meta
-          property="og:title"
-          content="Cultural Books Clearance | El-D7E7"
-        />
-
-        <meta
-          property="og:description"
-          content="Explore selected cultural books at special clearance prices."
-        />
-
-        <meta property="og:type" content="website" />
-
-        <meta
-          property="og:image"
-          content="/src/assets/images/cultural-books-banner.png"
-        />
-
-        <meta name="twitter:card" content="summary_large_image" />
-
-        <meta
-          name="twitter:title"
-          content="Cultural Books Clearance | El-D7E7"
-        />
-
-        <meta
-          name="twitter:description"
-          content="Shop rare cultural books at special discounted prices."
-        />
-
-        <link
-          rel="canonical"
-          href="https://el-d7e7.com/cultural-books-clearance"
-        />
+        <meta name="robots" content="index, follow, max-image-preview:large" />
       </Helmet>
 
       <Header />
-
       <Navigation />
 
       <main>
@@ -173,25 +132,25 @@ export default function CulturalBooksClearance() {
 
               <div className="relative z-10 flex min-h-[310px] max-w-[650px] flex-col justify-center px-7 py-10 sm:min-h-[350px] sm:px-10 sm:py-12 lg:min-h-[392px] lg:px-14">
                 <p className="m-0 text-[28px] font-medium leading-tight tracking-[-0.8px] text-[#c53938] sm:text-[38px] lg:text-[48px] lg:tracking-[-0.96px]">
-                  Exclusive
+                  {lang === 'ar' ? 'حصري' : 'Exclusive'}
                 </p>
 
                 <h1
                   id="cultural-books-heading"
                   className="mt-3 text-[28px] font-medium leading-tight tracking-[-0.8px] text-[#352e2e] dark:text-white sm:text-[38px] lg:text-[48px] lg:tracking-[-0.96px]"
                 >
-                  Cultural Books Clearance
+                  {tr.clearanceBooksTitle}
                 </h1>
 
                 <p className="mt-4 max-w-[540px] text-sm leading-6 text-[#505050] dark:text-[#d1d5dc] sm:mt-5 sm:text-base sm:leading-7 lg:text-[18px]">
-                  Shop rare cultural books at special discounted prices.
+                  {lang === 'ar' ? 'تسوق كتباً ثقافية نادرة بأسعار مخفضة مميزة.' : 'Shop rare cultural books at special discounted prices.'}
                 </p>
 
                 <a
                   href="#products"
                   className="mt-7 inline-flex h-[50px] w-[190px] items-center justify-center rounded-full bg-[#c94545] px-6 text-base font-medium text-white transition duration-200 hover:bg-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] focus-visible:ring-offset-2 sm:mt-8 sm:h-[56px] sm:w-[220px] sm:text-lg lg:h-[60px] lg:w-[250px] lg:text-xl"
                 >
-                  Shop Now
+                  {tr.shopNow}
                 </a>
               </div>
             </div>
@@ -214,12 +173,9 @@ export default function CulturalBooksClearance() {
 
               <p className="m-0 text-center text-sm text-[var(--secondary-text)] sm:text-base lg:text-[18px]">
                 {filteredProducts.length > 0 ? (
-                  <>
-                    Showing {currentPageStart}–{currentPageEnd} out of{' '}
-                    {filteredProducts.length} Clearance Books
-                  </>
+                  tr.showing(currentPageStart, currentPageEnd, filteredProducts.length, tr.clearanceBooksTitle)
                 ) : (
-                  'No clearance books found'
+                  tr.noProductsFound
                 )}
               </p>
 
@@ -232,15 +188,15 @@ export default function CulturalBooksClearance() {
                   type="search"
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  placeholder="Search books..."
+                  placeholder={lang === 'ar' ? 'ابحث في الكتب...' : 'Search books...'}
                   autoComplete="off"
                   spellCheck="false"
-                  className="h-[50px] w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] px-5 pr-14 text-sm text-[var(--primary-text)] outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c94545] focus:ring-2 focus:ring-[#c94545]/20 sm:h-[54px] sm:px-6 sm:pr-14 sm:text-base"
+                  className="h-[50px] w-full rounded-full border border-[var(--border-color)] bg-[var(--surface-bg)] px-5 ltr:pr-14 rtl:pl-14 text-sm text-[var(--primary-text)] outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c94545] focus:ring-2 focus:ring-[#c94545]/20 sm:h-[54px] sm:px-6 sm:ltr:pr-14 sm:rtl:pl-14 sm:text-base"
                 />
 
                 <span
                   aria-hidden="true"
-                  className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-xl text-[var(--muted-text)]"
+                  className="pointer-events-none absolute ltr:right-5 rtl:left-5 top-1/2 -translate-y-1/2 text-xl text-[var(--muted-text)]"
                 >
                   ⌕
                 </span>
@@ -249,7 +205,7 @@ export default function CulturalBooksClearance() {
 
             {isLoading ? (
               <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-20 text-center">
-                <p className="animate-pulse text-base text-[var(--muted-text)]">Loading products…</p>
+                <p className="animate-pulse text-base text-[var(--muted-text)]">{tr.loading}</p>
               </div>
             ) : visibleProducts.length > 0 ? (
               <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
@@ -264,19 +220,16 @@ export default function CulturalBooksClearance() {
             ) : (
               <div className="mt-12 rounded-3xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-16 text-center">
                 <p className="m-0 text-lg font-medium text-[var(--primary-text)]">
-                  {productsList.length === 0 ? 'No products available yet.' : 'No books found'}
+                  {productsList.length === 0 ? tr.noProductsAvailable : tr.noProductsFilters}
                 </p>
 
-                <p className="mb-0 mt-2 text-sm text-[var(--secondary-text)]">
-                  {productsList.length === 0 ? 'Check back later.' : 'Try searching with another book name.'}
-                </p>
                 {productsList.length > 0 && (
                   <button
                     type="button"
                     onClick={() => { setSearchQuery(''); setCurrentPage(1); }}
                     className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-[#c94545] px-6 text-sm font-medium text-white transition hover:bg-[#ef5350]"
                   >
-                    Clear Search
+                    {tr.resetFilters}
                   </button>
                 )}
               </div>
@@ -308,9 +261,9 @@ export default function CulturalBooksClearance() {
                       onClick={() => goToPage(pageNumber)}
                       aria-label={`Go to page ${pageNumber}`}
                       aria-current={isActive ? 'page' : undefined}
-                      className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-full font-bold transition duration-200 ${
                         isActive
-                          ? 'bg-[#c53938] text-white'
+                          ? 'bg-[#c53938] text-white shadow-xs'
                           : 'bg-[var(--surface-soft)] text-[var(--secondary-text)] hover:text-[#c53938]'
                       }`}
                     >
@@ -330,7 +283,6 @@ export default function CulturalBooksClearance() {
                 </button>
               </nav>
             )}
-
           </div>
         </section>
       </main>

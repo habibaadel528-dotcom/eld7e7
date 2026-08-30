@@ -4,9 +4,13 @@ import { AlertTriangle, Trash2, ShieldAlert, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { userApi } from '../../../services/api';
 import { clearAuthSession } from '../../../utils/auth';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export default function DeleteAccountTab() {
   const navigate = useNavigate();
+  const { lang, t } = useLanguage();
+  const tr = t('settings').deleteTab;
+
   const [confirmInput, setConfirmInput] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,14 +30,13 @@ export default function DeleteAccountTab() {
     try {
       await userApi.deleteAccount({ password });
       setDeleted(true);
-      // Clear session and redirect after 2 seconds
       setTimeout(() => {
         clearAuthSession();
         navigate('/');
       }, 2000);
     } catch (err) {
-      setError(err.message || 'Failed to delete account. Please try again.');
-      toast.error(err.message || 'Failed to delete account. Please try again.');
+      setError(err.message || (lang === 'ar' ? 'فشل حذف الحساب. يرجى المحاولة لاحقاً.' : 'Failed to delete account. Please try again.'));
+      toast.error(err.message || (lang === 'ar' ? 'فشل حذف الحساب.' : 'Failed to delete account.'));
     } finally {
       setIsDeleting(false);
     }
@@ -50,10 +53,10 @@ export default function DeleteAccountTab() {
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/15 text-[#c53938]">
           <AlertTriangle className="h-6 w-6" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-[var(--primary-text)]">Delete Account</h2>
+        <div className="text-start">
+          <h2 className="text-xl font-bold text-[var(--primary-text)]">{tr.title}</h2>
           <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-1">
-            Permanently delete your profile, order history, and all account data.
+            {tr.subtitle}
           </p>
         </div>
       </div>
@@ -61,21 +64,21 @@ export default function DeleteAccountTab() {
       {deleted ? (
         <div className="p-6 rounded-[18px] bg-red-500/10 border border-red-500/20 text-red-400 space-y-3 text-center">
           <ShieldAlert className="h-10 w-10 text-[#c53938] mx-auto" />
-          <h3 className="text-lg font-bold text-[var(--primary-text)]">Account Deleted</h3>
+          <h3 className="text-lg font-bold text-[var(--primary-text)]">{lang === 'ar' ? 'تم حذف الحساب' : 'Account Deleted'}</h3>
           <p className="text-xs sm:text-sm text-[var(--muted-text)] max-w-md mx-auto">
-            Your account has been permanently deleted. Redirecting you to the homepage...
+            {lang === 'ar' ? 'تم حذف حسابك نهائياً. جارٍ تحويلك إلى الصفحة الرئيسية...' : 'Your account has been permanently deleted. Redirecting you to the homepage...'}
           </p>
         </div>
       ) : (
-        <div className="space-y-6 max-w-xl">
+        <div className="space-y-6 max-w-xl text-start">
           {/* Warning box */}
           <div className="p-5 rounded-[18px] bg-red-500/8 border border-red-500/20 space-y-3">
             <div className="flex items-center gap-2 text-sm font-bold text-[#c53938]">
               <ShieldAlert className="h-4 w-4 shrink-0" />
-              <span>Warning: This action is permanent and irreversible</span>
+              <span>{tr.warningTitle}</span>
             </div>
             <p className="text-xs sm:text-sm text-[var(--secondary-text)] leading-relaxed">
-              Once deleted, your personal information, order history, saved addresses, wishlist items, and payment methods will be permanently erased and cannot be recovered.
+              {tr.warningText}
             </p>
           </div>
 
@@ -92,7 +95,7 @@ export default function DeleteAccountTab() {
             {/* Password confirmation */}
             <div className="flex flex-col gap-2">
               <label htmlFor="deletePassword" className="text-xs sm:text-[13px] font-semibold text-[var(--label-text)]">
-                Enter your password to confirm:
+                {tr.enterPassword}
               </label>
               <div className="relative">
                 <input
@@ -100,12 +103,12 @@ export default function DeleteAccountTab() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                  placeholder="Your current password"
+                  placeholder={lang === 'ar' ? 'كلمة المرور الحالية' : 'Your current password'}
                   className="
                     h-12 w-full rounded-[14px]
                     border border-[var(--input-border)]
                     bg-[var(--surface-input)]
-                    px-4 pr-12 text-sm text-[var(--primary-text)]
+                    px-4 ltr:pr-12 rtl:pl-12 text-sm text-[var(--primary-text)]
                     outline-none transition-all
                     focus:border-[#c53938] focus:ring-2 focus:ring-[#c53938]/15
                     placeholder:text-[var(--muted-text)]
@@ -114,7 +117,7 @@ export default function DeleteAccountTab() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors p-1 cursor-pointer"
+                  className="absolute ltr:right-3.5 rtl:left-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors p-1 cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -125,7 +128,7 @@ export default function DeleteAccountTab() {
             {/* Type DELETE */}
             <div className="flex flex-col gap-2">
               <label htmlFor="confirmDelete" className="text-xs sm:text-[13px] font-semibold text-[var(--label-text)]">
-                Type <span className="font-bold text-[#c53938]">DELETE</span> to confirm:
+                {tr.typeDelete}
               </label>
               <input
                 id="confirmDelete"
@@ -163,7 +166,7 @@ export default function DeleteAccountTab() {
                 "
               >
                 <Trash2 className="h-4 w-4" />
-                {isDeleting ? 'Deleting Account...' : 'Delete My Account'}
+                {isDeleting ? tr.deleting : tr.deleteButton}
               </button>
             </div>
           </form>

@@ -1,21 +1,23 @@
 import { Helmet } from 'react-helmet-async';
 import { useLocation } from 'react-router-dom';
-
-const titleMap = {
-  '/account/orders': 'My Orders',
-  '/account/wishlist': 'Wishlist',
-  '/account/address': 'Address',
-  '/account/payments': 'Payments',
-  '/account/notifications': 'Notifications',
-  '/account/settings': 'Settings',
-  '/account/support': 'Support',
-};
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AccountPlaceholderPage() {
   const location = useLocation();
+  const { t } = useLanguage();
+  const tr = t('sidebar');
 
-  const title =
-    titleMap[location.pathname] ?? 'Account';
+  const titleMap = {
+    '/account/orders':        tr.myOrders,
+    '/account/wishlist':      tr.wishlist,
+    '/account/address':       tr.address,
+    '/account/payments':      tr.payments,
+    '/account/notifications': 'Notifications',
+    '/account/settings':      tr.settings,
+    '/account/support':       'Support',
+  };
+
+  const title = titleMap[location.pathname] ?? 'Account';
 
   return (
     <>

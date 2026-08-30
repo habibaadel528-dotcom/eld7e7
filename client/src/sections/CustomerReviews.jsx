@@ -2,32 +2,11 @@ import { useEffect, useState } from 'react';
 
 import johnyImage from '../assets/images/johny.png';
 import martaImage from '../assets/images/marta.png';
+import { useLanguage } from '../context/LanguageContext';
 
-const reviews = [
-  {
-    id: 1,
-    name: 'Johny Assloy',
-    image: johnyImage,
-    rating: 4,
-    text: 'This store has become my go-to place for stationery and creative supplies. The selection is carefully curated and the quality is consistently high. Customer support was responsive and helpful. The order arrived on time and in perfect condition.',
-  },
-  {
-    id: 2,
-    name: 'Michael Roberts',
-    image: martaImage,
-    rating: 4,
-    text: 'I purchased craft supplies for a school project and the experience exceeded expectations. The materials were high-quality, carefully selected, and perfectly suited for creative work. The order arrived quickly and in excellent condition. Overall, a smooth and trustworthy shopping experience.',
-  },
-  {
-    id: 3,
-    name: 'Marta Brown',
-    image: martaImage,
-    rating: 4,
-    text: 'I ordered stationery and cultural books and was very satisfied with the experience. The product quality was excellent and matched the descriptions perfectly. The checkout process was simple and smooth. Delivery was fast and well-organized.',
-  },
-];
+const reviewImages = [johnyImage, martaImage, martaImage];
 
-function ReviewCard({ review, isActive }) {
+function ReviewCard({ review, image, isActive }) {
   return (
     <article
       aria-hidden={!isActive}
@@ -41,7 +20,7 @@ function ReviewCard({ review, isActive }) {
         aria-hidden="true"
         className="font-serif text-[72px] font-bold leading-[40px] text-[#d64545]"
       >
-        “
+        "
       </span>
 
       <p className="m-0 text-left text-base leading-7 text-[var(--primary-text)] sm:text-[18px]">
@@ -51,7 +30,7 @@ function ReviewCard({ review, isActive }) {
       <div className="mt-auto flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-[14px]">
           <img
-            src={review.image}
+            src={image}
             alt={`${review.name}, customer`}
             loading="lazy"
             decoding="async"
@@ -64,18 +43,14 @@ function ReviewCard({ review, isActive }) {
         </div>
 
         <div
-          aria-label={`${review.rating} out of 5 stars`}
+          aria-label="4 out of 5 stars"
           className="flex items-center text-[24px] leading-none"
         >
           {Array.from({ length: 5 }, (_, index) => (
             <span
               key={index}
               aria-hidden="true"
-              className={
-                index < review.rating
-                  ? 'text-[#f4a04b]'
-                  : 'text-[#6b6259]'
-              }
+              className={index < 4 ? 'text-[#f4a04b]' : 'text-[#6b6259]'}
             >
               ★
             </span>
@@ -87,21 +62,20 @@ function ReviewCard({ review, isActive }) {
 }
 
 export default function CustomerReviews() {
+  const { t } = useLanguage();
+  const tr = t('customerReviews');
+
   const [activeIndex, setActiveIndex] = useState(1);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setActiveIndex((currentIndex) =>
-        currentIndex === reviews.length - 1 ? 0 : currentIndex + 1,
+        currentIndex === tr.reviews.length - 1 ? 0 : currentIndex + 1,
       );
     }, 5000);
 
     return () => window.clearInterval(intervalId);
-  }, []);
-
-  const selectReview = (index) => {
-    setActiveIndex(index);
-  };
+  }, [tr.reviews.length]);
 
   return (
     <section
@@ -115,10 +89,10 @@ export default function CustomerReviews() {
             id="customer-reviews-title"
             className="m-0 flex items-start text-center text-[30px] font-normal leading-10 tracking-[-0.9px] sm:text-4xl"
           >
-            <span className="mr-2 text-[#ef5350]">Customer</span>
+            <span className="mr-2 text-[#ef5350]">{tr.sectionTitle1}</span>
 
             <span className="relative pb-2 text-[var(--primary-text)]">
-              Review
+              {tr.sectionTitle2}
 
               <span
                 aria-hidden="true"
@@ -142,10 +116,11 @@ export default function CustomerReviews() {
               }px))`,
             }}
           >
-            {reviews.map((review, index) => (
+            {tr.reviews.map((review, index) => (
               <ReviewCard
-                key={review.id}
+                key={index}
                 review={review}
+                image={reviewImages[index]}
                 isActive={index === activeIndex}
               />
             ))}
@@ -156,14 +131,14 @@ export default function CustomerReviews() {
             role="tablist"
             aria-label="Customer reviews"
           >
-            {reviews.map((review, index) => (
+            {tr.reviews.map((review, index) => (
               <button
-                key={review.id}
+                key={index}
                 type="button"
                 role="tab"
                 aria-selected={activeIndex === index}
                 aria-label={`Show review from ${review.name}`}
-                onClick={() => selectReview(index)}
+                onClick={() => setActiveIndex(index)}
                 className={`h-[18px] w-[18px] rounded-full transition ${
                   activeIndex === index
                     ? 'bg-[#d64545]'

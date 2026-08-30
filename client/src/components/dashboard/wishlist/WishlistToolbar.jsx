@@ -1,4 +1,5 @@
-import { Search, ShoppingCart, ArrowUpDown } from 'lucide-react';
+import { Search, ShoppingCart } from 'lucide-react';
+import { useLanguage } from '../../../context/LanguageContext';
 
 export default function WishlistToolbar({
   totalItems,
@@ -8,13 +9,16 @@ export default function WishlistToolbar({
   sortBy,
   onSortChange,
 }) {
+  const { t } = useLanguage();
+  const tr = t('wishlist');
+
   return (
     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
       {/* Title & Count */}
       <div>
-        <h1 className="text-2xl font-bold text-[var(--primary-text)]">My Wishlist</h1>
+        <h1 className="text-2xl font-bold text-[var(--primary-text)]">{tr.title}</h1>
         <p className="text-xs text-[var(--secondary-text)] mt-1">
-          {totalItems} {totalItems === 1 ? 'saved item' : 'saved items'}
+          {totalItems} {totalItems === 1 ? tr.savedItem : tr.savedItems}
         </p>
       </div>
 
@@ -27,7 +31,7 @@ export default function WishlistToolbar({
             type="text"
             value={search || ''}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-            placeholder="Search wishlist..."
+            placeholder={tr.searchPlaceholder}
             className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] pl-9 pr-3 text-xs text-[var(--primary-text)] outline-none focus:border-[#C53938]"
           />
         </div>
@@ -39,10 +43,10 @@ export default function WishlistToolbar({
             onChange={(e) => onSortChange && onSortChange(e.target.value)}
             className="h-10 rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-3 text-xs font-medium text-[var(--primary-text)] outline-none focus:border-[#C53938]"
           >
-            <option value="newest">Sort: Latest Added</option>
-            <option value="price-low">Sort: Price Low to High</option>
-            <option value="price-high">Sort: Price High to Low</option>
-            <option value="name">Sort: Name A-Z</option>
+            <option value="newest">{tr.sortNewest}</option>
+            <option value="price-low">{tr.sortPriceLow}</option>
+            <option value="price-high">{tr.sortPriceHigh}</option>
+            <option value="name">{tr.sortName}</option>
           </select>
         </div>
 
@@ -54,7 +58,7 @@ export default function WishlistToolbar({
             className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#C53938] px-4 text-xs font-semibold text-white transition hover:bg-[#a82d2c]"
           >
             <ShoppingCart size={16} />
-            <span>Add All to Cart</span>
+            <span>{tr.addAllToCart}</span>
           </button>
         )}
       </div>

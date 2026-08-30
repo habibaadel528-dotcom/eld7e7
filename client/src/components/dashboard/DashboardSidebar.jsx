@@ -3,26 +3,15 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { getStoredUser, clearAuthSession } from '../../utils/auth';
 import LogoutModal from '../common/LogoutModal';
+import { useLanguage } from '../../context/LanguageContext';
 
-import dashboardIcon    from '../../assets/icons/dashboard/dashboard.svg';
-import ordersIcon       from '../../assets/icons/dashboard/orders.svg';
-import wishlistIcon     from '../../assets/icons/dashboard/wishlist.svg';
-import addressIcon      from '../../assets/icons/dashboard/address.svg';
-import paymentsIcon     from '../../assets/icons/dashboard/payments.svg';
-import settingsIcon     from '../../assets/icons/dashboard/settings.svg';
-import logoutIcon       from '../../assets/icons/dashboard/logout.svg';
-
-const mainNav = [
-  { to: '/account/dashboard',     label: 'Dashboard',     icon: dashboardIcon },
-  { to: '/account/orders',        label: 'My Orders',     icon: ordersIcon },
-  { to: '/account/wishlist',      label: 'Wishlist',      icon: wishlistIcon },
-  { to: '/account/address',       label: 'Address',       icon: addressIcon },
-  { to: '/account/payments',      label: 'Payments',      icon: paymentsIcon },
-];
-
-const secondaryNav = [
-  { to: '/account/settings',      label: 'Settings',      icon: settingsIcon },
-];
+import dashboardIcon  from '../../assets/icons/dashboard/dashboard.svg';
+import ordersIcon     from '../../assets/icons/dashboard/orders.svg';
+import wishlistIcon   from '../../assets/icons/dashboard/wishlist.svg';
+import addressIcon    from '../../assets/icons/dashboard/address.svg';
+import paymentsIcon   from '../../assets/icons/dashboard/payments.svg';
+import settingsIcon   from '../../assets/icons/dashboard/settings.svg';
+import logoutIcon     from '../../assets/icons/dashboard/logout.svg';
 
 function NavItem({ item, isCollapsed }) {
   return (
@@ -53,9 +42,7 @@ function NavItem({ item, isCollapsed }) {
               isActive ? 'brightness-0 invert' : 'icon-invert'
             }`}
           />
-          {!isCollapsed && (
-            <span className="truncate">{item.label}</span>
-          )}
+          {!isCollapsed && <span className="truncate">{item.label}</span>}
         </>
       )}
     </NavLink>
@@ -66,10 +53,24 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
   const navigate = useNavigate();
   const user = getStoredUser();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { t } = useLanguage();
+  const tr = t('sidebar');
+
+  const mainNav = [
+    { to: '/account/dashboard', label: tr.dashboard, icon: dashboardIcon },
+    { to: '/account/orders',    label: tr.myOrders,  icon: ordersIcon },
+    { to: '/account/wishlist',  label: tr.wishlist,  icon: wishlistIcon },
+    { to: '/account/address',   label: tr.address,   icon: addressIcon },
+    { to: '/account/payments',  label: tr.payments,  icon: paymentsIcon },
+  ];
+
+  const secondaryNav = [
+    { to: '/account/settings', label: tr.settings, icon: settingsIcon },
+  ];
 
   const handleLogout = () => {
     clearAuthSession();
-    toast.info('You have been logged out.');
+    toast.info(tr.loggedOut);
     navigate('/login', { replace: true });
   };
 
@@ -79,33 +80,29 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         isCollapsed ? 'py-10 px-2 items-center' : 'p-4 sm:p-5'
       }`}
     >
-      {/* ── Top Header / Sleek Toggle Button ── */}
       <div className={`flex items-center w-full mb-3 ${isCollapsed ? 'justify-center' : 'justify-between px-1'}`}>
         {!isCollapsed && (
           <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--secondary-text)] opacity-70">
-            Account Menu
+            {tr.accountMenu}
           </span>
         )}
         <button
           type="button"
           onClick={onToggleCollapse}
           className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] transition-all hover:bg-[#c53938] hover:text-white hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
-          title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          aria-label={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          title={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
+          aria-label={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
         >
           <svg
             className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2.2"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
           </svg>
         </button>
       </div>
 
-      {/* ── Profile card ── */}
+      {/* Profile card */}
       <div
         className={`flex items-center transition-all duration-300 ${
           isCollapsed
@@ -121,7 +118,6 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
           >
             {(user?.name || user?.firstName || 'U').charAt(0)}
           </div>
-          {/* Online status indicator */}
           <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[var(--surface-bg)] bg-emerald-500" />
         </div>
 
@@ -137,7 +133,7 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         )}
       </div>
 
-      {/* ── Navigation ── */}
+      {/* Navigation */}
       <nav aria-label="Account navigation" className={`mt-3 flex flex-1 flex-col gap-1 w-full ${isCollapsed ? 'items-center' : ''}`}>
         {mainNav.map((item) => (
           <NavItem key={item.to} item={item} isCollapsed={isCollapsed} />
@@ -150,11 +146,11 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         ))}
       </nav>
 
-      {/* ── Logout ── */}
+      {/* Logout */}
       <div className={`mt-auto border-t border-[var(--border-color)] pt-3 w-full ${isCollapsed ? 'flex justify-center' : ''}`}>
         <button
           type="button"
-          title={isCollapsed ? 'Logout' : undefined}
+          title={isCollapsed ? tr.logout : undefined}
           onClick={() => setShowLogoutModal(true)}
           className={`group flex items-center transition-all hover:bg-[var(--surface-soft)] cursor-pointer ${
             isCollapsed
@@ -171,16 +167,13 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
             className="h-[18px] w-[18px] shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5"
             style={{ filter: 'invert(25%) sepia(90%) saturate(700%) hue-rotate(330deg) brightness(95%)' }}
           />
-          {!isCollapsed && <span className="text-[#c53938]">Logout</span>}
+          {!isCollapsed && <span className="text-[#c53938]">{tr.logout}</span>}
         </button>
       </div>
 
       {showLogoutModal && (
         <LogoutModal
-          onConfirm={() => {
-            setShowLogoutModal(false);
-            handleLogout();
-          }}
+          onConfirm={() => { setShowLogoutModal(false); handleLogout(); }}
           onCancel={() => setShowLogoutModal(false)}
         />
       )}

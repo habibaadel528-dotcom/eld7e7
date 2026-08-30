@@ -4,17 +4,18 @@ import {
   MapPin, Clock, LogOut, CheckCircle2, RefreshCw,
 } from 'lucide-react';
 import { sessionApi } from '../../../services/api';
+import { useLanguage } from '../../../context/LanguageContext';
 
 /* Relative time helper */
-function timeAgo(date) {
-  if (!date) return 'Unknown';
+function timeAgo(date, lang = 'en') {
+  if (!date) return lang === 'ar' ? 'غير معروف' : 'Unknown';
   const diff = Math.floor((Date.now() - new Date(date)) / 1000);
-  if (diff < 30)  return 'Active now';
-  if (diff < 60)  return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 30)  return lang === 'ar' ? 'نشط الآن' : 'Active now';
+  if (diff < 60)  return lang === 'ar' ? `منذ ${diff} ثانية` : `${diff}s ago`;
+  if (diff < 3600) return lang === 'ar' ? `منذ ${Math.floor(diff / 60)} دقيقة` : `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return lang === 'ar' ? `منذ ${Math.floor(diff / 3600)} ساعة` : `${Math.floor(diff / 3600)}h ago`;
   const d = new Date(date);
-  return d.toLocaleDateString('en-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function DeviceIcon({ type }) {
@@ -26,11 +27,14 @@ function DeviceIcon({ type }) {
 }
 
 export default function SecurityTab() {
+  const { lang, t } = useLanguage();
+  const tr = t('settings').securityTab;
+
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [sessions, setSessions]     = useState([]);
   const [loading, setLoading]       = useState(true);
   const [notification, setNotification] = useState(null);
-  const [revoking, setRevoking]     = useState(null); // session id being revoked
+  const [revoking, setRevoking]     = useState(null);
 
   const notify = (msg, type = 'success') => {
     setNotification({ msg, type });
@@ -56,9 +60,9 @@ export default function SecurityTab() {
     try {
       await sessionApi.revokeSession(id);
       setSessions((p) => p.filter((s) => s.id !== id));
-      notify(`Signed out from ${name}.`);
+      notify(lang === 'ar' ? `تم تسجيل الخروج من ${name}.` : `Signed out from ${name}.`);
     } catch (err) {
-      notify(err.message || 'Failed to sign out session.', 'error');
+      notify(err.message || (lang === 'ar' ? 'فشل تسجيل الخروج من الجلسة.' : 'Failed to sign out session.'), 'error');
     } finally {
       setRevoking(null);
     }
@@ -69,172 +73,217 @@ export default function SecurityTab() {
     try {
       await sessionApi.revokeAllSessions();
       setSessions((p) => p.filter((s) => s.isCurrent));
-      notify('Signed out from all other devices.');
+      notify(lang === 'ar' ? 'تم تسجيل الخروج من كافة الأجهزة الأخرى.' : 'Signed out from all other devices.');
     } catch (err) {
-      notify(err.message || 'Failed to sign out all sessions.', 'error');
+      notify(err.message || (lang === 'ar' ? 'فشل تسجيل الخروج من كافة الجلسات.' : 'Failed to sign out all sessions.'), 'error');
     } finally {
       setRevoking(null);
     }
   };
 
   const toggle2FA = () => {
-    const next = !twoFactorEnabled;
-    setTwoFactorEnabled(next);
-    notify(next ? 'Two-Factor Authentication enabled.' : 'Two-Factor Authentication disabled.');
+    setTwoFactorEnabled((v) => {
+      const next = !v;
+      notify(next
+        ? (lang === 'ar' ? 'تم تفعيل المصادقة الثنائية (محاكاة تجريبية).' : 'Two-Factor Authentication enabled (Demo).')
+        : (lang === 'ar' ? 'تم تعطيل المصادقة الثنائية.' : 'Two-Factor Authentication disabled.')
+      );
+      return next;
+    });
   };
 
   const otherSessions = sessions.filter((s) => !s.isCurrent);
+  const currentSession = sessions.find((s) => s.isCurrent);
 
   return (
-    <div className="rounded-[24px] border border-[var(--border-color)] bg-[var(--surface-card)] p-6 sm:p-10 shadow-xs space-y-8 transition-colors duration-250">
+    <div className="rounded-[24px] border border-[var(--border-color)] bg-[var(--surface-card)] p-6 sm:p-10 shadow-xs transition-colors duration-250">
 
-      {/* Header */}
-      <div className="flex items-center gap-3 pb-5 border-b border-[var(--border-color)]">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--brand-soft-bg)] text-[#c53938]">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold text-[var(--primary-text)]">Security</h2>
-          <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-0.5">
-            Manage two-factor authentication and active login sessions.
-          </p>
-        </div>
-      </div>
-
-      {/* Toast */}
+      {/* Toast Notification */}
       {notification && (
-        <div className={`flex items-center gap-3 rounded-[14px] p-4 text-xs sm:text-sm font-medium border ${
-          notification.type === 'error'
-            ? 'bg-red-500/10 text-red-400 border-red-500/20'
-            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-        }`}>
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+        <div className={`
+          mb-6 flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-semibold
+          ${notification.type === 'error'
+            ? 'border border-red-500/20 bg-red-500/10 text-red-400'
+            : 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+          }
+        `}>
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           <span>{notification.msg}</span>
         </div>
       )}
 
-      {/* 2FA */}
-      <div className="rounded-[20px] border border-[var(--border-color)] p-6 bg-[var(--surface-soft)]">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1.5 max-w-xl">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h3 className="text-base font-bold text-[var(--primary-text)]">Two-Factor Authentication (2FA)</h3>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                twoFactorEnabled
-                  ? 'bg-emerald-500/15 text-emerald-400'
-                  : 'bg-[var(--surface-soft)] text-[var(--muted-text)] border border-[var(--border-color)]'
-              }`}>
-                {twoFactorEnabled ? 'Enabled' : 'Disabled'}
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-[var(--muted-text)] leading-relaxed">
-              Add an extra layer of security. When enabled, you will need an authentication code alongside your password to sign in.
-            </p>
-          </div>
-          <button
-            type="button" role="switch" aria-checked={twoFactorEnabled} onClick={toggle2FA}
-            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 mt-1 ${twoFactorEnabled ? 'bg-[#c53938]' : 'bg-[var(--surface-soft)] border border-[var(--border-color)]'}`}
-          >
-            <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${twoFactorEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-          </button>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6 pb-5 border-b border-[var(--border-color)]">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--brand-soft-bg)] text-[#c53938]">
+          <ShieldCheck className="h-5 w-5" />
+        </div>
+        <div className="text-start">
+          <h2 className="text-xl font-bold text-[var(--primary-text)]">{tr.title}</h2>
+          <p className="text-xs sm:text-sm text-[var(--muted-text)] mt-0.5">
+            {tr.subtitle}
+          </p>
         </div>
       </div>
 
-      {/* Sessions */}
-      <div className="space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-[var(--primary-text)]">Login Sessions</h3>
-            <p className="text-xs text-[var(--muted-text)] mt-0.5">
-              {loading ? 'Loading sessions...' : `${sessions.length} device${sessions.length !== 1 ? 's' : ''} currently signed in`}
-            </p>
+      <div className="flex flex-col gap-8 max-w-2xl">
+
+        {/* ── 2FA Section ── */}
+        <div className="flex items-center justify-between gap-4 p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-input)]">
+          <div className="flex flex-col gap-1 text-start">
+            <span className="text-sm font-bold text-[var(--primary-text)]">
+              {tr.twoFactor}
+            </span>
+            <span className="text-xs text-[var(--muted-text)]">
+              {tr.twoFactorDesc}
+            </span>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={twoFactorEnabled}
+            aria-label="Toggle 2FA"
+            onClick={toggle2FA}
+            className={`
+              relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full
+              border-2 border-transparent transition-colors duration-200 ease-in-out
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]
+              ${twoFactorEnabled ? 'bg-[#c53938]' : 'bg-[var(--toggle-off-bg)]'}
+            `}
+          >
+            <span
+              className={`
+                pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md
+                transform transition duration-200 ease-in-out
+                ${twoFactorEnabled ? 'ltr:translate-x-5 rtl:-translate-x-5' : 'translate-x-0'}
+              `}
+            />
+          </button>
+        </div>
+
+        {/* ── Sessions Section ── */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-[var(--primary-text)] uppercase tracking-wider text-start">
+              {tr.activeSessions}
+            </h3>
             <button
               type="button"
               onClick={fetchSessions}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 py-2 text-xs font-semibold text-[var(--secondary-text)] transition hover:text-[var(--primary-text)] disabled:opacity-40 cursor-pointer"
+              className="flex items-center gap-1.5 text-xs text-[var(--muted-text)] hover:text-[var(--primary-text)] transition-colors cursor-pointer"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              <span>{lang === 'ar' ? 'تحديث' : 'Refresh'}</span>
             </button>
-
-            {otherSessions.length > 0 && (
-              <button
-                type="button"
-                onClick={handleSignOutAll}
-                disabled={revoking === 'all'}
-                className="inline-flex items-center gap-2 rounded-full border border-red-500/30 bg-transparent px-4 py-2 text-xs font-bold text-[#c53938] transition-all hover:bg-[var(--brand-soft-bg)] active:scale-[0.98] cursor-pointer shadow-xs disabled:opacity-50"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                {revoking === 'all' ? 'Signing out...' : 'Sign out all devices'}
-              </button>
-            )}
           </div>
-        </div>
 
-        <div className="grid gap-4">
           {loading ? (
-            Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="h-24 rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-soft)] animate-pulse" />
-            ))
-          ) : sessions.length === 0 ? (
-            <div className="p-8 text-center text-sm text-[var(--muted-text)] border border-dashed border-[var(--border-color)] rounded-[18px]">
-              No active login sessions found.
+            <div className="flex flex-col gap-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="h-20 rounded-2xl bg-[var(--surface-input)] animate-pulse" />
+              ))}
             </div>
           ) : (
-            sessions.map((session) => (
-              <div
-                key={session.id}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-[18px] border border-[var(--border-color)] bg-[var(--surface-soft)] hover:border-[var(--brand-accent)]/20 transition-all"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface-card)] border border-[var(--border-color)] text-[var(--label-text)]">
-                    <DeviceIcon type={session.deviceType} />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h4 className="text-sm font-bold text-[var(--primary-text)]">{session.deviceName}</h4>
-                      {session.isCurrent && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          Current Device
-                        </span>
-                      )}
+            <div className="flex flex-col gap-3">
+              {currentSession && (
+                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                      <DeviceIcon type={currentSession.deviceType} />
                     </div>
-                    <p className="text-xs text-[var(--muted-text)]">{session.browser}</p>
-                    <div className="flex flex-wrap items-center gap-4 text-[11px] text-[var(--muted-text)] pt-0.5">
-                      {session.ip && (
+                    <div className="flex flex-col text-start">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-[var(--primary-text)]">
+                          {currentSession.deviceName}
+                        </span>
+                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                          {lang === 'ar' ? 'هذا الجهاز' : 'This Device'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-[var(--muted-text)]">
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {session.ip}
+                          {currentSession.location}
                         </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {timeAgo(session.lastActive)}
-                      </span>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {timeAgo(currentSession.lastActiveAt, lang)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
+              )}
 
-                {!session.isCurrent && (
+              {otherSessions.map((session) => (
+                <div
+                  key={session.id}
+                  className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-input)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-soft)] text-[var(--label-text)]">
+                      <DeviceIcon type={session.deviceType} />
+                    </div>
+                    <div className="flex flex-col text-start">
+                      <span className="text-xs sm:text-sm font-bold text-[var(--primary-text)]">
+                        {session.deviceName}
+                      </span>
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-[var(--muted-text)]">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {session.location}
+                        </span>
+                        <span>·</span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {timeAgo(session.lastActiveAt, lang)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
                     onClick={() => handleSignOutSession(session.id, session.deviceName)}
                     disabled={revoking === session.id}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--surface-card)] px-4 py-2 text-xs font-semibold text-[var(--secondary-text)] transition-all hover:border-red-500/40 hover:text-[#c53938] cursor-pointer self-end sm:self-center disabled:opacity-50"
+                    className="
+                      flex items-center gap-1.5 px-3 py-1.5 rounded-xl
+                      border border-red-500/20 text-xs font-semibold text-red-400
+                      hover:bg-red-500/10 transition-colors duration-150
+                      disabled:opacity-50 cursor-pointer
+                    "
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    {revoking === session.id ? 'Signing out...' : 'Sign Out'}
+                    <span>{revoking === session.id ? (lang === 'ar' ? 'جارٍ الخروج...' : 'Signing out...') : (lang === 'ar' ? 'خروج' : 'Sign out')}</span>
                   </button>
-                )}
-              </div>
-            ))
+                </div>
+              ))}
+            </div>
+          )}
+
+          {otherSessions.length > 0 && (
+            <div className="pt-2 text-start">
+              <button
+                type="button"
+                onClick={handleSignOutAll}
+                disabled={revoking === 'all'}
+                className="
+                  inline-flex items-center justify-center gap-2
+                  h-10 px-5 rounded-full
+                  border border-red-500/30 text-xs font-semibold text-[#c53938]
+                  hover:bg-red-500/10 transition-colors duration-150
+                  disabled:opacity-50 cursor-pointer
+                "
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>{revoking === 'all' ? (lang === 'ar' ? 'جارٍ تسجيل الخروج...' : 'Signing out all...') : tr.signOutAll}</span>
+              </button>
+            </div>
           )}
         </div>
+
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Truck, Upload, Check, Copy, CheckCheck, X } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
@@ -14,38 +15,6 @@ import chevronRightIcon from '../assets/icons/cart/chevron-right.svg';
 /* ── Payment account details ── */
 const INSTAPAY_ACCOUNT   = '01111291542';
 const VODAFONE_CASH_NUM  = '012266251423';
-
-const paymentMethods = [
-  {
-    id: 'cod',
-    label: 'Cash on Delivery',
-    description: 'Pay when your order arrives',
-    icon: Truck,
-  },
-  {
-    id: 'instapay',
-    label: 'InstaPay',
-    description: 'Transfer via InstaPay then upload proof',
-    icon: () => (
-      <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
-        <rect width="40" height="40" rx="10" fill="#5C2D91"/>
-        <path d="M10 28L20 12L30 28H22L20 24L18 28H10Z" fill="white"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'vodafone_cash',
-    label: 'Vodafone Cash',
-    description: 'Transfer via Vodafone Cash then upload proof',
-    icon: () => (
-      <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
-        <rect width="40" height="40" rx="10" fill="#E60000"/>
-        <circle cx="20" cy="20" r="9" stroke="white" strokeWidth="2.5" fill="none"/>
-        <path d="M20 14v6l4 2" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
-      </svg>
-    ),
-  },
-];
 
 const MANUAL_METHODS = ['instapay', 'vodafone_cash'];
 const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5MB
@@ -66,6 +35,8 @@ function FormField({ label, ...inputProps }) {
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
+  const { t } = useLanguage();
+  const tr = t('checkout');
   const handleCopy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -80,7 +51,7 @@ function CopyButton({ text }) {
       className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938]"
     >
       {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
-      {copied ? 'Copied!' : 'Copy'}
+      {copied ? '✓' : 'Copy'}
     </button>
   );
 }
@@ -89,6 +60,40 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, subtotal, clearCart } = useCart();
   const fileInputRef = useRef(null);
+  const { t } = useLanguage();
+  const tr = t('checkout');
+
+  const paymentMethods = [
+    {
+      id: 'cod',
+      label: 'Cash on Delivery',
+      description: tr.deliveryInstructions,
+      icon: Truck,
+    },
+    {
+      id: 'instapay',
+      label: 'InstaPay',
+      description: 'Transfer via InstaPay then upload proof',
+      icon: () => (
+        <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+          <rect width="40" height="40" rx="10" fill="#5C2D91"/>
+          <path d="M10 28L20 12L30 28H22L20 24L18 28H10Z" fill="white"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'vodafone_cash',
+      label: 'Vodafone Cash',
+      description: 'Transfer via Vodafone Cash then upload proof',
+      icon: () => (
+        <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+          <rect width="40" height="40" rx="10" fill="#E60000"/>
+          <circle cx="20" cy="20" r="9" stroke="white" strokeWidth="2.5" fill="none"/>
+          <path d="M20 14v6l4 2" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
+      ),
+    },
+  ];
 
   const [selectedPayment, setSelectedPayment] = useState('cod');
   const [formData, setFormData] = useState({
@@ -99,7 +104,7 @@ export default function Checkout() {
   const [submitError, setSubmitError]   = useState('');
 
   /* ── Payment proof state ── */
-  const [placedOrder, setPlacedOrder]         = useState(null);   // order returned after creation
+  const [placedOrder, setPlacedOrder]         = useState(null);
   const [proofFile, setProofFile]             = useState(null);
   const [proofPreview, setProofPreview]       = useState('');
   const [proofError, setProofError]           = useState('');
@@ -152,10 +157,10 @@ export default function Checkout() {
 
   const validate = () => {
     const errs = {};
-    if (!formData.fullName.trim()) errs.fullName = 'Full name is required.';
-    if (!formData.phone.trim())    errs.phone    = 'Phone number is required.';
-    if (!formData.address.trim())  errs.address  = 'Address is required.';
-    if (!formData.city.trim())     errs.city     = 'City is required.';
+    if (!formData.fullName.trim()) errs.fullName = tr.requiredFields;
+    if (!formData.phone.trim())    errs.phone    = tr.requiredFields;
+    if (!formData.address.trim())  errs.address  = tr.requiredFields;
+    if (!formData.city.trim())     errs.city     = tr.requiredFields;
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -189,7 +194,6 @@ export default function Checkout() {
       clearCart();
 
       if (MANUAL_METHODS.includes(selectedPayment)) {
-        /* Stay on page — show upload section */
         setPlacedOrder(data.order);
         toast.success('Order placed! Please upload your payment proof.');
       } else {
@@ -254,46 +258,39 @@ export default function Checkout() {
     }
   };
 
-  /* ── Render helpers ── */
   const isManual = MANUAL_METHODS.includes(selectedPayment);
   const paymentAccount = selectedPayment === 'instapay' ? INSTAPAY_ACCOUNT : VODAFONE_CASH_NUM;
   const paymentLabel   = selectedPayment === 'instapay' ? 'InstaPay Address' : 'Vodafone Cash Number';
   const paymentName    = selectedPayment === 'instapay' ? 'InstaPay' : 'Vodafone Cash';
 
-  /* ─────────────────────────────────────────────────
-     After order placed for manual payment — show upload UI
-  ───────────────────────────────────────────────── */
+  /* ── Upload proof state (after order placed) ── */
   if (placedOrder) {
     return (
       <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
-        <Helmet><title>Upload Payment Proof | El-D7E7</title></Helmet>
+        <Helmet><title>{tr.uploadTitle} | El-D7E7</title></Helmet>
         <DashboardHeader />
         <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-0">
           <DashboardSidebar />
           <main className="min-w-0">
             {proofSubmitted ? (
-              /* ── Success state ── */
               <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-12 text-center">
                 <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                   <Check size={40} className="text-emerald-600" />
                 </div>
-                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">Payment Proof Submitted!</h1>
+                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">{tr.proofSubmittedTitle}</h1>
                 <p className="mb-2 text-sm font-semibold text-[var(--secondary-text)]">Order #{placedOrder.orderNumber}</p>
                 <p className="mb-8 max-w-md text-sm text-[var(--muted-text)] leading-relaxed">
-                  Your payment proof has been submitted successfully. Your order is currently under review.
-                  We'll notify you once your payment is verified.
+                  {tr.proofSubmittedText}
                 </p>
                 <Link
                   to="/account/orders"
                   className="rounded-full bg-[#c53938] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#ef5350]"
                 >
-                  View My Orders
+                  {tr.viewMyOrders}
                 </Link>
               </div>
             ) : (
-              /* ── Upload proof state ── */
               <div className="max-w-xl space-y-6">
-                {/* Order created confirmation */}
                 <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-5">
                   <p className="text-sm font-semibold text-emerald-700">
                     ✅ Order #{placedOrder.orderNumber} placed successfully!
@@ -303,14 +300,12 @@ export default function Checkout() {
                   </p>
                 </div>
 
-                {/* Payment instructions card */}
                 <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
                   <h2 className="mb-4 text-lg font-bold text-[var(--primary-text)]">
-                    {paymentName} Payment Instructions
+                    {paymentName} {tr.paymentInstructions}
                   </h2>
 
                   <div className="space-y-4">
-                    {/* Account number row */}
                     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-4">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted-text)]">
                         {paymentLabel}
@@ -323,10 +318,9 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    {/* Amount row */}
                     <div className="rounded-xl border border-[#c53938]/20 bg-[#c53938]/5 p-4">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#c53938]/70">
-                        Amount to Transfer
+                        {tr.amountToTransfer}
                       </p>
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-xl font-bold text-[#c53938]">
@@ -335,20 +329,15 @@ export default function Checkout() {
                         <CopyButton text={String(placedOrder.totalAmount)} />
                       </div>
                     </div>
-
-                    <p className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs font-medium text-amber-800 leading-relaxed">
-                      ⚠️ Please transfer the <strong>exact</strong> order amount to the {paymentName} account above, then upload the payment screenshot below.
-                    </p>
                   </div>
                 </section>
 
-                {/* Upload section */}
                 <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
                   <h2 className="mb-1 text-lg font-bold text-[var(--primary-text)]">
-                    Upload Payment Screenshot
+                    {tr.uploadTitle}
                   </h2>
                   <p className="mb-5 text-xs text-[var(--muted-text)]">
-                    Accepted formats: JPG, JPEG, PNG — Max size: 5MB
+                    {tr.uploadFormats}
                   </p>
 
                   {!proofPreview ? (
@@ -359,7 +348,7 @@ export default function Checkout() {
                     >
                       <Upload size={28} className="text-[var(--muted-text)]" />
                       <span className="text-sm font-medium text-[var(--secondary-text)]">
-                        Click to upload screenshot
+                        {tr.uploadClick}
                       </span>
                       <span className="text-xs text-[var(--muted-text)]">JPG, JPEG, PNG up to 5MB</span>
                     </button>
@@ -401,12 +390,12 @@ export default function Checkout() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
                         </svg>
-                        Uploading…
+                        {tr.uploading}
                       </>
                     ) : (
                       <>
                         <Upload size={16} />
-                        Submit Payment Proof
+                        {tr.submitProof}
                       </>
                     )}
                   </button>
@@ -419,13 +408,11 @@ export default function Checkout() {
     );
   }
 
-  /* ─────────────────────────────────────────────────
-     Normal checkout form
-  ───────────────────────────────────────────────── */
+  /* ── Normal checkout form ── */
   return (
     <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
       <Helmet>
-        <title>Checkout | El-D7E7</title>
+        <title>{tr.title} | El-D7E7</title>
         <meta name="description" content="Confirm your delivery details and payment method to place your order." />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
@@ -437,33 +424,33 @@ export default function Checkout() {
 
         <main className="min-w-0">
           <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
-            <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">Home</Link>
+            <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr.home}</Link>
             <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
-            <Link to="/cart" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">Cart</Link>
+            <Link to="/cart" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr.cart}</Link>
             <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
-            <span aria-current="page">Checkout</span>
+            <span aria-current="page">{tr.title}</span>
           </nav>
 
-          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">Checkout</h1>
+          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">{tr.title}</h1>
 
           <form onSubmit={handlePlaceOrder} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
             {/* Left column */}
             <div className="space-y-6">
               {/* Delivery address */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Delivery Address</h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.deliveryAddress}</h2>
 
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <FormField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
-                  <FormField label="Phone Number" name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
+                  <FormField label={tr.fullName} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
+                  <FormField label={tr.phoneNumber} name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
 
                   <div className="sm:col-span-2">
-                    <FormField label="Street Address" name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
+                    <FormField label={tr.streetAddress} name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
                   </div>
 
                   <div>
                     <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-                      City / Delivery Zone
+                      {tr.cityZone}
                     </label>
                     {shippingZones.length > 0 ? (
                       <select
@@ -472,7 +459,7 @@ export default function Checkout() {
                         onChange={handleChange}
                         className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 cursor-pointer"
                       >
-                        <option value="">-- Select your area / city --</option>
+                        <option value="">{tr.selectCity}</option>
                         {shippingZones.map((z) => (
                           <option key={z._id || z.id} value={z.name}>
                             {z.name} — EGP {z.price} ({z.eta})
@@ -484,17 +471,17 @@ export default function Checkout() {
                     )}
                   </div>
 
-                  <FormField label="Notes (optional)" name="notes" value={formData.notes} onChange={handleChange} placeholder="Delivery instructions" />
+                  <FormField label={tr.notes} name="notes" value={formData.notes} onChange={handleChange} placeholder={tr.deliveryInstructions} />
                 </div>
 
                 {(errors.fullName || errors.phone || errors.address || errors.city) && (
-                  <p className="mt-4 text-sm text-[#c53938]">Please fill in all required fields marked above.</p>
+                  <p className="mt-4 text-sm text-[#c53938]">{tr.requiredFields}</p>
                 )}
               </section>
 
               {/* Payment method */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Payment Method</h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.paymentMethod}</h2>
 
                 <div className="mt-5 space-y-3">
                   {paymentMethods.map((method) => {
@@ -533,7 +520,6 @@ export default function Checkout() {
                   })}
                 </div>
 
-                {/* Payment preview info for manual methods */}
                 {isManual && (
                   <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
                     <p className="text-xs font-medium text-amber-800 leading-relaxed">
@@ -545,7 +531,7 @@ export default function Checkout() {
 
               {/* Order items recap */}
               <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Order Items ({cartItems.length})</h2>
+                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.orderItems} ({cartItems.length})</h2>
 
                 <div className="mt-5 divide-y divide-[var(--border-color)]">
                   {cartItems.map((item) => (
@@ -559,7 +545,7 @@ export default function Checkout() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">{item.name}</p>
-                        <p className="m-0 text-xs text-[var(--muted-text)]">Qty: {item.quantity}</p>
+                        <p className="m-0 text-xs text-[var(--muted-text)]">{tr.qty}: {item.quantity}</p>
                       </div>
                       <p className="m-0 shrink-0 text-sm font-semibold text-[var(--primary-text)]">
                         EGP {(item.price * item.quantity).toFixed(2)}
@@ -568,7 +554,7 @@ export default function Checkout() {
                   ))}
 
                   {cartItems.length === 0 && (
-                    <p className="py-4 text-sm text-[var(--muted-text)]">Your cart is empty.</p>
+                    <p className="py-4 text-sm text-[var(--muted-text)]">{tr.emptyCart}</p>
                   )}
                 </div>
               </section>
@@ -576,23 +562,23 @@ export default function Checkout() {
 
             {/* Right column — summary */}
             <aside className="h-fit rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 lg:sticky lg:top-8">
-              <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">Order Summary</h2>
+              <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.orderSummary}</h2>
 
               <dl className="mt-5 space-y-4">
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">Subtotal</dt>
+                  <dt className="text-sm text-[var(--secondary-text)]">{tr.subtotal}</dt>
                   <dd className="m-0 text-sm text-[var(--primary-text)] font-medium">EGP {subtotal.toFixed(2)}</dd>
                 </div>
 
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">Delivery Fee ({formData.city || 'Standard'})</dt>
+                  <dt className="text-sm text-[var(--secondary-text)]">{tr.deliveryFee} ({formData.city || 'Standard'})</dt>
                   <dd className="m-0 text-sm font-semibold text-[var(--primary-text)]">EGP {deliveryFee.toFixed(2)}</dd>
                 </div>
 
                 <div className="h-px bg-[var(--border-color)]" />
 
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-base font-semibold text-[var(--primary-text)]">Total</dt>
+                  <dt className="text-base font-semibold text-[var(--primary-text)]">{tr.total}</dt>
                   <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</dd>
                 </div>
               </dl>
@@ -612,13 +598,13 @@ export default function Checkout() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
                     </svg>
-                    Placing Order…
+                    {tr.placingOrder}
                   </>
-                ) : isManual ? 'Place Order & Pay' : 'Place Order'}
+                ) : isManual ? tr.placeOrderPay : tr.placeOrder}
               </button>
 
               <Link to="/cart" className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]">
-                Back to Cart
+                {tr.backToCart}
               </Link>
             </aside>
           </form>

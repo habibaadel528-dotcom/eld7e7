@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { adminApi } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* ── Mock data — fallback if backend empty ── */
 const initialCustomers = [
@@ -26,7 +27,7 @@ function formatEGP(n) {
   return `EGP ${n.toLocaleString('en-US')}`;
 }
 
-/* ── Small icon set (no extra deps) ── */
+/* ── Small icon set ── */
 function StatIcon({ type }) {
   const paths = {
     users: (
@@ -51,7 +52,7 @@ function StatIcon({ type }) {
 
 function StatCard({ icon, iconBg, value, label }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4">
+    <div className="flex items-center gap-3 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 text-start">
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${iconBg}`}>
         <StatIcon type={icon} />
       </span>
@@ -66,6 +67,8 @@ function StatCard({ icon, iconBg, value, label }) {
 export default function CustomerManagementPage() {
   const [customers, setCustomers] = useState(initialCustomers);
   const [query, setQuery] = useState('');
+  const { lang, t } = useLanguage();
+  const tr = t('admin').customers;
 
   useEffect(() => {
     adminApi.getCustomers()
@@ -77,15 +80,15 @@ export default function CustomerManagementPage() {
             email: c.email,
             orders: 0,
             spent: 0,
-            status: c.isActive ? 'Active' : 'Inactive',
-            joined: new Date(c.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            status: c.isActive ? tr.active : tr.inactive,
+            joined: new Date(c.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             color: ['bg-rose-100 text-rose-600', 'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600'][i % 3],
           }));
           setCustomers(mapped);
         }
       })
       .catch(() => {});
-  }, []);
+  }, [tr.active, tr.inactive, lang]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -97,52 +100,52 @@ export default function CustomerManagementPage() {
 
   const stats = useMemo(() => {
     const total = customers.length;
-    const active = customers.filter((c) => c.status === 'Active').length;
+    const active = customers.filter((c) => c.status === tr.active).length;
     const inactive = total - active;
     const avgOrders = Math.round(customers.reduce((s, c) => s + c.orders, 0) / total);
     return { total, active, inactive, avgOrders };
-  }, [customers]);
+  }, [customers, tr.active]);
 
   const toggleStatus = (id) => {
     setCustomers((prev) =>
       prev.map((c) =>
-        c.id === id ? { ...c, status: c.status === 'Active' ? 'Inactive' : 'Active' } : c
+        c.id === id ? { ...c, status: c.status === tr.active ? tr.inactive : tr.active } : c
       )
     );
   };
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 text-start">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--primary-text)]">Customer Management</h1>
+          <h1 className="text-2xl font-bold text-[var(--primary-text)]">{tr.title}</h1>
           <p className="text-sm text-[var(--secondary-text)]">
-            {customers.length} registered customers
+            {customers.length} {tr.totalCustomers.toLowerCase()}
           </p>
         </div>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-lg bg-[#c53938] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[#c53938] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V3m0 12-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
-          Export
+          {lang === 'ar' ? 'تصدير' : 'Export'}
         </button>
       </div>
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard icon="users" iconBg="bg-slate-100 text-slate-600" value={stats.total} label="Total" />
-        <StatCard icon="userCheck" iconBg="bg-emerald-100 text-emerald-600" value={stats.active} label="Active" />
-        <StatCard icon="userX" iconBg="bg-slate-100 text-slate-500" value={stats.inactive} label="Inactive" />
-        <StatCard icon="bag" iconBg="bg-[#c53938]/10 text-[#c53938]" value={stats.avgOrders} label="Avg Orders" />
+        <StatCard icon="users"     iconBg="bg-slate-100 text-slate-600"        value={stats.total}    label={tr.totalCustomers} />
+        <StatCard icon="userCheck" iconBg="bg-emerald-100 text-emerald-600"    value={stats.active}   label={tr.activeCustomers} />
+        <StatCard icon="userX"     iconBg="bg-slate-100 text-slate-500"        value={stats.inactive} label={tr.inactiveCustomers} />
+        <StatCard icon="bag"       iconBg="bg-[#c53938]/10 text-[#c53938]"     value={stats.avgOrders} label={tr.avgOrderValue} />
       </div>
 
       {/* ── Search ── */}
       <div className="relative max-w-md">
-        <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--secondary-text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+        <svg className="pointer-events-none absolute ltr:left-3.5 rtl:right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--secondary-text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <circle cx="11" cy="11" r="7" />
           <path strokeLinecap="round" d="m21 21-4.3-4.3" />
         </svg>
@@ -150,26 +153,32 @@ export default function CustomerManagementPage() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search customers..."
-          className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] pl-10 pr-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
+          placeholder={tr.searchPlaceholder}
+          className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] ltr:pl-10 ltr:pr-4 rtl:pr-10 rtl:pl-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
         />
       </div>
 
       {/* ── Table ── */}
       <div className="overflow-x-auto rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)]">
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-start text-sm">
           <thead>
             <tr className="border-b border-[var(--border-color)] text-[11px] uppercase tracking-wide text-[var(--secondary-text)]">
-              <th className="px-5 py-3 font-medium">Customer</th>
-              <th className="px-5 py-3 font-medium">Orders</th>
-              <th className="px-5 py-3 font-medium">Total Spent</th>
-              <th className="px-5 py-3 font-medium">Status</th>
-              <th className="px-5 py-3 font-medium">Joined</th>
-              <th className="px-5 py-3 text-right font-medium">Actions</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.name}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.orders}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.spent}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.status}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.joined}</th>
+              <th className="px-5 py-3 text-end font-medium">{lang === 'ar' ? 'إجراءات' : 'Actions'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-color)]">
-            {filtered.map((c) => (
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="px-5 py-8 text-center text-sm text-[var(--secondary-text)]">
+                  {tr.noResults}
+                </td>
+              </tr>
+            ) : filtered.map((c) => (
               <tr key={c.id} className="transition hover:bg-[var(--surface-soft)]">
                 <td className="px-5 py-3">
                   <div className="flex items-center gap-3">
@@ -182,12 +191,12 @@ export default function CustomerManagementPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-3 text-[var(--primary-text)]">{c.orders} orders</td>
+                <td className="px-5 py-3 text-[var(--primary-text)]">{c.orders}</td>
                 <td className="px-5 py-3 font-semibold text-[var(--primary-text)]">{formatEGP(c.spent)}</td>
                 <td className="px-5 py-3">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      c.status === 'Active'
+                      c.status === tr.active
                         ? 'bg-emerald-100 text-emerald-600'
                         : 'bg-slate-100 text-slate-500'
                     }`}
@@ -198,27 +207,23 @@ export default function CustomerManagementPage() {
                 <td className="px-5 py-3 text-[var(--secondary-text)]">{c.joined}</td>
                 <td className="px-5 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      title="View customer"
-                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)]"
-                    >
+                    <button type="button" title="View customer" className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer">
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z" />
                         <circle cx="12" cy="12" r="3" />
                       </svg>
                     </button>
                     <button
                       type="button"
                       onClick={() => toggleStatus(c.id)}
-                      title={c.status === 'Active' ? 'Deactivate customer' : 'Activate customer'}
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-[var(--surface-soft)] ${
-                        c.status === 'Active' ? 'text-emerald-500' : 'text-[var(--secondary-text)]'
+                      title={c.status === tr.active ? 'Deactivate customer' : 'Activate customer'}
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-[var(--surface-soft)] cursor-pointer ${
+                        c.status === tr.active ? 'text-emerald-500' : 'text-[var(--secondary-text)]'
                       }`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <rect x="2" y="7" width="20" height="10" rx="5" />
-                        <circle cx={c.status === 'Active' ? '17' : '7'} cy="12" r="3" fill="currentColor" stroke="none" />
+                        <circle cx={c.status === tr.active ? '17' : '7'} cy="12" r="3" fill="currentColor" stroke="none" />
                       </svg>
                     </button>
                   </div>

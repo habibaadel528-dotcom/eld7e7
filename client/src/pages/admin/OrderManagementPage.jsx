@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { adminApi } from '../../services/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 /* ── AuthenticatedImage: fetches protected images with JWT token ── */
 function AuthenticatedImage({ src, alt, className, onError }) {
@@ -61,8 +62,6 @@ const initialOrders = [
   { id: 'ELD-6530', customer: 'Dina Ramzy',      email: 'dina.r@gmail.com',    date: 'Jun 8, 2026',  items: 1, total: 24999, payment: 'Cash',          paymentStatus: 'pending',              status: 'Returned'   },
 ];
 
-const filterTabs = ['All', 'Processing', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
-
 const statusStyles = {
   Processing: 'text-sky-600',
   Shipped:    'text-amber-600',
@@ -71,140 +70,121 @@ const statusStyles = {
   Returned:   'text-violet-600',
 };
 
-const paymentStatusConfig = {
-  pending:              { label: 'Pending',              className: 'bg-gray-100 text-gray-600' },
-  pending_verification: { label: 'Pending Verification', className: 'bg-amber-100 text-amber-700' },
-  paid:                 { label: 'Paid',                 className: 'bg-emerald-100 text-emerald-700' },
-  rejected:             { label: 'Rejected',             className: 'bg-red-100 text-[#c53938]' },
-};
-
-function formatEGP(n) { return `EGP ${n.toLocaleString('en-US')}`; }
+function formatEGP(n) { return `EGP ${Number(n || 0).toLocaleString('en-US')}`; }
 
 /* ── Payment Verification Modal ── */
-function PaymentVerificationModal({ order, onClose, onVerified }) {
+function PaymentVerificationModal({ order, onClose, onVerified, lang }) {
   const [rejectionReason, setRejectionReason] = useState('');
-  const [action, setAction]                   = useState(''); // 'approve' | 'reject'
+  const [action, setAction]                   = useState('');
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState('');
   const [proofError, setProofError]           = useState('');
 
-  const token = localStorage.getItem('authToken');
   const proofUrl = order.rawId ? adminApi.getPaymentProofUrl(order.rawId) : null;
 
   const handleVerify = async () => {
     if (!action) return;
     if (action === 'reject' && !rejectionReason.trim()) {
-      setError('Please enter a rejection reason.');
+      setError(lang === 'ar' ? 'يرجى إدخال سبب الرفض.' : 'Please enter a rejection reason.');
       return;
     }
-
     setLoading(true);
     setError('');
     try {
-      await adminApi.verifyPayment(order.rawId, {
-        action,
-        rejectionReason: action === 'reject' ? rejectionReason.trim() : undefined,
-      });
+      if (order.rawId) {
+        await adminApi.verifyPayment(order.rawId, {
+          action,
+          rejectionReason: action === 'reject' ? rejectionReason.trim() : undefined,
+        });
+      }
+      toast.success(action === 'approve' ? (lang === 'ar' ? 'تمت الموافقة على الدفع!' : 'Payment approved!') : (lang === 'ar' ? 'تم رفض الدفع.' : 'Payment rejected.'));
       onVerified(order.id, action);
       onClose();
-      if (action === 'approve') {
-        toast.success(`Payment for order #${order.id} approved`);
-      } else {
-        toast.info(`Payment for order #${order.id} rejected`);
-      }
     } catch (err) {
-      setError(err.message || 'Verification failed. Please try again.');
-      toast.error(err.message || 'Verification failed. Please try again.');
+      setError(err.message || (lang === 'ar' ? 'فشل التحقق من الدفع.' : 'Failed to verify payment.'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div
-        className="w-full max-w-lg rounded-2xl bg-[var(--surface-bg)] shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] shadow-2xl text-start">
+        {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-[var(--border-color)] px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-[var(--primary-text)]">Review Payment Proof</h2>
-            <p className="text-xs text-[var(--secondary-text)]">
-              Order #{order.id} · {order.customer}
-            </p>
+            <h2 className="text-base font-bold text-[var(--primary-text)]">
+              {lang === 'ar' ? 'التحقق من إثبات الدفع' : 'Review Payment Proof'}
+            </h2>
+            <p className="text-xs text-[var(--secondary-text)]">{order.id} · {order.customer}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] hover:bg-[var(--surface-soft)]"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer"
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         </div>
 
-        <div className="p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-          {/* Payment info */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-[var(--surface-soft)] p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-text)]">Payment Method</p>
-              <p className="mt-1 text-sm font-bold text-[var(--primary-text)]">{order.payment}</p>
+        {/* Modal Body */}
+        <div className="flex-1 space-y-4 overflow-y-auto p-6">
+          {/* Order quick summary */}
+          <div className="flex items-center justify-between rounded-xl bg-[var(--surface-soft)] p-3 text-xs">
+            <div>
+              <span className="text-[var(--secondary-text)]">{lang === 'ar' ? 'المبلغ المطلوب:' : 'Amount:'} </span>
+              <span className="font-bold text-[var(--primary-text)]">{formatEGP(order.total)}</span>
             </div>
-            <div className="rounded-xl bg-[var(--surface-soft)] p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--muted-text)]">Amount</p>
-              <p className="mt-1 text-sm font-bold text-[#c53938]">{formatEGP(order.total)}</p>
+            <div>
+              <span className="text-[var(--secondary-text)]">{lang === 'ar' ? 'الطريقة:' : 'Method:'} </span>
+              <span className="font-bold text-[var(--primary-text)]">{order.payment}</span>
             </div>
           </div>
 
-          {/* Payment proof image */}
+          {/* Proof Screenshot */}
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted-text)]">Payment Screenshot</p>
-            {proofUrl ? (
-              <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] min-h-[128px]">
+            <p className="mb-2 text-xs font-semibold text-[var(--primary-text)]">
+              {lang === 'ar' ? 'صورة إيصال التحويل / السكرين شوت:' : 'Transfer Receipt / Screenshot:'}
+            </p>
+            {proofUrl && !proofError ? (
+              <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-black/5">
                 <AuthenticatedImage
                   src={proofUrl}
-                  alt="Payment proof"
-                  className="w-full object-contain max-h-64"
-                  onError={() => setProofError('Could not load payment proof image.')}
+                  alt="Payment Proof"
+                  className="max-h-72 w-full object-contain"
+                  onError={() => setProofError(true)}
                 />
-                {proofError && (
-                  <div className="flex h-32 items-center justify-center">
-                    <p className="text-xs text-[var(--muted-text)]">{proofError}</p>
-                  </div>
-                )}
               </div>
             ) : (
-              <div className="flex h-24 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)]">
-                <p className="text-xs text-[var(--muted-text)]">No payment proof available.</p>
+              <div className="flex h-40 flex-col items-center justify-center rounded-xl border-2 border-dashed border-[var(--border-color)] text-xs text-[var(--secondary-text)]">
+                <span>{lang === 'ar' ? 'لا يوجد ملف إثبات دفع مرفق.' : 'No proof file uploaded.'}</span>
               </div>
             )}
           </div>
 
-          {/* Action selection */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Actions: Approve / Reject toggle */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
             <button
               type="button"
               onClick={() => { setAction('approve'); setError(''); }}
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${
+              className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition cursor-pointer ${
                 action === 'approve'
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-[var(--border-color)] text-[var(--secondary-text)] hover:border-emerald-300'
+                  ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
+                  : 'border-[var(--border-color)] text-[var(--secondary-text)] hover:border-emerald-400'
               }`}
             >
-              ✅ Approve Payment
+              ✓ {lang === 'ar' ? 'قبول وتأكيد الدفع' : 'Approve Payment'}
             </button>
             <button
               type="button"
               onClick={() => { setAction('reject'); setError(''); }}
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${
+              className={`rounded-xl border-2 px-4 py-3 text-sm font-bold transition cursor-pointer ${
                 action === 'reject'
                   ? 'border-[#c53938] bg-[#c53938]/5 text-[#c53938]'
                   : 'border-[var(--border-color)] text-[var(--secondary-text)] hover:border-[#c53938]/40'
               }`}
             >
-              ❌ Reject Payment
+              ✕ {lang === 'ar' ? 'رفض الدفع' : 'Reject Payment'}
             </button>
           </div>
 
@@ -212,12 +192,12 @@ function PaymentVerificationModal({ order, onClose, onVerified }) {
           {action === 'reject' && (
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-                Rejection Reason <span className="text-[#c53938]">*</span>
+                {lang === 'ar' ? 'سبب الرفض' : 'Rejection Reason'} <span className="text-[#c53938]">*</span>
               </label>
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="e.g. Screenshot is blurry, wrong amount transferred, wrong account…"
+                placeholder={lang === 'ar' ? 'مثال: الصورة غير واضحة، المبلغ غير مطابق، لم يتم استلام التحويل...' : 'e.g. Screenshot is blurry, wrong amount transferred, wrong account…'}
                 rows={3}
                 className="w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 py-3 text-sm text-[var(--primary-text)] outline-none resize-none focus:border-[#c53938] placeholder:text-[var(--muted-text)]"
               />
@@ -233,7 +213,7 @@ function PaymentVerificationModal({ order, onClose, onVerified }) {
             type="button"
             onClick={handleVerify}
             disabled={!action || loading}
-            className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`flex h-12 w-full items-center justify-center gap-2 rounded-full text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer ${
               action === 'reject' ? 'bg-[#c53938] hover:bg-[#ef5350]' : 'bg-emerald-600 hover:bg-emerald-500'
             }`}
           >
@@ -243,9 +223,9 @@ function PaymentVerificationModal({ order, onClose, onVerified }) {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
                 </svg>
-                Processing…
+                {lang === 'ar' ? 'جارٍ المعالجة…' : 'Processing…'}
               </>
-            ) : action === 'approve' ? 'Confirm Approval' : action === 'reject' ? 'Confirm Rejection' : 'Select an action first'}
+            ) : action === 'approve' ? (lang === 'ar' ? 'تأكيد الموافقة' : 'Confirm Approval') : action === 'reject' ? (lang === 'ar' ? 'تأكيد الرفض' : 'Confirm Rejection') : (lang === 'ar' ? 'اختر إجراء أولاً' : 'Select an action first')}
           </button>
         </div>
       </div>
@@ -259,6 +239,24 @@ export default function OrderManagementPage() {
   const [query, setQuery]             = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [reviewingOrder, setReviewingOrder] = useState(null);
+  const { lang, t } = useLanguage();
+  const tr = t('admin').orders;
+
+  const filterTabs = [
+    { key: 'All', label: lang === 'ar' ? 'الكل' : 'All' },
+    { key: 'Processing', label: tr.processing },
+    { key: 'Shipped', label: tr.shipped },
+    { key: 'Delivered', label: tr.delivered },
+    { key: 'Cancelled', label: lang === 'ar' ? 'ملغي' : 'Cancelled' },
+    { key: 'Returned', label: lang === 'ar' ? 'مرتجع' : 'Returned' },
+  ];
+
+  const paymentStatusConfig = {
+    pending:              { label: lang === 'ar' ? 'قيد الانتظار' : 'Pending', className: 'bg-gray-100 text-gray-600' },
+    pending_verification: { label: lang === 'ar' ? 'بانتظار التحقق' : 'Pending Verification', className: 'bg-amber-100 text-amber-700' },
+    paid:                 { label: lang === 'ar' ? 'مدفوع' : 'Paid', className: 'bg-emerald-100 text-emerald-700' },
+    rejected:             { label: lang === 'ar' ? 'مرفوض' : 'Rejected', className: 'bg-red-100 text-[#c53938]' },
+  };
 
   const fetchOrders = useCallback(() => {
     adminApi.getOrders()
@@ -269,10 +267,10 @@ export default function OrderManagementPage() {
             rawId:         o._id,
             customer:      o.user ? `${o.user.firstName} ${o.user.lastName}` : o.shippingAddress?.recipientName || 'Guest',
             email:         o.user?.email || 'N/A',
-            date:          new Date(o.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+            date:          new Date(o.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
             items:         o.items?.length || 1,
             total:         o.totalAmount,
-            payment:       o.paymentMethod === 'cash_on_delivery' ? 'Cash on Delivery'
+            payment:       o.paymentMethod === 'cash_on_delivery' ? (lang === 'ar' ? 'الدفع عند الاستلام' : 'Cash on Delivery')
                          : o.paymentMethod === 'instapay'         ? 'InstaPay'
                          : o.paymentMethod === 'vodafone_cash'    ? 'Vodafone Cash'
                          : o.paymentMethod,
@@ -284,7 +282,7 @@ export default function OrderManagementPage() {
         }
       })
       .catch(() => {});
-  }, []);
+  }, [lang]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
@@ -319,59 +317,59 @@ export default function OrderManagementPage() {
   const pendingVerificationCount = orders.filter((o) => o.paymentStatus === 'pending_verification').length;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 text-start">
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--primary-text)]">Order Management</h1>
+          <h1 className="text-2xl font-bold text-[var(--primary-text)]">{tr.title}</h1>
           <p className="text-sm text-[var(--secondary-text)]">
-            {orders.length} total orders
+            {orders.length} {lang === 'ar' ? 'إجمالي الطلبات' : 'total orders'}
             {pendingVerificationCount > 0 && (
-              <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
-                {pendingVerificationCount} pending payment review
+              <span className="mx-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700">
+                {pendingVerificationCount} {lang === 'ar' ? 'طلبات بانتظار مراجعة الدفع' : 'pending payment review'}
               </span>
             )}
           </p>
         </div>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-lg bg-[#c53938] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
+          className="flex items-center gap-2 rounded-lg bg-[#c53938] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 cursor-pointer"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V3m0 12-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
           </svg>
-          Export CSV
+          {lang === 'ar' ? 'تصدير CSV' : 'Export CSV'}
         </button>
       </div>
 
       {/* ── Search + filters ── */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[240px] flex-1">
-          <svg className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--secondary-text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <svg className="pointer-events-none absolute ltr:left-3.5 rtl:right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--secondary-text)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
             <circle cx="11" cy="11" r="7" /><path strokeLinecap="round" d="m21 21-4.3-4.3" />
           </svg>
           <input
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by ID or customer..."
-            className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] pl-10 pr-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
+            placeholder={tr.searchPlaceholder}
+            className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] ltr:pl-10 ltr:pr-4 rtl:pr-10 rtl:pl-4 text-sm text-[var(--primary-text)] placeholder-[var(--secondary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {filterTabs.map((tab) => (
             <button
-              key={tab}
+              key={tab.key}
               type="button"
-              onClick={() => setActiveFilter(tab)}
-              className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                activeFilter === tab
+              onClick={() => setActiveFilter(tab.key)}
+              className={`rounded-full px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+                activeFilter === tab.key
                   ? 'bg-[#c53938] text-white'
                   : 'border border-[var(--border-color)] bg-[var(--surface-bg)] text-[var(--secondary-text)] hover:text-[var(--primary-text)]'
               }`}
             >
-              {tab}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -379,22 +377,28 @@ export default function OrderManagementPage() {
 
       {/* ── Table ── */}
       <div className="overflow-x-auto rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)]">
-        <table className="w-full min-w-[960px] text-left text-sm">
+        <table className="w-full min-w-[960px] text-start text-sm">
           <thead>
             <tr className="border-b border-[var(--border-color)] text-[11px] uppercase tracking-wide text-[var(--secondary-text)]">
-              <th className="px-5 py-3 font-medium">Order ID</th>
-              <th className="px-5 py-3 font-medium">Customer</th>
-              <th className="px-5 py-3 font-medium">Date</th>
-              <th className="px-5 py-3 font-medium">Items</th>
-              <th className="px-5 py-3 font-medium">Total</th>
-              <th className="px-5 py-3 font-medium">Payment</th>
-              <th className="px-5 py-3 font-medium">Payment Status</th>
-              <th className="px-5 py-3 font-medium">Order Status</th>
-              <th className="px-5 py-3 text-right font-medium">Actions</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.orderId}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.customer}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.date}</th>
+              <th className="px-5 py-3 font-medium text-start">{lang === 'ar' ? 'العناصر' : 'Items'}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.amount}</th>
+              <th className="px-5 py-3 font-medium text-start">{lang === 'ar' ? 'طريقة الدفع' : 'Payment'}</th>
+              <th className="px-5 py-3 font-medium text-start">{lang === 'ar' ? 'حالة الدفع' : 'Payment Status'}</th>
+              <th className="px-5 py-3 font-medium text-start">{tr.status}</th>
+              <th className="px-5 py-3 text-end font-medium">{tr.action}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-color)]">
-            {filtered.map((o) => {
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan="9" className="px-5 py-8 text-center text-sm text-[var(--secondary-text)]">
+                  {tr.noResults}
+                </td>
+              </tr>
+            ) : filtered.map((o) => {
               const ps = paymentStatusConfig[o.paymentStatus] || paymentStatusConfig.pending;
               const needsReview = o.paymentStatus === 'pending_verification' && o.rawId;
 
@@ -419,48 +423,38 @@ export default function OrderManagementPage() {
                       <select
                         value={o.status}
                         onChange={(e) => updateStatus(o.id, e.target.value)}
-                        className={`appearance-none rounded-lg border border-[var(--border-color)] bg-transparent py-1.5 pl-2.5 pr-7 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 ${statusStyles[o.status]}`}
+                        className={`appearance-none rounded-lg border border-[var(--border-color)] bg-transparent py-1.5 ltr:pl-2.5 ltr:pr-7 rtl:pr-2.5 rtl:pl-7 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 ${statusStyles[o.status]}`}
                       >
                         {Object.keys(statusStyles).map((s) => (
                           <option key={s} value={s} className="text-[var(--primary-text)]">{s}</option>
                         ))}
                       </select>
-                      <svg className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <svg className="pointer-events-none absolute ltr:right-2 rtl:left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-current" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
                       </svg>
                     </div>
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      {/* Review payment button — shown for pending_verification */}
                       {needsReview && (
                         <button
                           type="button"
                           title="Review payment proof"
                           onClick={() => setReviewingOrder(o)}
-                          className="flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700 transition hover:bg-amber-200"
+                          className="flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700 transition hover:bg-amber-200 cursor-pointer"
                         >
-                          🔍 Review
+                          🔍 {lang === 'ar' ? 'مراجعة' : 'Review'}
                         </button>
                       )}
 
                       <button
                         type="button"
                         title="View order"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)]"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z" />
                           <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-                      <button
-                        type="button"
-                        title="Delete order"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938]"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M9 7V4h6v3m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" />
                         </svg>
                       </button>
                     </div>
@@ -478,6 +472,7 @@ export default function OrderManagementPage() {
           order={reviewingOrder}
           onClose={() => setReviewingOrder(null)}
           onVerified={handleVerified}
+          lang={lang}
         />
       )}
     </div>
