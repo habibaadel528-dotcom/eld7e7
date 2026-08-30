@@ -186,9 +186,9 @@ export default function App() {
           element={<OrderManagementPage />}
         />
 
+        <Route path="dashboard" element={<Navigate to="customers" replace />} />
         <Route path="products" element={<ProductManagementPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
-        {/* overview, products, analytics, promotions, settings — هنعملهم لما تبعتي تصميماتهم */}
       </Route>
 
       {/* Unknown routes */}

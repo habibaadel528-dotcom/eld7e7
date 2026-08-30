@@ -180,6 +180,19 @@ export default function AdminHeader({ onOpenMobileMenu }) {
 
                   <div className="h-px bg-[var(--border-color)]" />
 
+                  {/* Customer Dashboard Link */}
+                  <Link
+                    to="/account/dashboard"
+                    role="menuitem"
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-3 px-5 py-3 text-sm font-medium text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[#c53938] text-start"
+                  >
+                    <span aria-hidden="true" className="flex h-5 w-5 items-center justify-center text-base">⌂</span>
+                    <span>{lang === 'ar' ? 'لوحة حساب العميل' : 'Customer Dashboard'}</span>
+                  </Link>
+
+                  <div className="h-px bg-[var(--border-color)]" />
+
                   {/* Settings Link */}
                   <Link
                     to="/admin/settings"

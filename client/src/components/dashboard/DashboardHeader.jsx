@@ -213,6 +213,7 @@ export default function DashboardHeader() {
                 {/* Nav links */}
                 <div className="py-2">
                   {[
+                    ...(user?.role === 'admin' ? [{ label: lang === 'ar' ? 'لوحة الإدارة' : 'Admin Panel', to: '/admin', icon: '🛡' }] : []),
                     { label: tr.dashboard, to: '/account/dashboard', icon: '⌂' },
                     { label: tr.myOrders,  to: '/account/orders',    icon: '▣' },
                     { label: tr.wishlist,  to: '/account/wishlist',  icon: '♡' },

@@ -46,13 +46,10 @@ export default function AccountMenu({ onClose }) {
   // Menu items differ based on auth state and role
   const menuItems = isLoggedIn
     ? [
-        isAdmin
-          ? { label: tr.adminPanel, to: '/admin/dashboard', icon: '🛡' }
-          : { label: tr.dashboard, to: '/account/dashboard', icon: '⌂' },
-        ...(!isAdmin ? [
-          { label: tr.myOrders,        to: '/account/orders',    icon: '▣' },
-          { label: tr.accountSettings, to: '/account/settings',  icon: '⚙' },
-        ] : []),
+        ...(isAdmin ? [{ label: tr.adminPanel, to: '/admin', icon: '🛡' }] : []),
+        { label: tr.dashboard, to: '/account/dashboard', icon: '⌂' },
+        { label: tr.myOrders, to: '/account/orders', icon: '▣' },
+        { label: tr.accountSettings, to: '/account/settings', icon: '⚙' },
       ]
     : [
         { label: tr.login,   to: '/login',  icon: '↪' },
@@ -68,7 +65,7 @@ export default function AccountMenu({ onClose }) {
     >
       {/* ── Profile row ── */}
       <Link
-        to={isAdmin ? '/admin/dashboard' : '/account/dashboard'}
+        to={isAdmin ? '/admin' : '/account/dashboard'}
         role="menuitem"
         onClick={onClose}
         className="flex items-center gap-3 px-5 py-4 transition hover:bg-[var(--surface-soft)]"
