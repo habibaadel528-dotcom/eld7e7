@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+export const API_BASE =
+  import.meta.env.VITE_API_URL || 'https://eld7e7-production.up.railway.app/api';
 
 /* ── Health check ── */
 export async function checkHealth() {
@@ -55,56 +56,55 @@ export async function apiFetchFormData(path, formData) {
   return data;
 }
 
-
 /* ── Auth ── */
 export const authApi = {
-  register: (body) => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
-  login:    (body) => apiFetch('/auth/login',    { method: 'POST', body: JSON.stringify(body) }),
-  me:       ()     => apiFetch('/auth/me'),
+  register:       (body)  => apiFetch('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+  login:          (body)  => apiFetch('/auth/login',    { method: 'POST', body: JSON.stringify(body) }),
+  me:             ()      => apiFetch('/auth/me'),
+  forgotPassword: (email) => apiFetch('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
 };
 
 /* ── User ── */
 export const userApi = {
-  getProfile:    ()       => apiFetch('/users/profile'),
-  updateProfile: (body)   => apiFetch('/users/profile',  { method: 'PATCH', body: JSON.stringify(body) }),
-  updatePassword:(body)   => apiFetch('/users/password', { method: 'PATCH', body: JSON.stringify(body) }),
-  deleteAccount: (body)   => apiFetch('/users/account',  { method: 'DELETE', body: JSON.stringify(body) }),
+  getProfile:     ()         => apiFetch('/users/profile'),
+  updateProfile:  (body)     => apiFetch('/users/profile',  { method: 'PATCH', body: JSON.stringify(body) }),
+  updatePassword: (body)     => apiFetch('/users/password', { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteAccount:  (body)     => apiFetch('/users/account',  { method: 'DELETE', body: JSON.stringify(body) }),
 
-  getAddresses:   ()      => apiFetch('/users/addresses'),
-  addAddress:    (body)   => apiFetch('/users/addresses',    { method: 'POST',   body: JSON.stringify(body) }),
-  updateAddress: (id, body) => apiFetch(`/users/addresses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
-  deleteAddress: (id)     => apiFetch(`/users/addresses/${id}`,   { method: 'DELETE' }),
+  getAddresses:   ()         => apiFetch('/users/addresses'),
+  addAddress:     (body)     => apiFetch('/users/addresses',    { method: 'POST',   body: JSON.stringify(body) }),
+  updateAddress:  (id, body) => apiFetch(`/users/addresses/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteAddress:  (id)       => apiFetch(`/users/addresses/${id}`,   { method: 'DELETE' }),
 
-  getWishlist:          ()          => apiFetch('/users/wishlist'),
-  addToWishlist:        (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'POST' }),
-  removeFromWishlist:   (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'DELETE' }),
+  getWishlist:        ()          => apiFetch('/users/wishlist'),
+  addToWishlist:      (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'POST' }),
+  removeFromWishlist: (productId) => apiFetch(`/users/wishlist/${productId}`, { method: 'DELETE' }),
 
-  getCart:              ()          => apiFetch('/users/cart'),
-  updateCart:           (cart)      => apiFetch('/users/cart', { method: 'PUT', body: JSON.stringify({ cart }) }),
-  clearCart:            ()          => apiFetch('/users/cart', { method: 'DELETE' }),
+  getCart:        ()     => apiFetch('/users/cart'),
+  updateCart:     (cart) => apiFetch('/users/cart', { method: 'PUT', body: JSON.stringify({ cart }) }),
+  clearCart:      ()     => apiFetch('/users/cart', { method: 'DELETE' }),
 };
 
 /* ── Orders ── */
 export const orderApi = {
-  createOrder:        (body)   => apiFetch('/orders',    { method: 'POST', body: JSON.stringify(body) }),
-  getMyOrders:        (params) => apiFetch(`/orders?${new URLSearchParams(params || {})}`),
-  getOrderById:       (id)     => apiFetch(`/orders/${id}`),
-  cancelOrder:        (id)     => apiFetch(`/orders/${id}/cancel`, { method: 'PATCH' }),
+  createOrder:        (body)         => apiFetch('/orders',    { method: 'POST', body: JSON.stringify(body) }),
+  getMyOrders:        (params)       => apiFetch(`/orders?${new URLSearchParams(params || {})}`),
+  getOrderById:       (id)           => apiFetch(`/orders/${id}`),
+  cancelOrder:        (id)           => apiFetch(`/orders/${id}/cancel`, { method: 'PATCH' }),
   submitPaymentProof: (id, formData) => apiFetchFormData(`/orders/${id}/payment-proof`, formData),
 };
 
-
 /* ── Products (public) ── */
 export const productApi = {
-  getProducts:   (params) => apiFetch(`/products?${new URLSearchParams(params || {})}`),
-  getProductById:(id)     => apiFetch(`/products/${id}`),
+  getProducts:    (params) => apiFetch(`/products?${new URLSearchParams(params || {})}`),
+  getProductById: (id)     => apiFetch(`/products/${id}`),
 };
 
 /* ── Sessions ── */
 export const sessionApi = {
-  getSessions:      ()   => apiFetch('/users/sessions'),
-  revokeSession:    (id) => apiFetch(`/users/sessions/${id}`, { method: 'DELETE' }),
-  revokeAllSessions:()   => apiFetch('/users/sessions',       { method: 'DELETE' }),
+  getSessions:       ()   => apiFetch('/users/sessions'),
+  revokeSession:     (id) => apiFetch(`/users/sessions/${id}`, { method: 'DELETE' }),
+  revokeAllSessions: ()   => apiFetch('/users/sessions',       { method: 'DELETE' }),
 };
 
 /* ── Admin ── */
@@ -122,11 +122,19 @@ export const adminApi = {
   deleteProduct:      (id)         => apiFetch(`/admin/products/${id}`, { method: 'DELETE' }),
 };
 
+/* ── Upload ── */
+export const uploadApi = {
+  uploadImage: (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    return apiFetchFormData('/upload', fd);
+  },
+};
 
 /* ── Shipping Zones ── */
 export const shippingZoneApi = {
-  getZones:   ()           => apiFetch('/shipping-zones'),
-  createZone: (body)       => apiFetch('/shipping-zones',      { method: 'POST',   body: JSON.stringify(body) }),
-  updateZone: (id, body)   => apiFetch(`/shipping-zones/${id}`, { method: 'PATCH',  body: JSON.stringify(body) }),
-  deleteZone: (id)         => apiFetch(`/shipping-zones/${id}`, { method: 'DELETE' }),
+  getZones:   ()         => apiFetch('/shipping-zones'),
+  createZone: (body)     => apiFetch('/shipping-zones',      { method: 'POST',   body: JSON.stringify(body) }),
+  updateZone: (id, body) => apiFetch(`/shipping-zones/${id}`, { method: 'PATCH',  body: JSON.stringify(body) }),
+  deleteZone: (id)       => apiFetch(`/shipping-zones/${id}`, { method: 'DELETE' }),
 };

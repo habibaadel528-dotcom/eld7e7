@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { adminApi } from '../../services/api';
+import { adminApi, uploadApi } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -193,23 +193,8 @@ export default function ProductManagementPage() {
     setIsSubmitting(true);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const fd = new FormData();
-      fd.append('image', file);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/upload`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: fd,
-        }
-      );
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Upload failed.');
-
-      setFormData((prev) => ({ ...prev, image: result.data.url }));
+      const result = await uploadApi.uploadImage(file);
+      setFormData((prev) => ({ ...prev, image: result.data?.url || result.url }));
       toast.success(lang === 'ar' ? 'تم رفع الصورة بنجاح' : 'Image uploaded successfully');
     } catch (err) {
       setModalError(err.message || (lang === 'ar' ? 'فشل رفع الصورة.' : 'Failed to upload image.'));

@@ -7,6 +7,7 @@ import AuthInput from '../../components/auth/AuthInput';
 import logoMascot from '../../assets/icons/logo-mascot-transparent.png';
 import logoWordmark from '../../assets/icons/logo-wordmark.png';
 import { useLanguage } from '../../context/LanguageContext';
+import { authApi } from '../../services/api';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,19 +38,14 @@ export default function ForgotPassword() {
     setServerError('');
 
     try {
-      const res = await fetch(
-        (import.meta.env.VITE_API_URL || 'http://localhost:5000/api') + '/auth/forgot-password',
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: trimmed }) }
-      );
-
-      if (res.ok || res.status === 404) {
+      await authApi.forgotPassword(trimmed);
+      setSubmitted(true);
+    } catch (err) {
+      if (err.status === 404) {
         setSubmitted(true);
       } else {
-        const data = await res.json().catch(() => ({}));
-        setServerError(data.message || tr.errors.serverError);
+        setServerError(err.message || tr.errors.serverError);
       }
-    } catch {
-      setServerError(tr.errors.connectionError);
     } finally {
       setIsSubmitting(false);
     }
