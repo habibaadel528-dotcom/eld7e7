@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
 import Header from '../sections/Header';
@@ -14,14 +15,22 @@ import bannerImage from '../assets/images/cultural-books-banner.png';
 const PRODUCTS_PER_PAGE = 15;
 
 export default function CulturalBooksClearance() {
+  const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
   const { lang, t } = useLanguage();
   const tr = t('products');
 
   const [productsList, setProductsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const q = searchParams.get('search');
+    if (q !== null) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     productApi.getProducts({ category: 'cultural-books' })

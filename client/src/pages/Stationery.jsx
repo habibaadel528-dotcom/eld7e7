@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
 import Header from '../sections/Header';
@@ -17,8 +18,11 @@ import bannerImage from '../assets/images/stationery-banner.png';
 const PRODUCTS_PER_PAGE = 12;
 
 export default function Stationery() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlSearch = searchParams.get('search') || '';
+
   const { addToCart } = useCart();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const tr = t('products');
   const [productsList, setProductsList] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +68,14 @@ export default function Stationery() {
   }, [maxProductPrice]);
 
   const filteredProducts = useMemo(() => {
+    const q = urlSearch.trim().toLowerCase();
     return productsList.filter((product) => {
+      const matchesSearch =
+        !q ||
+        (product.name || '').toLowerCase().includes(q) ||
+        (product.description || '').toLowerCase().includes(q) ||
+        (product.subcategory || '').toLowerCase().includes(q);
+
       const matchesCategory =
         !selectedCategory ||
         (product.subcategory || product.subCategory || '') === selectedCategory;
@@ -75,9 +86,9 @@ export default function Stationery() {
 
       const matchesPrice = (product.price || 0) <= maxPrice;
 
-      return matchesCategory && matchesAvailability && matchesPrice;
+      return matchesSearch && matchesCategory && matchesAvailability && matchesPrice;
     });
-  }, [productsList, maxPrice, selectedAvailability, selectedCategory]);
+  }, [productsList, maxPrice, selectedAvailability, selectedCategory, urlSearch]);
 
   const totalPages = Math.max(
     1,
@@ -95,7 +106,7 @@ export default function Stationery() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [maxPrice, selectedAvailability, selectedCategory]);
+  }, [maxPrice, selectedAvailability, selectedCategory, urlSearch]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -119,6 +130,7 @@ export default function Stationery() {
     setSelectedCategory('');
     setSelectedAvailability([]);
     setMaxPrice(maxProductPrice);
+    setSearchParams({});
   };
 
   const goToPage = (pageNumber) => {
@@ -245,6 +257,29 @@ export default function Stationery() {
             >
               Stationery products
             </h2>
+
+            {urlSearch && (
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#c53938]/30 bg-[#c53938]/5 p-4 text-start">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#c53938] text-xs text-white">🔍</span>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--primary-text)] m-0">
+                      {lang === 'ar' ? `نتائج البحث عن: "${urlSearch}"` : `Search results for: "${urlSearch}"`}
+                    </p>
+                    <p className="text-xs text-[var(--secondary-text)] m-0">
+                      {lang === 'ar' ? `تم العثور على ${filteredProducts.length} منتج` : `Found ${filteredProducts.length} products`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({})}
+                  className="rounded-full bg-[var(--surface-bg)] border border-[var(--border-color)] px-3 py-1.5 text-xs font-semibold text-[#c53938] hover:bg-[#c53938] hover:text-white transition cursor-pointer"
+                >
+                  {lang === 'ar' ? '✕ إلغاء البحث وعرض الكل' : '✕ Clear Search'}
+                </button>
+              </div>
+            )}
 
             <p className="mb-10 text-center text-[var(--secondary-text)]">
               {filteredProducts.length > 0
