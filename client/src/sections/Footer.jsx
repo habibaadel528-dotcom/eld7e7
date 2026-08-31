@@ -44,9 +44,9 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow El-D7E7 on Instagram"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 text-black dark:text-white transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
             >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="h-5 w-5 text-black dark:text-white transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -58,9 +58,9 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow El-D7E7 on LinkedIn"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 text-black dark:text-white transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
             >
-              <svg className="h-4.5 w-4.5" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="h-5 w-5 text-black dark:text-white transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M19 0H5C2.239 0 0 2.239 0 5V19C0 21.761 2.239 24 5 24H19C21.762 24 24 21.761 24 19V5C24 2.239 21.762 0 19 0ZM8 19H5V8H8V19ZM6.5 6.732C5.534 6.732 4.75 5.942 4.75 4.968C4.75 3.994 5.534 3.204 6.5 3.204C7.466 3.204 8.25 3.994 8.25 4.968C8.25 5.942 7.467 6.732 6.5 6.732ZM20 19H17V13.396C17 10.028 13 10.283 13 13.396V19H10V8H13V9.765C14.396 7.179 20 6.988 20 12.241V19Z" />
               </svg>
             </a>
@@ -199,9 +199,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on Facebook"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 text-black dark:text-white transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
               >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-4 w-4 text-black dark:text-white transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
               </a>
@@ -212,9 +212,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on Instagram"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 text-black dark:text-white transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
               >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg className="h-4 w-4 text-black dark:text-white transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
@@ -227,9 +227,9 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on Twitter"
-                className="flex h-7 w-7 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 text-black dark:text-white transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
               >
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-3.5 w-3.5 text-black dark:text-white transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               </a>

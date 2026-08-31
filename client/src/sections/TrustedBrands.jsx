@@ -47,14 +47,14 @@ export default function TrustedBrands() {
               </div>
 
               <div className="mt-4">
-                <h3 className="text-base sm:text-lg font-black text-[var(--primary-text)]">
+                <h3 className="text-base sm:text-lg font-black text-black dark:text-white">
                   {tr.vodafoneTitle}
                 </h3>
-                <p className="text-xs text-[var(--secondary-text)] mt-0.5">
+                <p className="text-xs text-black/80 dark:text-gray-300 font-medium mt-0.5">
                   {tr.vodafoneSubtitle}
                 </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-bold text-[var(--primary-text)] border border-[var(--border-color)]">
-                  <span className="text-[#E60000] text-xs font-semibold">📱</span>
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-black/5 dark:bg-white/10 px-3.5 py-1.5 text-xs font-black text-black dark:text-white border border-black/10 dark:border-white/10">
+                  <span className="text-[#E60000] text-xs font-bold">📱</span>
                   <span>{tr.vodafoneDetail}</span>
                 </div>
               </div>
@@ -74,14 +74,14 @@ export default function TrustedBrands() {
               </div>
 
               <div className="mt-4">
-                <h3 className="text-base sm:text-lg font-black text-[var(--primary-text)]">
+                <h3 className="text-base sm:text-lg font-black text-black dark:text-white">
                   {tr.instapayTitle}
                 </h3>
-                <p className="text-xs text-[var(--secondary-text)] mt-0.5">
+                <p className="text-xs text-black/80 dark:text-gray-300 font-medium mt-0.5">
                   {tr.instapaySubtitle}
                 </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-bold text-[var(--primary-text)] border border-[var(--border-color)]">
-                  <span className="text-[#5C2D91] text-xs font-semibold">🏦</span>
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-black/5 dark:bg-white/10 px-3.5 py-1.5 text-xs font-black text-black dark:text-white border border-black/10 dark:border-white/10">
+                  <span className="text-[#5C2D91] text-xs font-bold">🏦</span>
                   <span>{tr.instapayDetail}</span>
                 </div>
               </div>

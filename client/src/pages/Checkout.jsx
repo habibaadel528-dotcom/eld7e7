@@ -21,13 +21,13 @@ const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5MB
 
 function FormField({ label, ...inputProps }) {
   return (
-    <label className="block">
-      <span className="mb-2 block text-sm font-medium text-[var(--secondary-text)]">
+    <label className="block w-full min-w-0">
+      <span className="mb-2 block text-sm font-bold text-black dark:text-gray-200">
         {label}
       </span>
       <input
         {...inputProps}
-        className="h-12 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c53938]"
+        className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm font-medium text-black dark:text-white outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c53938]"
       />
     </label>
   );
@@ -46,7 +46,7 @@ function CopyButton({ text }) {
       type="button"
       onClick={handleCopy}
       title="Copy"
-      className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938] cursor-pointer"
+      className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-white/10 bg-gray-100 dark:bg-white/10 px-3 py-1.5 text-xs font-bold text-black dark:text-white transition hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
     >
       {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
       {copied ? '✓' : 'Copy'}
@@ -267,7 +267,7 @@ export default function Checkout() {
   const paymentName    = selectedPayment === 'instapay' ? 'InstaPay' : 'Vodafone Cash';
 
   return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[var(--page-bg)] text-[var(--primary-text)]">
       <Helmet>
         <title>{placedOrder ? (tr?.uploadTitle || 'Upload Payment Screenshot') : (tr?.title || 'Checkout')} | El-D7E7</title>
         <meta name="description" content="Confirm your delivery details and payment method to place your order." />
@@ -276,7 +276,7 @@ export default function Checkout() {
 
       <DashboardHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
 
-      <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 lg:px-8">
+      <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-6 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 lg:px-8">
         {/* Desktop Sidebar */}
         <div className="hidden lg:block h-full">
           <DashboardSidebar />

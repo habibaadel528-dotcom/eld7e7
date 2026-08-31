@@ -67,7 +67,7 @@ export default function OrderSummary({ subtotal }) {
 
         <button
           type="submit"
-          className="h-12 rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] px-8 text-base font-semibold text-gray-700 dark:text-gray-300 transition-all hover:border-[#c53938] hover:bg-[#c53938] hover:text-white cursor-pointer active:scale-95 shadow-xs"
+          className="h-12 rounded-full border border-gray-300 dark:border-white/15 bg-gray-100 dark:bg-white/10 px-8 text-base font-bold text-black dark:text-white transition-all hover:border-[#c53938] hover:bg-[#c53938] hover:!text-white cursor-pointer active:scale-95 shadow-xs"
         >
           {tr.apply}
         </button>

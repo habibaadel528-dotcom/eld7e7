@@ -66,11 +66,11 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
         />
       )}
 
-      <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)]">
-        <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)] w-full max-w-full overflow-hidden sm:overflow-visible">
+        <div className="mx-auto flex h-[72px] max-w-[1440px] w-full items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-6 lg:px-8">
 
           {/* ── Left: Mobile Hamburger & Brand Logo ── */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {/* Mobile Menu Button */}
             <button
               type="button"
