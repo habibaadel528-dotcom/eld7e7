@@ -54,7 +54,7 @@
   color-scheme: dark;
 }
 
-/* ══════════════════════ RED BACKGROUNDS TEXT FIX ══════════════════════ */
+/* ══════════════════════ RED BACKGROUNDS & HOVER TEXT FIX ══════════════════════ */
 /* All buttons, links, and badges with solid red backgrounds always have white text */
 button[class*="bg-[#c53938]"]:not([class*="bg-[#c53938]/"]),
 button[class*="bg-[#c94545]"]:not([class*="bg-[#c94545]/"]),
@@ -66,7 +66,13 @@ button[class*="bg-red-"]:not([class*="bg-red-50"]):not([class*="bg-red-100"]):no
 a[class*="bg-red-"]:not([class*="bg-red-50"]):not([class*="bg-red-100"]):not([class*="bg-red-200"]),
 span[class*="bg-[#c53938]"]:not([class*="bg-[#c53938]/"]),
 span[class*="bg-[#c94545]"]:not([class*="bg-[#c94545]/"]),
-span[class*="bg-[#ef5350]"]:not([class*="bg-[#ef5350]/"]) {
+span[class*="bg-[#ef5350]"]:not([class*="bg-[#ef5350]/"]),
+button[class*="hover:bg-[#c53938]"]:hover,
+button[class*="hover:bg-[#c94545]"]:hover,
+button[class*="hover:bg-[#ef5350]"]:hover,
+a[class*="hover:bg-[#c53938]"]:hover,
+a[class*="hover:bg-[#c94545]"]:hover,
+a[class*="hover:bg-[#ef5350]"]:hover {
   color: #ffffff !important;
 }
 

@@ -133,10 +133,22 @@ const translations = {
       successMessage: 'Thank you for subscribing!',
     },
 
-    // ── Trusted Brands ────────────────────────────────────────
+    // ── Trusted Brands / Payment Methods ─────────────────────
     trustedBrands: {
-      title1: 'Trusted by Students, Creatives',
-      title2: ', and Small Businesses',
+      badge: '⚡ Fast & Secure Checkout',
+      title: 'Accepted Payment Methods',
+      subtitle: 'Pay smoothly and securely using your favorite mobile wallet or instant bank transfer.',
+      vodafoneTitle: 'Vodafone Cash',
+      vodafoneSubtitle: 'Instant Mobile Wallet',
+      vodafoneDetail: 'Wallet: 012266251423',
+      vodafoneBadge: 'Instant Verification',
+      instapayTitle: 'InstaPay',
+      instapaySubtitle: 'National Instant Transfer',
+      instapayDetail: 'Account: 01111291542',
+      instapayBadge: '0% Extra Fees',
+      trust1: '100% Secure & Encrypted',
+      trust2: 'Instant Order Confirmation',
+      trust3: 'Fast Delivery Across Egypt',
     },
 
     // ── Footer ────────────────────────────────────────────────
@@ -795,10 +807,22 @@ const translations = {
       successMessage: 'شكراً على اشتراكك!',
     },
 
-    // ── Trusted Brands ────────────────────────────────────────
+    // ── Trusted Brands / Payment Methods ─────────────────────
     trustedBrands: {
-      title1: 'موثوق به من الطلاب والمبدعين',
-      title2: 'والشركات الصغيرة',
+      badge: '⚡ دفع سريع وآمن',
+      title: 'طرق الدفع المعتمدة',
+      subtitle: 'ادفع بكل سهولة وأمان عبر محفظتك الإلكترونية أو التحويل البنكي اللحظي.',
+      vodafoneTitle: 'فودافون كاش',
+      vodafoneSubtitle: 'محفظة إلكترونية فورية',
+      vodafoneDetail: 'رقم المحفظة: 012266251423',
+      vodafoneBadge: 'تأكيد فوري',
+      instapayTitle: 'إنستاباي',
+      instapaySubtitle: 'تحويل بنكي لحظي مباشر',
+      instapayDetail: 'رقم الحساب: 01111291542',
+      instapayBadge: 'بدون أي رسوم إضافية',
+      trust1: 'دفع آمن ومحمي 100%',
+      trust2: 'تأكيد فوري لطلبك',
+      trust3: 'شحن وتوصيل لجميع المحافظات',
     },
 
     // ── Footer ────────────────────────────────────────────────
