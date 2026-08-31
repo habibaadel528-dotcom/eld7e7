@@ -10,48 +10,7 @@ import productS24 from '../../assets/images/dashboard/product-s24.png';
 import productJeans from '../../assets/images/dashboard/product-jeans.png';
 import productCoffee from '../../assets/images/dashboard/product-coffee.png';
 
-import orderCamera from '../../assets/images/dashboard/order-camera.png';
 import orderHeadphones from '../../assets/images/dashboard/order-headphones.png';
-import orderLaptop from '../../assets/images/dashboard/order-laptop.png';
-import orderBag from '../../assets/images/dashboard/order-bag.png';
-import orderSunglasses from '../../assets/images/dashboard/order-sunglasses.png';
-import orderWatch from '../../assets/images/dashboard/order-watch.png';
-
-
-
-
-const fallbackRecentOrders = [
-  {
-    id: 'ELD-7291',
-    status: 'Shipped',
-    statusColor: 'bg-amber-100 text-amber-600',
-    date: 'Jul 28, 2026',
-    items: '3 items',
-    amount: 'EGP 8,499',
-    action: 'Track',
-    thumbs: [orderCamera, orderHeadphones, orderSunglasses],
-  },
-  {
-    id: 'ELD-7144',
-    status: 'Delivered',
-    statusColor: 'bg-emerald-100 text-emerald-600',
-    date: 'Jul 18, 2026',
-    items: '1 item',
-    amount: 'EGP 28,999',
-    action: 'Details',
-    thumbs: [orderLaptop],
-  },
-  {
-    id: 'ELD-6988',
-    status: 'Delivered',
-    statusColor: 'bg-emerald-100 text-emerald-600',
-    date: 'Jul 5, 2026',
-    items: '2 items',
-    amount: 'EGP 5,899',
-    action: 'Details',
-    thumbs: [orderBag, orderWatch],
-  },
-];
 
 const recommendedProducts = [
   {

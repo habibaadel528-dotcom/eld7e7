@@ -47,7 +47,6 @@ export default function Header({ cartCount: propCartCount }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
   const accountMenuRef = useRef(null);
@@ -57,17 +56,13 @@ export default function Header({ cartCount: propCartCount }) {
   // Fetch products once for live instant search
   useEffect(() => {
     let isMounted = true;
-    setIsLoadingProducts(true);
     productApi.getProducts({ limit: 100 })
       .then((data) => {
         if (isMounted) {
           setAllProducts(data.products || []);
         }
       })
-      .catch(() => {})
-      .finally(() => {
-        if (isMounted) setIsLoadingProducts(false);
-      });
+      .catch(() => {});
     return () => { isMounted = false; };
   }, []);
 

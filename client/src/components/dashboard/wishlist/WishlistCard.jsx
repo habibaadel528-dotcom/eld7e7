@@ -1,4 +1,4 @@
-import { Heart, ShoppingCart, Star, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Star } from 'lucide-react';
 import productAirpods from '../../../assets/images/dashboard/product-airpods.png';
 
 export default function WishlistCard({ product, onRemove, onAddToCart }) {
