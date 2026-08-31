@@ -76,6 +76,26 @@ a[class*="hover:bg-[#ef5350]"]:hover {
   color: #ffffff !important;
 }
 
+/* Secondary & Outline buttons: Crisp black text in light mode, crisp white on hover with red bg */
+.btn-outline-custom {
+  background-color: var(--surface-soft) !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+  border: 1px solid var(--border-color) !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+:root[data-theme="dark"] .btn-outline-custom {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.btn-outline-custom:hover {
+  background-color: #c53938 !important;
+  color: #ffffff !important;
+  border-color: #c53938 !important;
+}
+
 /* ══════════════════════ RESET ══════════════════════ */
 *,
 *::before,

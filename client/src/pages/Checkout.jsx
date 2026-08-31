@@ -464,23 +464,23 @@ export default function Checkout() {
                 {tr?.title || 'Checkout'}
               </h1>
 
-              <form onSubmit={handlePlaceOrder} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+              <form onSubmit={handlePlaceOrder} className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_380px] w-full min-w-0 max-w-full">
                 {/* Left column */}
-                <div className="space-y-6">
+                <div className="space-y-5 w-full min-w-0">
                   {/* Delivery address */}
-                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
-                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.deliveryAddress || 'Delivery Address'}</h2>
+                  <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.deliveryAddress || 'Delivery Address'}</h2>
 
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div className="mt-4 grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 w-full min-w-0">
                       <FormField label={tr?.fullName || 'Full Name'} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
                       <FormField label={tr?.phoneNumber || 'Phone Number'} name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
 
-                      <div className="sm:col-span-2">
+                      <div className="sm:col-span-2 min-w-0">
                         <FormField label={tr?.streetAddress || 'Street Address'} name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
                       </div>
 
-                      <div>
-                        <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
+                      <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs sm:text-sm font-bold text-black dark:text-gray-200">
                           {tr?.cityZone || 'City / Delivery Zone'}
                         </label>
                         {shippingZones.length > 0 ? (
@@ -488,7 +488,7 @@ export default function Checkout() {
                             name="city"
                             value={formData.city}
                             onChange={handleChange}
-                            className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 cursor-pointer"
+                            className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs sm:text-sm font-medium text-black dark:text-white focus:border-[#c53938] focus:outline-none cursor-pointer"
                           >
                             <option value="">{tr?.selectCity || '-- Select your area / city --'}</option>
                             {shippingZones.map((z) => (
@@ -502,19 +502,21 @@ export default function Checkout() {
                         )}
                       </div>
 
-                      <FormField label={tr?.notes || 'Notes (optional)'} name="notes" value={formData.notes} onChange={handleChange} placeholder={tr?.deliveryInstructions || 'Delivery instructions'} />
+                      <div className="min-w-0">
+                        <FormField label={tr?.notes || 'Notes (optional)'} name="notes" value={formData.notes} onChange={handleChange} placeholder={tr?.deliveryInstructions || 'Delivery instructions'} />
+                      </div>
                     </div>
 
                     {(errors.fullName || errors.phone || errors.address || errors.city) && (
-                      <p className="mt-4 text-sm text-[#c53938] font-medium">{tr?.requiredFields || 'Please fill in all required fields.'}</p>
+                      <p className="mt-3 text-xs text-[#c53938] font-bold">{tr?.requiredFields || 'Please fill in all required fields.'}</p>
                     )}
                   </section>
 
                   {/* Payment method */}
-                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
-                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.paymentMethod || 'Payment Method'}</h2>
+                  <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.paymentMethod || 'Payment Method'}</h2>
 
-                    <div className="mt-5 space-y-3">
+                    <div className="mt-4 space-y-2.5 w-full min-w-0">
                       {paymentMethods.map((method) => {
                         const Icon = method.icon;
                         const isSelected = selectedPayment === method.id;
@@ -524,27 +526,27 @@ export default function Checkout() {
                             key={method.id}
                             type="button"
                             onClick={() => setSelectedPayment(method.id)}
-                            className={`flex w-full items-center gap-4 rounded-xl border px-4 sm:px-5 py-4 text-left rtl:text-right transition cursor-pointer ${
+                            className={`flex w-full min-w-0 items-center gap-2.5 sm:gap-4 rounded-xl border p-3 sm:p-4 text-left rtl:text-right transition cursor-pointer ${
                               isSelected
                                 ? 'border-[#c53938] bg-[#c53938]/5'
                                 : 'border-[var(--border-color)] hover:border-[#c53938]/50'
                             }`}
                           >
-                            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
                               isSelected ? 'bg-[#c53938] text-white' : 'bg-[var(--surface-soft)] text-[var(--secondary-text)]'
                             }`}>
-                              <Icon size={20} />
+                              <Icon size={18} />
                             </span>
 
                             <span className="min-w-0 flex-1">
-                              <span className="block text-sm font-semibold text-[var(--primary-text)]">{method.label}</span>
-                              <span className="block text-xs text-[var(--muted-text)]">{method.description}</span>
+                              <span className="block text-xs sm:text-sm font-bold text-black dark:text-white truncate">{method.label}</span>
+                              <span className="block text-[11px] text-[var(--secondary-text)] truncate">{method.description}</span>
                             </span>
 
-                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                            <span className={`flex h-4.5 w-4.5 sm:h-5 sm:w-5 shrink-0 items-center justify-center rounded-full border-2 ${
                               isSelected ? 'border-[#c53938] bg-[#c53938]' : 'border-[var(--border-color)]'
                             }`}>
-                              {isSelected && <Check size={12} color="#fff" />}
+                              {isSelected && <Check size={10} color="#fff" />}
                             </span>
                           </button>
                         );
@@ -552,8 +554,8 @@ export default function Checkout() {
                     </div>
 
                     {isManual && (
-                      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                        <p className="text-xs font-medium text-amber-800 leading-relaxed">
+                      <div className="mt-3.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+                        <p className="text-xs font-medium text-amber-800 leading-relaxed m-0">
                           📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
                         </p>
                       </div>
@@ -561,13 +563,13 @@ export default function Checkout() {
                   </section>
 
                   {/* Order items recap */}
-                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
-                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.orderItems || 'Order Items'} ({cartItems.length})</h2>
+                  <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.orderItems || 'Order Items'} ({cartItems.length})</h2>
 
-                    <div className="mt-5 divide-y divide-[var(--border-color)]">
+                    <div className="mt-4 divide-y divide-[var(--border-color)] w-full min-w-0">
                       {cartItems.map((item) => (
-                        <div key={item.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)]">
+                        <div key={item.id} className="flex items-center justify-between gap-3 py-2.5 sm:py-3 first:pt-0 last:pb-0 min-w-0">
+                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)] border border-[var(--border-color)]">
                             {item.image ? (
                               <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
                             ) : (
@@ -575,10 +577,10 @@ export default function Checkout() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">{item.name}</p>
-                            <p className="m-0 text-xs text-[var(--muted-text)]">{tr?.qty || 'Qty'}: {item.quantity}</p>
+                            <p className="m-0 truncate text-xs sm:text-sm font-bold text-black dark:text-white">{item.name}</p>
+                            <p className="m-0 text-xs text-[var(--secondary-text)]">{tr?.qty || 'Qty'}: {item.quantity}</p>
                           </div>
-                          <p className="m-0 shrink-0 text-sm font-semibold text-[var(--primary-text)]">
+                          <p className="m-0 shrink-0 text-xs sm:text-sm font-bold text-black dark:text-white whitespace-nowrap">
                             EGP {(item.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
@@ -592,36 +594,36 @@ export default function Checkout() {
                 </div>
 
                 {/* Right column — summary */}
-                <aside className="h-fit rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6 lg:sticky lg:top-8">
-                  <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.orderSummary || 'Order Summary'}</h2>
+                <aside className="h-fit rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 lg:sticky lg:top-8 w-full min-w-0 max-w-full">
+                  <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.orderSummary || 'Order Summary'}</h2>
 
-                  <dl className="mt-5 space-y-4">
+                  <dl className="mt-4 space-y-3.5">
                     <div className="flex items-center justify-between gap-4">
-                      <dt className="text-sm text-[var(--secondary-text)]">{tr?.subtotal || 'Subtotal'}</dt>
-                      <dd className="m-0 text-sm text-[var(--primary-text)] font-medium">EGP {(subtotal || 0).toFixed(2)}</dd>
+                      <dt className="text-xs sm:text-sm text-[var(--secondary-text)]">{tr?.subtotal || 'Subtotal'}</dt>
+                      <dd className="m-0 text-xs sm:text-sm text-black dark:text-white font-bold">EGP {(subtotal || 0).toFixed(2)}</dd>
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
-                      <dt className="text-sm text-[var(--secondary-text)]">{tr?.deliveryFee || 'Delivery Fee'} ({formData.city || 'Standard'})</dt>
-                      <dd className="m-0 text-sm font-semibold text-[var(--primary-text)]">EGP {deliveryFee.toFixed(2)}</dd>
+                      <dt className="text-xs sm:text-sm text-[var(--secondary-text)] truncate">{tr?.deliveryFee || 'Delivery Fee'} ({formData.city || 'Standard'})</dt>
+                      <dd className="m-0 text-xs sm:text-sm font-bold text-black dark:text-white whitespace-nowrap">EGP {deliveryFee.toFixed(2)}</dd>
                     </div>
 
                     <div className="h-px bg-[var(--border-color)]" />
 
                     <div className="flex items-center justify-between gap-4">
-                      <dt className="text-base font-semibold text-[var(--primary-text)]">{tr?.total || 'Total'}</dt>
-                      <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</dd>
+                      <dt className="text-sm sm:text-base font-black text-black dark:text-white">{tr?.total || 'Total'}</dt>
+                      <dd className="m-0 text-lg sm:text-xl font-black text-[#c53938]">EGP {total.toFixed(2)}</dd>
                     </div>
                   </dl>
 
                   {submitError && (
-                    <p className="mt-4 rounded-lg bg-[#c53938]/10 px-3 py-2 text-xs text-[#c53938] font-medium">{submitError}</p>
+                    <p className="mt-3.5 rounded-lg bg-[#c53938]/10 px-3 py-2 text-xs text-[#c53938] font-bold">{submitError}</p>
                   )}
 
                   <button
                     type="submit"
                     disabled={cartItems.length === 0 || isSubmitting}
-                    className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                    className="mt-5 flex h-[50px] sm:h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] text-sm sm:text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-md"
                   >
                     {isSubmitting ? (
                       <>
@@ -634,7 +636,10 @@ export default function Checkout() {
                     ) : isManual ? (tr?.placeOrderPay || 'Place Order & Pay') : (tr?.placeOrder || 'Place Order')}
                   </button>
 
-                  <Link to="/cart" className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]">
+                  <Link
+                    to="/cart"
+                    className="btn-outline-custom mt-2.5 flex h-10 w-full items-center justify-center rounded-full text-xs font-bold cursor-pointer"
+                  >
                     {tr?.backToCart || 'Back to Cart'}
                   </Link>
                 </aside>

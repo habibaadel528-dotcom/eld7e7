@@ -54,7 +54,7 @@ export default function AdminHeader({ onOpenMobileMenu }) {
         />
       )}
 
-      <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)]">
+      <header className="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--surface-bg)] w-full">
         <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
           <div className="flex items-center gap-3">
@@ -155,7 +155,7 @@ export default function AdminHeader({ onOpenMobileMenu }) {
                   id="admin-account-menu"
                   role="menu"
                   aria-label="Admin menu"
-                  className="absolute ltr:right-0 rtl:left-0 top-[calc(100%+10px)] z-[100] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-[var(--page-bg)] shadow-[0_12px_35px_rgba(0,0,0,0.25)]"
+                  className="absolute ltr:right-0 rtl:left-0 top-[calc(100%+8px)] z-[9999] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[16px] border border-[var(--border-color)] bg-[var(--surface-card)] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
                 >
                   {/* Profile info row */}
                   <Link

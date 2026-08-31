@@ -66,7 +66,7 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
         />
       )}
 
-      <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)] w-full max-w-full overflow-hidden sm:overflow-visible">
+      <header className="sticky top-0 z-50 border-b border-[var(--border-color)] bg-[var(--surface-bg)] w-full">
         <div className="mx-auto flex h-[72px] max-w-[1440px] w-full items-center justify-between gap-2.5 sm:gap-4 px-3 sm:px-6 lg:px-8">
 
           {/* ── Left: Mobile Hamburger & Brand Logo ── */}
@@ -172,7 +172,7 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
                   id="dashboard-account-menu"
                   role="menu"
                   aria-label="Account menu"
-                  className="absolute ltr:right-0 rtl:left-0 top-[calc(100%+10px)] z-[100] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[14px] border border-[var(--border-color)] bg-[var(--page-bg)] shadow-[0_12px_35px_rgba(0,0,0,0.25)]"
+                  className="absolute ltr:right-0 rtl:left-0 top-[calc(100%+8px)] z-[9999] w-[min(280px,calc(100vw-32px))] overflow-hidden rounded-[16px] border border-[var(--border-color)] bg-[var(--surface-card)] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
                 >
                   {/* Profile info row */}
                   <Link
