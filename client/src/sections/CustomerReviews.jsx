@@ -87,7 +87,7 @@ export default function CustomerReviews() {
                       </span>
 
                       {/* Review Text */}
-                      <p className="m-0 text-sm sm:text-base lg:text-lg leading-relaxed text-black dark:text-gray-100 font-medium text-start">
+                      <p className="m-0 text-sm sm:text-base lg:text-lg leading-relaxed text-[var(--primary-text)] font-medium text-start">
                         {review.text}
                       </p>
 
@@ -99,10 +99,10 @@ export default function CustomerReviews() {
                             alt={`${review.name}, customer`}
                             loading="lazy"
                             decoding="async"
-                            className="h-11 w-11 rounded-full object-cover border border-gray-300 dark:border-white/20"
+                            className="h-11 w-11 rounded-full object-cover border border-[var(--border-color)]"
                           />
                           <div className="text-start">
-                            <p className="m-0 text-sm sm:text-base font-bold text-black dark:text-white">
+                            <p className="m-0 text-sm sm:text-base font-bold text-[var(--primary-text)]">
                               {review.name}
                             </p>
                             <span className="text-xs text-[var(--secondary-text)]">Verified Customer</span>

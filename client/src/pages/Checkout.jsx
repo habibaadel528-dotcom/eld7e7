@@ -22,12 +22,12 @@ const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5MB
 function FormField({ label, ...inputProps }) {
   return (
     <label className="block w-full min-w-0">
-      <span className="mb-2 block text-sm font-bold text-black dark:text-gray-200">
+      <span className="mb-2 block text-sm font-bold text-[var(--primary-text)]">
         {label}
       </span>
       <input
         {...inputProps}
-        className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm font-medium text-black dark:text-white outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c53938]"
+        className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm font-medium text-[var(--primary-text)] outline-none transition placeholder:text-[var(--muted-text)] focus:border-[#c53938]"
       />
     </label>
   );
@@ -46,7 +46,7 @@ function CopyButton({ text }) {
       type="button"
       onClick={handleCopy}
       title="Copy"
-      className="flex items-center gap-1.5 rounded-lg border border-gray-300 dark:border-white/10 bg-gray-100 dark:bg-white/10 px-3 py-1.5 text-xs font-bold text-black dark:text-white transition hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
+      className="btn-outline-custom flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
     >
       {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
       {copied ? '✓' : 'Copy'}
@@ -469,7 +469,7 @@ export default function Checkout() {
                 <div className="space-y-5 w-full min-w-0">
                   {/* Delivery address */}
                   <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
-                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.deliveryAddress || 'Delivery Address'}</h2>
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-[var(--primary-text)]">{tr?.deliveryAddress || 'Delivery Address'}</h2>
 
                     <div className="mt-4 grid gap-3.5 sm:gap-4 grid-cols-1 sm:grid-cols-2 w-full min-w-0">
                       <FormField label={tr?.fullName || 'Full Name'} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
@@ -480,7 +480,7 @@ export default function Checkout() {
                       </div>
 
                       <div className="min-w-0">
-                        <label className="mb-1.5 block text-xs sm:text-sm font-bold text-black dark:text-gray-200">
+                        <label className="mb-1.5 block text-xs sm:text-sm font-bold text-[var(--primary-text)]">
                           {tr?.cityZone || 'City / Delivery Zone'}
                         </label>
                         {shippingZones.length > 0 ? (
@@ -488,7 +488,7 @@ export default function Checkout() {
                             name="city"
                             value={formData.city}
                             onChange={handleChange}
-                            className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs sm:text-sm font-medium text-black dark:text-white focus:border-[#c53938] focus:outline-none cursor-pointer"
+                            className="h-12 w-full min-w-0 rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs sm:text-sm font-medium text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none cursor-pointer"
                           >
                             <option value="">{tr?.selectCity || '-- Select your area / city --'}</option>
                             {shippingZones.map((z) => (
@@ -514,7 +514,7 @@ export default function Checkout() {
 
                   {/* Payment method */}
                   <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
-                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.paymentMethod || 'Payment Method'}</h2>
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-[var(--primary-text)]">{tr?.paymentMethod || 'Payment Method'}</h2>
 
                     <div className="mt-4 space-y-2.5 w-full min-w-0">
                       {paymentMethods.map((method) => {
@@ -539,7 +539,7 @@ export default function Checkout() {
                             </span>
 
                             <span className="min-w-0 flex-1">
-                              <span className="block text-xs sm:text-sm font-bold text-black dark:text-white truncate">{method.label}</span>
+                              <span className="block text-xs sm:text-sm font-bold text-[var(--primary-text)] truncate">{method.label}</span>
                               <span className="block text-[11px] text-[var(--secondary-text)] truncate">{method.description}</span>
                             </span>
 
@@ -554,8 +554,8 @@ export default function Checkout() {
                     </div>
 
                     {isManual && (
-                      <div className="mt-3.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
-                        <p className="text-xs font-medium text-amber-800 leading-relaxed m-0">
+                      <div className="mt-3.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3.5 py-2.5">
+                        <p className="text-xs font-medium text-amber-600 dark:text-amber-300 leading-relaxed m-0">
                           📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
                         </p>
                       </div>
@@ -564,7 +564,7 @@ export default function Checkout() {
 
                   {/* Order items recap */}
                   <section className="rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 w-full min-w-0 max-w-full">
-                    <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.orderItems || 'Order Items'} ({cartItems.length})</h2>
+                    <h2 className="m-0 text-lg sm:text-xl font-black text-[var(--primary-text)]">{tr?.orderItems || 'Order Items'} ({cartItems.length})</h2>
 
                     <div className="mt-4 divide-y divide-[var(--border-color)] w-full min-w-0">
                       {cartItems.map((item) => (
@@ -577,10 +577,10 @@ export default function Checkout() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="m-0 truncate text-xs sm:text-sm font-bold text-black dark:text-white">{item.name}</p>
+                            <p className="m-0 truncate text-xs sm:text-sm font-bold text-[var(--primary-text)]">{item.name}</p>
                             <p className="m-0 text-xs text-[var(--secondary-text)]">{tr?.qty || 'Qty'}: {item.quantity}</p>
                           </div>
-                          <p className="m-0 shrink-0 text-xs sm:text-sm font-bold text-black dark:text-white whitespace-nowrap">
+                          <p className="m-0 shrink-0 text-xs sm:text-sm font-bold text-[var(--primary-text)] whitespace-nowrap">
                             EGP {(item.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
@@ -595,23 +595,23 @@ export default function Checkout() {
 
                 {/* Right column — summary */}
                 <aside className="h-fit rounded-2xl sm:rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 sm:p-6 lg:sticky lg:top-8 w-full min-w-0 max-w-full">
-                  <h2 className="m-0 text-lg sm:text-xl font-black text-black dark:text-white">{tr?.orderSummary || 'Order Summary'}</h2>
+                  <h2 className="m-0 text-lg sm:text-xl font-black text-[var(--primary-text)]">{tr?.orderSummary || 'Order Summary'}</h2>
 
                   <dl className="mt-4 space-y-3.5">
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-xs sm:text-sm text-[var(--secondary-text)]">{tr?.subtotal || 'Subtotal'}</dt>
-                      <dd className="m-0 text-xs sm:text-sm text-black dark:text-white font-bold">EGP {(subtotal || 0).toFixed(2)}</dd>
+                      <dd className="m-0 text-xs sm:text-sm text-[var(--primary-text)] font-bold">EGP {(subtotal || 0).toFixed(2)}</dd>
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
                       <dt className="text-xs sm:text-sm text-[var(--secondary-text)] truncate">{tr?.deliveryFee || 'Delivery Fee'} ({formData.city || 'Standard'})</dt>
-                      <dd className="m-0 text-xs sm:text-sm font-bold text-black dark:text-white whitespace-nowrap">EGP {deliveryFee.toFixed(2)}</dd>
+                      <dd className="m-0 text-xs sm:text-sm font-bold text-[var(--primary-text)] whitespace-nowrap">EGP {deliveryFee.toFixed(2)}</dd>
                     </div>
 
                     <div className="h-px bg-[var(--border-color)]" />
 
                     <div className="flex items-center justify-between gap-4">
-                      <dt className="text-sm sm:text-base font-black text-black dark:text-white">{tr?.total || 'Total'}</dt>
+                      <dt className="text-sm sm:text-base font-black text-[var(--primary-text)]">{tr?.total || 'Total'}</dt>
                       <dd className="m-0 text-lg sm:text-xl font-black text-[#c53938]">EGP {total.toFixed(2)}</dd>
                     </div>
                   </dl>

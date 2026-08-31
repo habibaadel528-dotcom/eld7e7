@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 /* ══════════════════════ LIGHT THEME ══════════════════════ */
 :root {
   --page-bg:            #f5f5f7;
@@ -8,21 +10,21 @@
   --surface-card:       #ffffff;
   --surface-input:      #f9f9fb;
 
-  --primary-text:       #111827;
-  --secondary-text:     #4b5563;
+  --primary-text:       #000000;
+  --secondary-text:     #374151;
   --muted-text:         #6b7280;
-  --label-text:         #374151;
+  --label-text:         #111827;
 
-  --border-color:       rgba(0, 0, 0, 0.1);
-  --soft-border-color:  rgba(0, 0, 0, 0.06);
+  --border-color:       rgba(0, 0, 0, 0.12);
+  --soft-border-color:  rgba(0, 0, 0, 0.08);
   --input-border:       #d1d5db;
 
   --brand-primary:      #c53938;
   --brand-accent:       #ef5350;
   --brand-soft-bg:      #fee2e2;
 
-  --icon-color:         #4b5563;
-  --icon-muted:         #9ca3af;
+  --icon-color:         #111827;
+  --icon-muted:         #6b7280;
 
   color-scheme: light;
 }
@@ -35,21 +37,21 @@
   --surface-card:       #1b1b1f;
   --surface-input:      #232328;
 
-  --primary-text:       #f9fafb;
-  --secondary-text:     #9ca3af;
-  --muted-text:         #6b7280;
-  --label-text:         #d1d5db;
+  --primary-text:       #ffffff;
+  --secondary-text:     #d1d5db;
+  --muted-text:         #9ca3af;
+  --label-text:         #f3f4f6;
 
-  --border-color:       rgba(255, 255, 255, 0.1);
-  --soft-border-color:  rgba(255, 255, 255, 0.06);
-  --input-border:       rgba(255, 255, 255, 0.15);
+  --border-color:       rgba(255, 255, 255, 0.14);
+  --soft-border-color:  rgba(255, 255, 255, 0.08);
+  --input-border:       rgba(255, 255, 255, 0.2);
 
   --brand-primary:      #c53938;
   --brand-accent:       #ef5350;
   --brand-soft-bg:      rgba(197, 57, 56, 0.18);
 
-  --icon-color:         #e5e7eb;
-  --icon-muted:         #6b7280;
+  --icon-color:         #ffffff;
+  --icon-muted:         #9ca3af;
 
   color-scheme: dark;
 }
