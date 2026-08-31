@@ -63,7 +63,7 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)]">
-      <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
 
         {/* ── Left / Logo & Mobile Menu ── */}
         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -71,7 +71,7 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
             <button
               type="button"
               onClick={onOpenMobileMenu}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] hover:bg-[#c53938] hover:text-white hover:border-[#c53938] lg:hidden transition-colors cursor-pointer"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] hover:bg-[var(--surface-bg)] hover:text-[var(--primary-text)] lg:hidden transition cursor-pointer"
               aria-label={lang === 'ar' ? 'فتح قائمة الحساب' : 'Open account navigation menu'}
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -90,7 +90,7 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
               alt="El-D7E7 Mascot"
               width="56"
               height="56"
-              className="h-10 w-10 sm:h-13 sm:w-13 object-contain transition-transform hover:scale-105"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain transition-transform hover:scale-105"
             />
             <img
               src={logoWordmark}
@@ -103,14 +103,14 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
         </div>
 
         {/* ── Right Actions ── */}
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3 ml-auto ltr:ml-auto rtl:mr-auto rtl:ml-0">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
 
           {/* Language Toggle (EN | AR) */}
           <button
             type="button"
             onClick={toggleLang}
             aria-label={lang === 'en' ? 'Switch to Arabic' : 'التبديل للإنجليزية'}
-            className="flex h-9 items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs font-semibold text-[var(--secondary-text)] transition hover:border-[#ef5350] hover:text-[#ef5350] cursor-pointer"
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] px-3 text-xs font-semibold text-[var(--secondary-text)] transition hover:border-[#ef5350] hover:text-[#ef5350] cursor-pointer"
           >
             <span className={lang === 'en' ? 'text-[#c94545] font-bold' : 'text-[var(--muted-text)]'}>EN</span>
             <span className="text-[var(--border-color)]">|</span>
@@ -156,11 +156,11 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
           <Link
             to="/cart"
             aria-label={`Shopping cart with ${cartCount} items`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] transition hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938] cursor-pointer"
+            className="relative flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] transition hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938] cursor-pointer"
           >
             <img src={cartIcon} alt="" aria-hidden="true" width="18" height="18" className="icon-invert" />
             {cartCount > 0 && (
-              <span className="absolute ltr:-right-1 rtl:-left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#c53938] text-[9px] font-bold leading-none text-white shadow-xs">
+              <span className="absolute ltr:-right-1 rtl:-left-1 -top-1 flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-[#c53938] text-[9px] font-bold leading-none text-white shadow-xs">
                 {cartCount}
               </span>
             )}
@@ -176,9 +176,9 @@ export default function DashboardHeader({ onOpenMobileMenu }) {
               aria-label="Account menu"
               className="flex items-center gap-2 rounded-full p-0.5 transition hover:ring-2 hover:ring-[#c53938]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938] cursor-pointer"
             >
-              <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 ring-2 ring-[var(--border-color)] text-base font-bold text-[#c53938] uppercase">
-                {formattedUser.initial}
-              </div>
+              <span className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#c53938] text-white font-bold text-sm sm:text-base uppercase shadow-sm">
+                {formattedUser.initial || '👤'}
+              </span>
               <div className="hidden text-start sm:block">
                 <p className="text-sm font-semibold leading-tight text-[var(--primary-text)]">
                   {formattedUser.fullName}

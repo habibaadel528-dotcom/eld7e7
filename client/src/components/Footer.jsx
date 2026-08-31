@@ -94,78 +94,37 @@ export const Footer = () => {
             </div>
 
             <div>
-              <h4 className="font-bold text-gray-900 text-sm mb-3">Secured Payment Gateways</h4>
-              <div className="grid grid-cols-3 gap-x-4 gap-y-3 max-w-[220px]">
-                {/* InstaPay */}
-                <div className="flex flex-col items-center gap-1">
-                  <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" stroke="#4A4A4A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M24 6L6 16h36L24 6z"/>
-                    <line x1="6" y1="40" x2="42" y2="40"/>
-                    <line x1="10" y1="16" x2="10" y2="40"/>
-                    <line x1="18" y1="16" x2="18" y2="40"/>
-                    <line x1="26" y1="16" x2="26" y2="40"/>
-                    <line x1="34" y1="16" x2="34" y2="40"/>
-                    <line x1="38" y1="16" x2="38" y2="40"/>
-                    <path d="M4 40h40v3H4z" strokeWidth="0" fill="#4A4A4A" opacity="0.15"/>
+              <h4 className="font-bold text-[var(--primary-text)] text-sm mb-3">Secured Payment Gateways</h4>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Cash on Delivery */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface-soft)] border border-[var(--border-color)] transition hover:border-[#c53938]">
+                  <svg className="w-5 h-5 text-[#c53938]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
                   </svg>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">InstaPay</span>
+                  <span className="text-xs font-bold text-[var(--primary-text)]">Cash</span>
                 </div>
 
-                {/* Paymob */}
-                <div className="flex flex-col items-center gap-1">
-                  <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" stroke="#4A4A4A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="6" y="14" width="30" height="24" rx="3"/>
-                    <path d="M12 14V11a4 4 0 014-4h16a4 4 0 014 4v3"/>
-                    <rect x="28" y="22" width="14" height="10" rx="2"/>
-                    <circle cx="34" cy="27" r="2" fill="#4A4A4A" stroke="none"/>
-                    <circle cx="40" cy="10" r="6" fill="#F5F5F5" stroke="#4A4A4A" strokeWidth="1.8"/>
-                    <line x1="40" y1="7" x2="40" y2="13"/>
-                    <line x1="37" y1="10" x2="43" y2="10"/>
-                  </svg>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">Paymob</span>
+                {/* InstaPay */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface-soft)] border border-[var(--border-color)] transition hover:border-[#5C2D91]">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#5C2D91] text-white">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                      <path d="M5 17.5L12 5.5L19 17.5H13.2L12 14.2L10.8 17.5H5Z" fill="white" />
+                    </svg>
+                  </span>
+                  <span className="text-xs font-bold text-[var(--primary-text)]">InstaPay</span>
                 </div>
 
                 {/* Vodafone Cash */}
-                <div className="flex flex-col items-center gap-1">
-                  <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" stroke="#4A4A4A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="12" y="4" width="20" height="36" rx="3"/>
-                    <line x1="12" y1="10" x2="32" y2="10"/>
-                    <line x1="12" y1="32" x2="32" y2="32"/>
-                    <circle cx="22" cy="36" r="1.5" fill="#4A4A4A" stroke="none"/>
-                    <circle cx="36" cy="14" r="8" fill="#F5F5F5" stroke="#4A4A4A" strokeWidth="1.8"/>
-                    <circle cx="36" cy="14" r="4" stroke="#4A4A4A" strokeWidth="1.5"/>
-                    <circle cx="38" cy="12" r="1" fill="#4A4A4A" stroke="none"/>
-                  </svg>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">Vodafone Cash</span>
-                </div>
-
-                {/* Mastercard */}
-                <div className="flex flex-col items-center gap-1">
-                  <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" stroke="#4A4A4A" strokeWidth="1.8">
-                    <circle cx="19" cy="24" r="11"/>
-                    <circle cx="29" cy="24" r="11"/>
-                  </svg>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">Mastercard</span>
-                </div>
-
-                {/* Cash */}
-                <div className="flex flex-col items-center gap-1">
-                  <svg className="w-7 h-7" viewBox="0 0 48 48" fill="none" stroke="#4A4A4A" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="4" y="12" width="36" height="22" rx="3" transform="rotate(-5 4 12)"/>
-                    <rect x="8" y="15" width="36" height="22" rx="3"/>
-                    <circle cx="26" cy="26" r="6"/>
-                    <path d="M26 22v8"/>
-                    <path d="M23 24.5c0-1.5 1.2-2 3-2s3 .5 3 2-1.2 2-3 2-3 .5-3 2 1.2 2 3 2"/>
-                  </svg>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">Cash</span>
-                </div>
-
-                {/* VISA */}
-                <div className="flex flex-col items-center gap-1">
-                  <div className="w-7 h-7 flex items-center justify-center">
-                    <span className="text-[15px] font-black text-[#4A4A4A] tracking-tight leading-none" style={{ fontFamily: 'system-ui, sans-serif' }}>VISA</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-gray-500 text-center leading-tight">Visa</span>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[var(--surface-soft)] border border-[var(--border-color)] transition hover:border-[#E60000]">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#E60000] text-white">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-3 w-3">
+                      <circle cx="12" cy="12" r="7" stroke="white" strokeWidth="2.5" fill="none" />
+                      <path d="M12 8.5v3.8l2.5 1.3" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </span>
+                  <span className="text-xs font-bold text-[var(--primary-text)]">Vodafone Cash</span>
                 </div>
               </div>
             </div>

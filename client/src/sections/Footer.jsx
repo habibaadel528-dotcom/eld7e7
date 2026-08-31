@@ -6,8 +6,6 @@ import linkedinIcon from '../assets/icons/linkedin.svg';
 import facebookIcon from '../assets/icons/facebook.svg';
 import twitterIcon from '../assets/icons/twitter.svg';
 import phoneIcon from '../assets/icons/phone.svg';
-
-import paymentMethods from '../assets/icons/payment-methods.png';
 import { useLanguage } from '../context/LanguageContext';
 
 const socialLinks = [
@@ -127,13 +125,32 @@ export default function Footer() {
               {tr.securedPayment}
             </p>
 
-            <img
-              src={paymentMethods}
-              alt="Supported secured payment methods"
-              loading="lazy"
-              decoding="async"
-              className="mt-1.5 h-auto w-[180px] object-contain opacity-55"
-            />
+            <div className="mt-2.5 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--primary-text)]">
+                <svg className="h-3.5 w-3.5 text-[#c53938]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M6 12h.01M18 12h.01" />
+                </svg>
+                Cash
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--primary-text)]">
+                <span className="flex h-3.5 w-3.5 items-center justify-center rounded bg-[#5C2D91] text-white">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <path d="M5 17.5L12 5.5L19 17.5H13.2L12 14.2L10.8 17.5H5Z" fill="white" />
+                  </svg>
+                </span>
+                InstaPay
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] px-2.5 py-1 text-[10px] font-bold text-[var(--primary-text)]">
+                <span className="flex h-3.5 w-3.5 items-center justify-center rounded bg-[#E60000] text-white">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-2.5 w-2.5">
+                    <circle cx="12" cy="12" r="7" stroke="white" strokeWidth="2.5" fill="none" />
+                  </svg>
+                </span>
+                Vodafone Cash
+              </span>
+            </div>
           </section>
         </div>
 
