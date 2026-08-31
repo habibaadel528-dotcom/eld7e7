@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import notebookImage from '../assets/images/best-seller-notebook.png';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -50,13 +51,13 @@ export default function BestSeller() {
                 {tr.features}
               </p>
 
-              <a
-                href="/products/notebook"
+              <Link
+                to="/stationery"
                 aria-label="View Notebook product"
                 className="mt-[74px] inline-flex h-[60px] w-[250px] items-center justify-center rounded-full bg-[#c94545] px-6 text-xl font-medium text-white transition duration-200 hover:bg-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] focus-visible:ring-offset-2 focus-visible:ring-offset-[#1e1e1e] active:scale-[0.98]"
               >
                 {tr.viewProduct}
-              </a>
+              </Link>
             </div>
 
             <div className="relative min-h-[360px] overflow-hidden bg-white/10 lg:min-h-[445px]">

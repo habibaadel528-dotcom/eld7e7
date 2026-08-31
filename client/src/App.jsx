@@ -191,7 +191,11 @@ export default function App() {
         <Route path="settings" element={<AdminSettingsPage />} />
       </Route>
 
-      {/* Unknown routes */}
+      {/* 404 & Unknown routes */}
+      <Route
+        path="/404"
+        element={<NotFoundPage />}
+      />
       <Route
         path="*"
         element={<NotFoundPage />}

@@ -35,8 +35,6 @@ function FormField({ label, ...inputProps }) {
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
-  const { t } = useLanguage();
-  const tr = t('checkout');
   const handleCopy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
@@ -48,7 +46,7 @@ function CopyButton({ text }) {
       type="button"
       onClick={handleCopy}
       title="Copy"
-      className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938]"
+      className="flex items-center gap-1.5 rounded-lg bg-[var(--surface-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--secondary-text)] transition hover:bg-[#c53938]/10 hover:text-[#c53938] cursor-pointer"
     >
       {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
       {copied ? '✓' : 'Copy'}
@@ -62,20 +60,23 @@ export default function Checkout() {
   const fileInputRef = useRef(null);
   const { t } = useLanguage();
   const tr = t('checkout');
+  const trSidebar = t('sidebar');
+
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const paymentMethods = [
     {
       id: 'cod',
       label: 'Cash on Delivery',
-      description: tr.deliveryInstructions,
+      description: tr?.deliveryInstructions || 'Delivery instructions',
       icon: Truck,
     },
     {
       id: 'instapay',
       label: 'InstaPay',
       description: 'Transfer via InstaPay then upload proof',
-      icon: () => (
-        <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+      icon: ({ size = 20 }) => (
+        <svg viewBox="0 0 40 40" fill="none" width={size} height={size}>
           <rect width="40" height="40" rx="10" fill="#5C2D91"/>
           <path d="M10 28L20 12L30 28H22L20 24L18 28H10Z" fill="white"/>
         </svg>
@@ -85,8 +86,8 @@ export default function Checkout() {
       id: 'vodafone_cash',
       label: 'Vodafone Cash',
       description: 'Transfer via Vodafone Cash then upload proof',
-      icon: () => (
-        <svg viewBox="0 0 40 40" fill="none" width="22" height="22">
+      icon: ({ size = 20 }) => (
+        <svg viewBox="0 0 40 40" fill="none" width={size} height={size}>
           <rect width="40" height="40" rx="10" fill="#E60000"/>
           <circle cx="20" cy="20" r="9" stroke="white" strokeWidth="2.5" fill="none"/>
           <path d="M20 14v6l4 2" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
@@ -113,16 +114,16 @@ export default function Checkout() {
 
   /* ── Shipping zones ── */
   const [shippingZones, setShippingZones] = useState([]);
-  const [deliveryFee, setDeliveryFee]     = useState(0);
+  const [deliveryFee, setDeliveryFee]     = useState(35);
 
   useEffect(() => {
     shippingZoneApi.getZones()
-      .then((data) => { if (data.zones?.length) setShippingZones(data.zones); })
+      .then((data) => { if (data?.zones?.length) setShippingZones(data.zones); })
       .catch(() => {});
 
     userApi.getAddresses()
       .then((data) => {
-        if (data.addresses?.length) {
+        if (data?.addresses?.length) {
           const def = data.addresses.find((a) => a.isDefault) || data.addresses[0];
           setFormData((prev) => ({
             ...prev,
@@ -138,16 +139,16 @@ export default function Checkout() {
 
   useEffect(() => {
     if (!shippingZones.length) { setDeliveryFee(35); return; }
-    if (!formData.city.trim()) { setDeliveryFee(shippingZones[0].price); return; }
+    if (!formData.city?.trim()) { setDeliveryFee(shippingZones[0]?.price ?? 35); return; }
     const c = formData.city.toLowerCase().trim();
     const matched = shippingZones.find((z) => {
-      const zn = z.name.toLowerCase();
+      const zn = (z.name || '').toLowerCase();
       return zn.includes(c) || c.includes(zn.split(' ')[0]);
     });
-    setDeliveryFee(matched ? matched.price : shippingZones[0].price);
+    setDeliveryFee(matched?.price ?? shippingZones[0]?.price ?? 35);
   }, [formData.city, shippingZones]);
 
-  const total = subtotal + deliveryFee;
+  const total = (subtotal || 0) + deliveryFee;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -157,10 +158,10 @@ export default function Checkout() {
 
   const validate = () => {
     const errs = {};
-    if (!formData.fullName.trim()) errs.fullName = tr.requiredFields;
-    if (!formData.phone.trim())    errs.phone    = tr.requiredFields;
-    if (!formData.address.trim())  errs.address  = tr.requiredFields;
-    if (!formData.city.trim())     errs.city     = tr.requiredFields;
+    if (!formData.fullName?.trim()) errs.fullName = tr?.requiredFields || 'Please fill in all required fields.';
+    if (!formData.phone?.trim())    errs.phone    = tr?.requiredFields || 'Please fill in all required fields.';
+    if (!formData.address?.trim())  errs.address  = tr?.requiredFields || 'Please fill in all required fields.';
+    if (!formData.city?.trim())     errs.city     = tr?.requiredFields || 'Please fill in all required fields.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -194,12 +195,13 @@ export default function Checkout() {
       clearCart();
 
       if (MANUAL_METHODS.includes(selectedPayment)) {
-        setPlacedOrder(data.order);
+        setPlacedOrder(data.order || data);
         toast.success('Order placed! Please upload your payment proof.');
       } else {
         toast.success('Order placed successfully!');
+        const orderNum = data.order?.orderNumber || data.orderNumber || `D7E7-${Math.floor(100000 + Math.random() * 900000)}`;
         navigate('/order-success', {
-          state: { orderNumber: data.order.orderNumber, total, fullName: formData.fullName },
+          state: { orderNumber: orderNum, total, fullName: formData.fullName },
         });
       }
     } catch (err) {
@@ -240,14 +242,15 @@ export default function Checkout() {
   const handleSubmitProof = async (e) => {
     e.preventDefault();
     if (!proofFile) { setProofError('Please upload a payment screenshot.'); return; }
-    if (!placedOrder?._id) return;
+    const orderId = placedOrder?._id || placedOrder?.id;
+    if (!orderId) return;
 
     setIsUploadingProof(true);
     setProofError('');
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('proof', proofFile);
-      await orderApi.submitPaymentProof(placedOrder._id, formDataUpload);
+      await orderApi.submitPaymentProof(orderId, formDataUpload);
       setProofSubmitted(true);
       toast.success('Payment proof submitted successfully!');
     } catch (err) {
@@ -263,30 +266,74 @@ export default function Checkout() {
   const paymentLabel   = selectedPayment === 'instapay' ? 'InstaPay Address' : 'Vodafone Cash Number';
   const paymentName    = selectedPayment === 'instapay' ? 'InstaPay' : 'Vodafone Cash';
 
-  /* ── Upload proof state (after order placed) ── */
-  if (placedOrder) {
-    return (
-      <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
-        <Helmet><title>{tr.uploadTitle} | El-D7E7</title></Helmet>
-        <DashboardHeader />
-        <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-0">
+  return (
+    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
+      <Helmet>
+        <title>{placedOrder ? (tr?.uploadTitle || 'Upload Payment Screenshot') : (tr?.title || 'Checkout')} | El-D7E7</title>
+        <meta name="description" content="Confirm your delivery details and payment method to place your order." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+
+      <DashboardHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8 lg:px-8">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block h-full">
           <DashboardSidebar />
-          <main className="min-w-0">
-            {proofSubmitted ? (
-              <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-12 text-center">
+        </div>
+
+        {/* Mobile Slide-Over Sidebar Drawer */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="fixed inset-y-0 ltr:left-0 rtl:right-0 z-50 w-[290px] max-w-[85vw] bg-[var(--surface-bg)] p-4 shadow-2xl ltr:border-r rtl:border-l border-[var(--border-color)] overflow-y-auto animate-in ltr:slide-in-from-left rtl:slide-in-from-right duration-300">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--secondary-text)]">
+                  {trSidebar?.accountMenu || 'Account Menu'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition cursor-pointer"
+                  aria-label="Close mobile menu"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <DashboardSidebar
+                isCollapsed={false}
+                onToggleCollapse={() => setIsMobileMenuOpen(false)}
+                onNavClick={() => setIsMobileMenuOpen(false)}
+                isMobile
+              />
+            </div>
+          </div>
+        )}
+
+        <main className="min-w-0 flex-1">
+          {placedOrder ? (
+            /* ── Upload proof state (after order placed) ── */
+            proofSubmitted ? (
+              <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-8 sm:p-12 text-center">
                 <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
                   <Check size={40} className="text-emerald-600" />
                 </div>
-                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">{tr.proofSubmittedTitle}</h1>
+                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">{tr?.proofSubmittedTitle || 'Payment Proof Submitted!'}</h1>
                 <p className="mb-2 text-sm font-semibold text-[var(--secondary-text)]">Order #{placedOrder.orderNumber}</p>
                 <p className="mb-8 max-w-md text-sm text-[var(--muted-text)] leading-relaxed">
-                  {tr.proofSubmittedText}
+                  {tr?.proofSubmittedText || "Your payment proof has been submitted. Your order is under review. We'll notify you once payment is verified."}
                 </p>
                 <Link
                   to="/account/orders"
                   className="rounded-full bg-[#c53938] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#ef5350]"
                 >
-                  {tr.viewMyOrders}
+                  {tr?.viewMyOrders || 'View My Orders'}
                 </Link>
               </div>
             ) : (
@@ -302,7 +349,7 @@ export default function Checkout() {
 
                 <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
                   <h2 className="mb-4 text-lg font-bold text-[var(--primary-text)]">
-                    {paymentName} {tr.paymentInstructions}
+                    {paymentName} {tr?.paymentInstructions || 'Payment Instructions'}
                   </h2>
 
                   <div className="space-y-4">
@@ -320,7 +367,7 @@ export default function Checkout() {
 
                     <div className="rounded-xl border border-[#c53938]/20 bg-[#c53938]/5 p-4">
                       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#c53938]/70">
-                        {tr.amountToTransfer}
+                        {tr?.amountToTransfer || 'Amount to Transfer'}
                       </p>
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-xl font-bold text-[#c53938]">
@@ -334,21 +381,21 @@ export default function Checkout() {
 
                 <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
                   <h2 className="mb-1 text-lg font-bold text-[var(--primary-text)]">
-                    {tr.uploadTitle}
+                    {tr?.uploadTitle || 'Upload Payment Screenshot'}
                   </h2>
                   <p className="mb-5 text-xs text-[var(--muted-text)]">
-                    {tr.uploadFormats}
+                    {tr?.uploadFormats || 'Accepted formats: JPG, JPEG, PNG — Max size: 5MB'}
                   </p>
 
                   {!proofPreview ? (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] py-10 transition hover:border-[#c53938] hover:bg-[#c53938]/5"
+                      className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] py-10 transition hover:border-[#c53938] hover:bg-[#c53938]/5 cursor-pointer"
                     >
                       <Upload size={28} className="text-[var(--muted-text)]" />
                       <span className="text-sm font-medium text-[var(--secondary-text)]">
-                        {tr.uploadClick}
+                        {tr?.uploadClick || 'Click to upload screenshot'}
                       </span>
                       <span className="text-xs text-[var(--muted-text)]">JPG, JPEG, PNG up to 5MB</span>
                     </button>
@@ -358,7 +405,7 @@ export default function Checkout() {
                       <button
                         type="button"
                         onClick={handleRemoveFile}
-                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 cursor-pointer"
                         title="Remove"
                       >
                         <X size={14} />
@@ -382,7 +429,7 @@ export default function Checkout() {
                     type="button"
                     onClick={handleSubmitProof}
                     disabled={isUploadingProof || !proofFile}
-                    className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#c53938] text-sm font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#c53938] text-sm font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                   >
                     {isUploadingProof ? (
                       <>
@@ -390,224 +437,210 @@ export default function Checkout() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
                         </svg>
-                        {tr.uploading}
+                        {tr?.uploading || 'Uploading…'}
                       </>
                     ) : (
                       <>
                         <Upload size={16} />
-                        {tr.submitProof}
+                        {tr?.submitProof || 'Submit Payment Proof'}
                       </>
                     )}
                   </button>
                 </section>
               </div>
-            )}
-          </main>
-        </div>
-      </div>
-    );
-  }
+            )
+          ) : (
+            /* ── Normal checkout form ── */
+            <>
+              <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
+                <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr?.home || 'Home'}</Link>
+                <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain rtl:rotate-180" />
+                <Link to="/cart" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr?.cart || 'Cart'}</Link>
+                <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain rtl:rotate-180" />
+                <span aria-current="page">{tr?.title || 'Checkout'}</span>
+              </nav>
 
-  /* ── Normal checkout form ── */
-  return (
-    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--primary-text)]">
-      <Helmet>
-        <title>{tr.title} | El-D7E7</title>
-        <meta name="description" content="Confirm your delivery details and payment method to place your order." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+              <h1 className="mb-0 mt-4 text-[32px] sm:text-[40px] font-bold leading-tight text-[var(--primary-text)]">
+                {tr?.title || 'Checkout'}
+              </h1>
 
-      <DashboardHeader />
+              <form onSubmit={handlePlaceOrder} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+                {/* Left column */}
+                <div className="space-y-6">
+                  {/* Delivery address */}
+                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
+                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.deliveryAddress || 'Delivery Address'}</h2>
 
-      <div className="mx-auto grid w-full max-w-[1440px] gap-8 px-5 py-8 sm:px-8 lg:grid-cols-[280px_minmax(0,1fr)] lg:px-0">
-        <DashboardSidebar />
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      <FormField label={tr?.fullName || 'Full Name'} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
+                      <FormField label={tr?.phoneNumber || 'Phone Number'} name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
 
-        <main className="min-w-0">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
-            <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr.home}</Link>
-            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
-            <Link to="/cart" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">{tr.cart}</Link>
-            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
-            <span aria-current="page">{tr.title}</span>
-          </nav>
+                      <div className="sm:col-span-2">
+                        <FormField label={tr?.streetAddress || 'Street Address'} name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
+                      </div>
 
-          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">{tr.title}</h1>
-
-          <form onSubmit={handlePlaceOrder} className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-            {/* Left column */}
-            <div className="space-y-6">
-              {/* Delivery address */}
-              <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.deliveryAddress}</h2>
-
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <FormField label={tr.fullName} name="fullName" value={formData.fullName} onChange={handleChange} placeholder="Eman Mohamed" autoComplete="name" />
-                  <FormField label={tr.phoneNumber} name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="01xxxxxxxxx" autoComplete="tel" />
-
-                  <div className="sm:col-span-2">
-                    <FormField label={tr.streetAddress} name="address" value={formData.address} onChange={handleChange} placeholder="Street name, building, floor, apartment" autoComplete="street-address" />
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
-                      {tr.cityZone}
-                    </label>
-                    {shippingZones.length > 0 ? (
-                      <select
-                        name="city"
-                        value={formData.city}
-                        onChange={handleChange}
-                        className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 cursor-pointer"
-                      >
-                        <option value="">{tr.selectCity}</option>
-                        {shippingZones.map((z) => (
-                          <option key={z._id || z.id} value={z.name}>
-                            {z.name} — EGP {z.price} ({z.eta})
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <FormField label="City" name="city" value={formData.city} onChange={handleChange} placeholder="Cairo" autoComplete="address-level2" />
-                    )}
-                  </div>
-
-                  <FormField label={tr.notes} name="notes" value={formData.notes} onChange={handleChange} placeholder={tr.deliveryInstructions} />
-                </div>
-
-                {(errors.fullName || errors.phone || errors.address || errors.city) && (
-                  <p className="mt-4 text-sm text-[#c53938]">{tr.requiredFields}</p>
-                )}
-              </section>
-
-              {/* Payment method */}
-              <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.paymentMethod}</h2>
-
-                <div className="mt-5 space-y-3">
-                  {paymentMethods.map((method) => {
-                    const Icon = method.icon;
-                    const isSelected = selectedPayment === method.id;
-
-                    return (
-                      <button
-                        key={method.id}
-                        type="button"
-                        onClick={() => setSelectedPayment(method.id)}
-                        className={`flex w-full items-center gap-4 rounded-xl border px-5 py-4 text-left transition ${
-                          isSelected
-                            ? 'border-[#c53938] bg-[#c53938]/5'
-                            : 'border-[var(--border-color)] hover:border-[#c53938]/50'
-                        }`}
-                      >
-                        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
-                          isSelected ? 'bg-[#c53938] text-white' : 'bg-[var(--surface-soft)] text-[var(--secondary-text)]'
-                        }`}>
-                          <Icon size={20} />
-                        </span>
-
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-semibold text-[var(--primary-text)]">{method.label}</span>
-                          <span className="block text-xs text-[var(--muted-text)]">{method.description}</span>
-                        </span>
-
-                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                          isSelected ? 'border-[#c53938] bg-[#c53938]' : 'border-[var(--border-color)]'
-                        }`}>
-                          {isSelected && <Check size={12} color="#fff" />}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {isManual && (
-                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                    <p className="text-xs font-medium text-amber-800 leading-relaxed">
-                      📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              {/* Order items recap */}
-              <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.orderItems} ({cartItems.length})</h2>
-
-                <div className="mt-5 divide-y divide-[var(--border-color)]">
-                  {cartItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)]">
-                        {item.image ? (
-                          <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                      <div>
+                        <label className="mb-1.5 block text-xs font-semibold text-[var(--primary-text)]">
+                          {tr?.cityZone || 'City / Delivery Zone'}
+                        </label>
+                        {shippingZones.length > 0 ? (
+                          <select
+                            name="city"
+                            value={formData.city}
+                            onChange={handleChange}
+                            className="h-11 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] px-4 text-sm text-[var(--primary-text)] focus:border-[#c53938] focus:outline-none focus:ring-2 focus:ring-[#c53938]/20 cursor-pointer"
+                          >
+                            <option value="">{tr?.selectCity || '-- Select your area / city --'}</option>
+                            {shippingZones.map((z) => (
+                              <option key={z._id || z.id} value={z.name}>
+                                {z.name} — EGP {z.price} ({z.eta})
+                              </option>
+                            ))}
+                          </select>
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[var(--muted-text)]">📦</div>
+                          <FormField label="City" name="city" value={formData.city} onChange={handleChange} placeholder="Cairo" autoComplete="address-level2" />
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">{item.name}</p>
-                        <p className="m-0 text-xs text-[var(--muted-text)]">{tr.qty}: {item.quantity}</p>
-                      </div>
-                      <p className="m-0 shrink-0 text-sm font-semibold text-[var(--primary-text)]">
-                        EGP {(item.price * item.quantity).toFixed(2)}
-                      </p>
+
+                      <FormField label={tr?.notes || 'Notes (optional)'} name="notes" value={formData.notes} onChange={handleChange} placeholder={tr?.deliveryInstructions || 'Delivery instructions'} />
                     </div>
-                  ))}
 
-                  {cartItems.length === 0 && (
-                    <p className="py-4 text-sm text-[var(--muted-text)]">{tr.emptyCart}</p>
+                    {(errors.fullName || errors.phone || errors.address || errors.city) && (
+                      <p className="mt-4 text-sm text-[#c53938] font-medium">{tr?.requiredFields || 'Please fill in all required fields.'}</p>
+                    )}
+                  </section>
+
+                  {/* Payment method */}
+                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
+                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.paymentMethod || 'Payment Method'}</h2>
+
+                    <div className="mt-5 space-y-3">
+                      {paymentMethods.map((method) => {
+                        const Icon = method.icon;
+                        const isSelected = selectedPayment === method.id;
+
+                        return (
+                          <button
+                            key={method.id}
+                            type="button"
+                            onClick={() => setSelectedPayment(method.id)}
+                            className={`flex w-full items-center gap-4 rounded-xl border px-4 sm:px-5 py-4 text-left rtl:text-right transition cursor-pointer ${
+                              isSelected
+                                ? 'border-[#c53938] bg-[#c53938]/5'
+                                : 'border-[var(--border-color)] hover:border-[#c53938]/50'
+                            }`}
+                          >
+                            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
+                              isSelected ? 'bg-[#c53938] text-white' : 'bg-[var(--surface-soft)] text-[var(--secondary-text)]'
+                            }`}>
+                              <Icon size={20} />
+                            </span>
+
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold text-[var(--primary-text)]">{method.label}</span>
+                              <span className="block text-xs text-[var(--muted-text)]">{method.description}</span>
+                            </span>
+
+                            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                              isSelected ? 'border-[#c53938] bg-[#c53938]' : 'border-[var(--border-color)]'
+                            }`}>
+                              {isSelected && <Check size={12} color="#fff" />}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {isManual && (
+                      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                        <p className="text-xs font-medium text-amber-800 leading-relaxed">
+                          📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
+                        </p>
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Order items recap */}
+                  <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6">
+                    <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.orderItems || 'Order Items'} ({cartItems.length})</h2>
+
+                    <div className="mt-5 divide-y divide-[var(--border-color)]">
+                      {cartItems.map((item) => (
+                        <div key={item.id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)]">
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[var(--muted-text)]">📦</div>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="m-0 truncate text-sm font-medium text-[var(--primary-text)]">{item.name}</p>
+                            <p className="m-0 text-xs text-[var(--muted-text)]">{tr?.qty || 'Qty'}: {item.quantity}</p>
+                          </div>
+                          <p className="m-0 shrink-0 text-sm font-semibold text-[var(--primary-text)]">
+                            EGP {(item.price * item.quantity).toFixed(2)}
+                          </p>
+                        </div>
+                      ))}
+
+                      {cartItems.length === 0 && (
+                        <p className="py-4 text-sm text-[var(--muted-text)]">{tr?.emptyCart || 'Your cart is empty.'}</p>
+                      )}
+                    </div>
+                  </section>
+                </div>
+
+                {/* Right column — summary */}
+                <aside className="h-fit rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-5 sm:p-6 lg:sticky lg:top-8">
+                  <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr?.orderSummary || 'Order Summary'}</h2>
+
+                  <dl className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-[var(--secondary-text)]">{tr?.subtotal || 'Subtotal'}</dt>
+                      <dd className="m-0 text-sm text-[var(--primary-text)] font-medium">EGP {(subtotal || 0).toFixed(2)}</dd>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-sm text-[var(--secondary-text)]">{tr?.deliveryFee || 'Delivery Fee'} ({formData.city || 'Standard'})</dt>
+                      <dd className="m-0 text-sm font-semibold text-[var(--primary-text)]">EGP {deliveryFee.toFixed(2)}</dd>
+                    </div>
+
+                    <div className="h-px bg-[var(--border-color)]" />
+
+                    <div className="flex items-center justify-between gap-4">
+                      <dt className="text-base font-semibold text-[var(--primary-text)]">{tr?.total || 'Total'}</dt>
+                      <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</dd>
+                    </div>
+                  </dl>
+
+                  {submitError && (
+                    <p className="mt-4 rounded-lg bg-[#c53938]/10 px-3 py-2 text-xs text-[#c53938] font-medium">{submitError}</p>
                   )}
-                </div>
-              </section>
-            </div>
 
-            {/* Right column — summary */}
-            <aside className="h-fit rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 lg:sticky lg:top-8">
-              <h2 className="m-0 text-xl font-bold text-[var(--primary-text)]">{tr.orderSummary}</h2>
+                  <button
+                    type="submit"
+                    disabled={cartItems.length === 0 || isSubmitting}
+                    className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+                        </svg>
+                        {tr?.placingOrder || 'Placing Order…'}
+                      </>
+                    ) : isManual ? (tr?.placeOrderPay || 'Place Order & Pay') : (tr?.placeOrder || 'Place Order')}
+                  </button>
 
-              <dl className="mt-5 space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">{tr.subtotal}</dt>
-                  <dd className="m-0 text-sm text-[var(--primary-text)] font-medium">EGP {subtotal.toFixed(2)}</dd>
-                </div>
-
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-sm text-[var(--secondary-text)]">{tr.deliveryFee} ({formData.city || 'Standard'})</dt>
-                  <dd className="m-0 text-sm font-semibold text-[var(--primary-text)]">EGP {deliveryFee.toFixed(2)}</dd>
-                </div>
-
-                <div className="h-px bg-[var(--border-color)]" />
-
-                <div className="flex items-center justify-between gap-4">
-                  <dt className="text-base font-semibold text-[var(--primary-text)]">{tr.total}</dt>
-                  <dd className="m-0 text-xl font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</dd>
-                </div>
-              </dl>
-
-              {submitError && (
-                <p className="mt-4 rounded-lg bg-[#c53938]/10 px-3 py-2 text-xs text-[#c53938] font-medium">{submitError}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={cartItems.length === 0 || isSubmitting}
-                className="mt-6 flex h-[54px] w-full items-center justify-center gap-2 rounded-full bg-[#c94545] text-base font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
-                    </svg>
-                    {tr.placingOrder}
-                  </>
-                ) : isManual ? tr.placeOrderPay : tr.placeOrder}
-              </button>
-
-              <Link to="/cart" className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]">
-                {tr.backToCart}
-              </Link>
-            </aside>
-          </form>
+                  <Link to="/cart" className="mt-3 block text-center text-sm text-[var(--secondary-text)] transition hover:text-[#c53938]">
+                    {tr?.backToCart || 'Back to Cart'}
+                  </Link>
+                </aside>
+              </form>
+            </>
+          )}
         </main>
       </div>
     </div>

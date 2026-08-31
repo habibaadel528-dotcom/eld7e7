@@ -147,10 +147,10 @@ export default function PaymentsPage() {
             <span className="mt-0.5 text-lg">⏳</span>
             <div>
               <p className="text-sm font-bold text-amber-800">
-                {tr.awaitingVerification(pendingVerification.length)}
+                {typeof tr?.awaitingVerification === 'function' ? tr.awaitingVerification(pendingVerification.length) : `${pendingVerification.length} orders awaiting verification`}
               </p>
               <p className="mt-0.5 text-xs text-amber-700">
-                {tr.verificationText}
+                {tr?.verificationText || 'We are verifying your payment.'}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {pendingVerification.map((o) => (
@@ -171,8 +171,10 @@ export default function PaymentsPage() {
           {/* ── Order Payment History ── */}
           <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.orderPaymentHistory}</h2>
-              <span className="text-xs text-[var(--muted-text)]">{tr.ordersCount(orders.length)}</span>
+              <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr?.orderPaymentHistory || 'Payment History'}</h2>
+              <span className="text-xs text-[var(--muted-text)]">
+                {typeof tr?.ordersCount === 'function' ? tr.ordersCount(orders.length) : `${orders.length} orders`}
+              </span>
             </div>
 
             <ul className="flex flex-col divide-y divide-[var(--border-color)]">
@@ -180,7 +182,7 @@ export default function PaymentsPage() {
 
               {!loading && recentOrders.length === 0 && (
                 <li className="py-10 text-center text-sm text-[var(--muted-text)]">
-                  {tr.noOrders}
+                  {tr?.noOrders || 'No orders yet'}
                 </li>
               )}
 
@@ -232,7 +234,7 @@ export default function PaymentsPage() {
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 7H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3m-6 0V5a2 2 0 0 1 4 0v2m-4 0h4" />
               </svg>
-              {tr.totalSpent}
+              {tr?.totalSpent || 'Total Spent'}
             </div>
 
             {loading ? (
@@ -241,7 +243,7 @@ export default function PaymentsPage() {
               <p className="relative mt-2 text-3xl font-bold">{formatEGP(totalSpent)}</p>
             )}
             <p className="relative mb-1 mt-0.5 text-xs opacity-70">
-              {tr.acrossOrders(orders.filter(o => !['cancelled','returned'].includes(o.status)).length)}
+              {typeof tr?.acrossOrders === 'function' ? tr.acrossOrders(orders.filter(o => !['cancelled','returned'].includes(o.status)).length) : `Across orders`}
             </p>
           </section>
 

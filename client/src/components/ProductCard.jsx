@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -21,11 +20,7 @@ export default function ProductCard({ product, onAddToCart }) {
     <article className="group relative flex min-h-[401px] flex-col overflow-hidden rounded-[15px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 transition duration-300 hover:-translate-y-1 hover:shadow-[0_16px_35px_rgba(0,0,0,0.12)]">
       {/* Image container & Wishlist Heart button */}
       <div className="relative flex min-h-[205px] items-center justify-center overflow-hidden rounded-[15px] bg-[var(--page-bg)]">
-        <Link
-          to={`/products/${product.slug}`}
-          className="flex h-full w-full items-center justify-center"
-          aria-label={`View ${product.name}`}
-        >
+        <div className="flex h-full w-full items-center justify-center">
           <img
             src={imageSrc}
             alt={`${product.name} cover`}
@@ -33,7 +28,7 @@ export default function ProductCard({ product, onAddToCart }) {
             decoding="async"
             className="h-[182px] w-auto object-contain transition duration-300 group-hover:scale-105"
           />
-        </Link>
+        </div>
 
         {/* Wishlist Heart Icon */}
         <button
@@ -59,12 +54,9 @@ export default function ProductCard({ product, onAddToCart }) {
           {product.category}
         </p>
 
-        <Link
-          to={`/products/${product.slug}`}
-          className="mt-1 line-clamp-2 min-h-[40px] text-[15px] leading-5 text-[var(--primary-text)] transition hover:text-[#c94545]"
-        >
+        <h3 className="mt-1 line-clamp-2 min-h-[40px] text-[15px] font-medium leading-5 text-[var(--primary-text)]">
           {product.name}
-        </Link>
+        </h3>
 
         <div
           className="mb-2 flex items-center gap-2"

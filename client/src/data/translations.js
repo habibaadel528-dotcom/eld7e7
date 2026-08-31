@@ -358,6 +358,18 @@ const translations = {
       continueShopping: 'Continue Shopping',
     },
 
+    // ── Not Found / 404 ───────────────────────────────────────
+    notFound: {
+      metaTitle: 'Page Not Found - 404 | El-D7E7',
+      metaDescription: 'Sorry, the page you are looking for is not available on El-D7E7.',
+      heading: '404 — Page Not Found',
+      description: 'Sorry! The page you are looking for does not exist or has been moved.',
+      goHome: 'Go To Home Page',
+      errorTitle: 'Something Went Wrong',
+      errorDescription: 'An unexpected error occurred. Please try again or return to home.',
+      retry: 'Try Again',
+    },
+
     // ── Admin ─────────────────────────────────────────────────
     admin: {
       header: {
@@ -1006,6 +1018,18 @@ const translations = {
       deliveryDays: '2 - 4 أيام عمل',
       trackOrder: 'تتبع طلبي',
       continueShopping: 'متابعة التسوق',
+    },
+
+    // ── Not Found / 404 ───────────────────────────────────────
+    notFound: {
+      metaTitle: 'الصفحة غير موجودة - 404 | الدحيح',
+      metaDescription: 'عذراً، الصفحة التي تبحث عنها غير متوفرة على متجر الدحيح.',
+      heading: '404 — الصفحة غير موجودة',
+      description: 'عذراً! الصفحة التي تحاول الوصول إليها غير موجودة أو تم نقلها.',
+      goHome: 'العودة للصفحة الرئيسية',
+      errorTitle: 'حدث خطأ غير متوقع',
+      errorDescription: 'نعتذر، حدث خطأ أثناء تحميل الصفحة. يرجى المحاولة مرة أخرى أو العودة للرئيسية.',
+      retry: 'إعادة المحاولة',
     },
 
     // ── Admin ─────────────────────────────────────────────────

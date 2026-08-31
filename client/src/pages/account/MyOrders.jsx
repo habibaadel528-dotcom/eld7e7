@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
-import { Filter, Search, ChevronDown, X, Package, Clock, CheckCircle2, Truck, AlertCircle, ShoppingBag } from 'lucide-react';
+import { Search, ChevronDown, X, Package, AlertCircle, ShoppingBag } from 'lucide-react';
 import { orderApi } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -416,12 +417,12 @@ export default function MyOrders() {
                 ? tr.noOrdersStatus(activeTab)
                 : tr.noOrdersEmpty}
             </p>
-            <a
-              href="/stationery"
+            <Link
+              to="/stationery"
               className="mt-5 inline-flex items-center rounded-xl bg-[#c83738] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#b72f30]"
             >
               {tr.startShopping}
-            </a>
+            </Link>
           </div>
         )}
       </div>

@@ -31,16 +31,16 @@ export default function OrderSuccess() {
         </span>
 
         <h1 className="mt-6 text-3xl font-bold text-[var(--primary-text)] sm:text-4xl">
-          {tr.title}
+          {tr?.title || 'Order Confirmed!'}
         </h1>
 
         <p className="mt-3 text-[var(--secondary-text)]">
-          {tr.thanks(location.state?.fullName)}
+          {typeof tr?.thanks === 'function' ? tr.thanks(location.state?.fullName) : 'Thank you for your purchase!'}
         </p>
 
         <div className="mt-8 w-full rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm text-[var(--secondary-text)]">{tr.orderNumber}</span>
+            <span className="text-sm text-[var(--secondary-text)]">{tr?.orderNumber || 'Order Number'}</span>
             <span className="text-sm font-bold text-[var(--primary-text)]">{orderNumber}</span>
           </div>
 
@@ -48,7 +48,7 @@ export default function OrderSuccess() {
             <>
               <div className="my-4 h-px bg-[var(--border-color)]" />
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-[var(--secondary-text)]">{tr.totalPaid}</span>
+                <span className="text-sm text-[var(--secondary-text)]">{tr?.totalPaid || 'Total Paid'}</span>
                 <span className="text-sm font-bold text-[var(--primary-text)]">EGP {total.toFixed(2)}</span>
               </div>
             </>
@@ -57,8 +57,8 @@ export default function OrderSuccess() {
           <div className="my-4 h-px bg-[var(--border-color)]" />
 
           <div className="flex items-center justify-between gap-4">
-            <span className="text-sm text-[var(--secondary-text)]">{tr.estimatedDelivery}</span>
-            <span className="text-sm font-bold text-[var(--primary-text)]">{tr.deliveryDays}</span>
+            <span className="text-sm text-[var(--secondary-text)]">{tr?.estimatedDelivery || 'Estimated Delivery'}</span>
+            <span className="text-sm font-bold text-[var(--primary-text)]">{tr?.deliveryDays || '2 - 4 Business Days'}</span>
           </div>
         </div>
 
@@ -68,7 +68,7 @@ export default function OrderSuccess() {
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[#c94545] text-sm font-bold text-white transition hover:bg-[#ef5350]"
           >
             <Package size={18} />
-            {tr.trackOrder}
+            {tr?.trackOrder || 'Track Order'}
           </Link>
 
           <Link
@@ -76,7 +76,7 @@ export default function OrderSuccess() {
             className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full border border-[var(--border-color)] text-sm font-bold text-[var(--primary-text)] transition hover:border-[#c53938] hover:text-[#c53938]"
           >
             <Home size={18} />
-            {tr.continueShopping}
+            {tr?.continueShopping || 'Continue Shopping'}
           </Link>
         </div>
       </main>

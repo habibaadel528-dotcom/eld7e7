@@ -14,7 +14,7 @@ import logoWordmark from '../../assets/icons/logo-wordmark.png';
 import cartIcon from '../../assets/icons/dashboard/cart.svg';
 import chevronRightIcon from '../../assets/icons/dashboard/chevron-right.svg';
 
-export default function DashboardHeader() {
+export default function DashboardHeader({ onOpenMobileMenu }) {
   const navigate = useNavigate();
   const { isDark, toggle: toggleTheme } = useTheme();
   const { cartCount } = useCart();
@@ -65,27 +65,42 @@ export default function DashboardHeader() {
     <header className="sticky top-0 z-30 border-b border-[var(--border-color)] bg-[var(--surface-bg)]">
       <div className="mx-auto flex h-[72px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
 
-        {/* ── Logo ── */}
-        <Link
-          to="/"
-          aria-label="Go to home page"
-          className="flex shrink-0 items-center gap-2 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
-        >
-          <img
-            src={logoMascot}
-            alt="El-D7E7 Mascot"
-            width="56"
-            height="56"
-            className="h-10 w-10 sm:h-13 sm:w-13 object-contain transition-transform hover:scale-105"
-          />
-          <img
-            src={logoWordmark}
-            alt="الدحيح El-D7E7"
-            width="135"
-            height="44"
-            className="hidden h-9 w-auto object-contain md:block"
-          />
-        </Link>
+        {/* ── Left / Logo & Mobile Menu ── */}
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          {onOpenMobileMenu && (
+            <button
+              type="button"
+              onClick={onOpenMobileMenu}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] hover:bg-[#c53938] hover:text-white hover:border-[#c53938] lg:hidden transition-colors cursor-pointer"
+              aria-label={lang === 'ar' ? 'فتح قائمة الحساب' : 'Open account navigation menu'}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
+
+          <Link
+            to="/"
+            aria-label="Go to home page"
+            className="flex shrink-0 items-center gap-2 rounded-lg transition-opacity hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
+          >
+            <img
+              src={logoMascot}
+              alt="El-D7E7 Mascot"
+              width="56"
+              height="56"
+              className="h-10 w-10 sm:h-13 sm:w-13 object-contain transition-transform hover:scale-105"
+            />
+            <img
+              src={logoWordmark}
+              alt="الدحيح El-D7E7"
+              width="135"
+              height="44"
+              className="hidden h-9 w-auto object-contain md:block"
+            />
+          </Link>
+        </div>
 
         {/* ── Right Actions ── */}
         <div className="flex shrink-0 items-center gap-2 sm:gap-3 ml-auto ltr:ml-auto rtl:mr-auto rtl:ml-0">

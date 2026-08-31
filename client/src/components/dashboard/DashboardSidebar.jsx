@@ -13,11 +13,12 @@ import paymentsIcon   from '../../assets/icons/dashboard/payments.svg';
 import settingsIcon   from '../../assets/icons/dashboard/settings.svg';
 import logoutIcon     from '../../assets/icons/dashboard/logout.svg';
 
-function NavItem({ item, isCollapsed }) {
+function NavItem({ item, isCollapsed, onClick }) {
   return (
     <NavLink
       to={item.to}
       title={isCollapsed ? item.label : undefined}
+      onClick={onClick}
       className={({ isActive }) =>
         `group flex items-center transition-all duration-150 ${
           isCollapsed
@@ -49,11 +50,11 @@ function NavItem({ item, isCollapsed }) {
   );
 }
 
-export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
+export default function DashboardSidebar({ isCollapsed, onToggleCollapse, onNavClick, isMobile }) {
   const navigate = useNavigate();
   const user = getStoredUser();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const tr = t('sidebar');
 
   const mainNav = [
@@ -80,27 +81,33 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
         isCollapsed ? 'py-10 px-2 items-center' : 'p-4 sm:p-5'
       }`}
     >
-      <div className={`flex items-center w-full mb-3 ${isCollapsed ? 'justify-center' : 'justify-between px-1'}`}>
-        {!isCollapsed && (
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--secondary-text)] opacity-70">
-            {tr.accountMenu}
-          </span>
-        )}
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] transition-all hover:bg-[#c53938] hover:text-white hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
-          title={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
-          aria-label={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
-        >
-          <svg
-            className={`h-4 w-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"
+      {!isMobile && (
+        <div className={`flex items-center w-full mb-3 ${isCollapsed ? 'justify-center' : 'justify-between px-1'}`}>
+          {!isCollapsed && (
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--secondary-text)] opacity-70">
+              {tr.accountMenu}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--secondary-text)] transition-all hover:bg-[#c53938] hover:text-white hover:border-[#c53938] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c53938]"
+            title={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
+            aria-label={isCollapsed ? tr.expandSidebar : tr.collapseSidebar}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
-      </div>
+            <svg
+              className={`h-4 w-4 transition-transform duration-300 ${
+                isCollapsed
+                  ? (lang === 'ar' ? '-rotate-180' : 'rotate-180')
+                  : (lang === 'ar' ? 'rotate-180' : '')
+              }`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       {/* Profile card */}
       <div
@@ -136,13 +143,13 @@ export default function DashboardSidebar({ isCollapsed, onToggleCollapse }) {
       {/* Navigation */}
       <nav aria-label="Account navigation" className={`mt-3 flex flex-1 flex-col gap-1 w-full ${isCollapsed ? 'items-center' : ''}`}>
         {mainNav.map((item) => (
-          <NavItem key={item.to} item={item} isCollapsed={isCollapsed} />
+          <NavItem key={item.to} item={item} isCollapsed={isCollapsed} onClick={onNavClick} />
         ))}
 
         <div className={`my-2 border-t border-[var(--border-color)] ${isCollapsed ? 'w-8 mx-auto' : 'w-full'}`} />
 
         {secondaryNav.map((item) => (
-          <NavItem key={item.to} item={item} isCollapsed={isCollapsed} />
+          <NavItem key={item.to} item={item} isCollapsed={isCollapsed} onClick={onNavClick} />
         ))}
       </nav>
 

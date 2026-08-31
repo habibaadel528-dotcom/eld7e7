@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { authApi, orderApi, userApi, productApi } from '../../services/api';
 import { getStoredUser } from '../../utils/auth';
 import { useLanguage } from '../../context/LanguageContext';
@@ -215,38 +216,42 @@ export default function DashboardPage() {
   const dynamicStats = [
     {
       id: 'orders',
+      to: '/account/orders',
       icon: 'bag',
       iconBg: 'bg-indigo-100 text-indigo-500',
       value: orderCount.toString(),
-      label: tr.totalOrders,
-      note: orderCount > 0 ? tr.activeCustomer : tr.noOrdersYet,
+      label: tr?.totalOrders || 'Total Orders',
+      note: orderCount > 0 ? (tr?.activeCustomer || 'Active customer') : (tr?.noOrdersYet || 'No orders yet'),
       noteColor: 'text-indigo-500',
     },
     {
       id: 'wishlist',
+      to: '/account/wishlist',
       icon: 'heart',
       iconBg: 'bg-rose-100 text-rose-500',
       value: wishlistCount.toString(),
-      label: tr.wishlistItems,
-      note: wishlistCount > 0 ? tr.saved(wishlistCount) : tr.saveItems,
+      label: tr?.wishlistItems || 'Wishlist Items',
+      note: wishlistCount > 0 ? (typeof tr?.saved === 'function' ? tr.saved(wishlistCount) : `${wishlistCount} saved`) : (tr?.saveItems || 'Save items'),
       noteColor: 'text-[#c53938]',
     },
     {
       id: 'loyalty',
+      to: '/account/dashboard',
       icon: 'check',
       iconBg: 'bg-amber-100 text-amber-500',
       value: loyaltyPts.toLocaleString(),
-      label: tr.loyaltyPoints,
-      note: tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString()),
+      label: tr?.loyaltyPoints || 'Loyalty Points',
+      note: typeof tr?.inRewards === 'function' ? tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString()) : `= EGP ${Math.floor(loyaltyPts / 10)} in rewards`,
       noteColor: 'text-amber-500',
     },
     {
       id: 'wallet',
+      to: '/account/payments',
       icon: 'wallet',
       iconBg: 'bg-emerald-100 text-emerald-500',
       value: `EGP ${walletBal.toLocaleString()}`,
-      label: tr.walletBalance,
-      note: tr.readyToUse,
+      label: tr?.walletBalance || 'Wallet Balance',
+      note: tr?.readyToUse || 'Ready to use',
       noteColor: 'text-emerald-500',
     },
   ];
@@ -270,10 +275,10 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--primary-text)]">
-            {tr.greeting(userFirstName)} <span>👋</span>
+            {typeof tr?.greeting === 'function' ? tr.greeting(userFirstName) : `Good morning, ${userFirstName}!`} <span>👋</span>
           </h1>
           <p className="text-sm text-[var(--secondary-text)]">
-            {tr.greetingSubtitle}
+            {tr?.greetingSubtitle || "Here's what's happening with your account today."}
           </p>
         </div>
         <div className="text-start ltr:text-right rtl:text-left">
@@ -285,22 +290,23 @@ export default function DashboardPage() {
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {dynamicStats.map((s) => (
-          <div
+          <Link
             key={s.id}
-            className="relative rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4"
+            to={s.to}
+            className="group relative rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4 transition duration-200 hover:border-[#c53938]/40 hover:shadow-md cursor-pointer block"
           >
             <div className="mb-4 flex items-start justify-between">
               <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${s.iconBg}`}>
                 <StatIcon type={s.icon} />
               </span>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-50 text-emerald-500 group-hover:scale-110 transition-transform">
                 <ArrowUpRight />
               </span>
             </div>
             <p className="text-2xl font-bold text-[var(--primary-text)]">{s.value}</p>
             <p className="text-xs text-[var(--secondary-text)]">{s.label}</p>
             <p className={`mt-1 text-xs font-medium ${s.noteColor}`}>{s.note}</p>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -309,18 +315,18 @@ export default function DashboardPage() {
         {/* Recent Orders */}
         <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.recentOrders}</h2>
-            <a href="/account/orders" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
-              {tr.viewAll}
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr?.recentOrders || 'Recent Orders'}</h2>
+            <Link to="/account/orders" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
+              {tr?.viewAll || 'View all'}
+              <svg className="h-3 w-3 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
               </svg>
-            </a>
+            </Link>
           </div>
 
           {loadingOrders ? (
             <div className="py-8 text-center text-xs text-[var(--secondary-text)]">
-              {tr.loadingOrders}
+              {tr?.loadingOrders || 'Loading recent orders...'}
             </div>
           ) : recentOrders.length > 0 ? (
             <ul className="flex flex-col divide-y divide-[var(--border-color)]">
@@ -332,7 +338,7 @@ export default function DashboardPage() {
                         key={i}
                         src={src}
                         alt=""
-                        className="h-9 w-9 rounded-full border-2 border-[var(--surface-bg)] object-cover"
+                        className="h-9 w-9 rounded-full border-2 border-[var(--surface-bg)] object-cover bg-white"
                       />
                     ))}
                   </div>
@@ -351,9 +357,9 @@ export default function DashboardPage() {
 
                   <div className="shrink-0 text-right">
                     <p className="text-sm font-semibold text-[var(--primary-text)]">{o.amount}</p>
-                    <a href="/account/orders" className="text-[11px] font-medium text-[#c53938] hover:underline">
+                    <Link to="/account/orders" className="text-[11px] font-medium text-[#c53938] hover:underline">
                       {o.action}
-                    </a>
+                    </Link>
                   </div>
                 </li>
               ))}
@@ -363,14 +369,14 @@ export default function DashboardPage() {
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)]">
                 <StatIcon type="bag" />
               </div>
-              <p className="text-sm font-semibold text-[var(--primary-text)]">{tr.noOrdersTitle}</p>
-              <p className="mt-1 text-xs text-[var(--secondary-text)]">{tr.noOrdersSubtitle}</p>
-              <a
-                href="/stationery"
+              <p className="text-sm font-semibold text-[var(--primary-text)]">{tr?.noOrdersTitle || 'No orders yet'}</p>
+              <p className="mt-1 text-xs text-[var(--secondary-text)]">{tr?.noOrdersSubtitle || 'When you place orders, they will show up here.'}</p>
+              <Link
+                to="/stationery"
                 className="mt-4 inline-flex items-center rounded-xl bg-[#c53938] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#a82d2c]"
               >
-                {tr.browseProducts}
-              </a>
+                {tr?.browseProducts || 'Browse Products'}
+              </Link>
             </div>
           )}
         </section>
@@ -381,10 +387,12 @@ export default function DashboardPage() {
           <span className="pointer-events-none absolute -bottom-12 -right-4 h-28 w-28 rounded-full bg-white/5" />
 
           <p className="relative text-[11px] font-semibold uppercase tracking-wider opacity-80">
-            {tr.loyaltyPointsCard}
+            {tr?.loyaltyPointsCard || 'Loyalty Points'}
           </p>
           <p className="relative mt-1 text-3xl font-bold">{loyaltyPts.toLocaleString()}</p>
-          <p className="relative mb-4 text-xs opacity-80">{tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString())}</p>
+          <p className="relative mb-4 text-xs opacity-80">
+            {typeof tr?.inRewards === 'function' ? tr.inRewards(Math.floor(loyaltyPts / 10).toLocaleString()) : `= EGP ${Math.floor(loyaltyPts / 10)} in rewards`}
+          </p>
 
           <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-white/20">
             <div
@@ -393,7 +401,7 @@ export default function DashboardPage() {
             />
           </div>
           <p className="relative mt-2 text-[11px] opacity-80">
-            {loyaltyPts >= 1000 ? tr.goldMember : tr.untilGold(1000 - loyaltyPts)}
+            {loyaltyPts >= 1000 ? (tr?.goldMember || 'Gold Member') : (typeof tr?.untilGold === 'function' ? tr.untilGold(1000 - loyaltyPts) : `${1000 - loyaltyPts} pts until Gold tier`)}
           </p>
         </section>
       </div>
@@ -401,18 +409,18 @@ export default function DashboardPage() {
       {/* ── Recommended for You ── */}
       <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr.recommendedForYou}</h2>
-          <a href="/stationery" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
-            {tr.browseAll}
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <h2 className="text-sm font-semibold text-[var(--primary-text)]">{tr?.recommendedForYou || 'Recommended for You'}</h2>
+          <Link to="/stationery" className="flex items-center gap-1 text-xs font-semibold text-[#c53938] hover:underline">
+            {tr?.browseAll || 'Browse all'}
+            <svg className="h-3 w-3 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
             </svg>
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {displayProducts.map((p) => (
-            <a key={p.id} href="/stationery" className="group flex flex-col">
+            <Link key={p.id} to="/stationery" className="group flex flex-col">
               <div className="mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[var(--surface-soft)]">
                 <img
                   src={p.image}
@@ -433,7 +441,7 @@ export default function DashboardPage() {
                 <StarIcon />
                 <span className="text-xs text-[var(--secondary-text)]">{p.rating}</span>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>

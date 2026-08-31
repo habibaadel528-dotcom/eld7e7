@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
@@ -14,10 +14,12 @@ export default function Cart() {
   const { cartItems, increaseQuantity, decreaseQuantity, removeItem, subtotal } = useCart();
   const { t } = useLanguage();
   const tr = t('cart');
+  const trSidebar = t('sidebar');
 
   const [isCollapsed, setIsCollapsed] = useState(
     () => localStorage.getItem('sidebar_collapsed') === 'true'
   );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleCollapse = () => {
     setIsCollapsed((prev) => {
@@ -43,32 +45,73 @@ export default function Cart() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <DashboardHeader />
+      <DashboardHeader onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
 
       <div
-        className={[
-          'mx-auto grid w-full max-w-[1440px] gap-6 lg:gap-8 px-4 py-8 sm:px-8 transition-all duration-300 ease-in-out lg:px-6',
-          isCollapsed ? 'lg:grid-cols-[80px_minmax(0,1fr)]' : 'lg:grid-cols-[280px_minmax(0,1fr)]',
-        ].join(' ')}
+        className={`mx-auto w-full items-stretch max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 transition-all duration-300 ${
+          isCollapsed
+            ? 'lg:grid lg:grid-cols-[80px_minmax(0,1fr)] lg:gap-8'
+            : 'lg:grid lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-8'
+        }`}
       >
-        <DashboardSidebar isCollapsed={isCollapsed} onToggleCollapse={toggleCollapse} />
+        {/* Desktop Sidebar (hidden on mobile) */}
+        <div className="hidden lg:block h-full">
+          <DashboardSidebar
+            isCollapsed={isCollapsed}
+            onToggleCollapse={toggleCollapse}
+          />
+        </div>
 
-        <main className="min-w-0 transition-all duration-300 ease-in-out">
+        {/* Mobile Slide-Over Sidebar Drawer */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity animate-in fade-in"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="fixed inset-y-0 ltr:left-0 rtl:right-0 z-50 w-[290px] max-w-[85vw] bg-[var(--surface-bg)] p-4 shadow-2xl ltr:border-r rtl:border-l border-[var(--border-color)] overflow-y-auto animate-in ltr:slide-in-from-left rtl:slide-in-from-right duration-300">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--secondary-text)]">
+                  {trSidebar?.accountMenu || 'Account Menu'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="rounded-lg p-1.5 text-[var(--secondary-text)] hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] transition cursor-pointer"
+                  aria-label="Close mobile menu"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <DashboardSidebar
+                isCollapsed={false}
+                onToggleCollapse={() => setIsMobileMenuOpen(false)}
+                onNavClick={() => setIsMobileMenuOpen(false)}
+                isMobile
+              />
+            </div>
+          </div>
+        )}
+
+        <main className="min-w-0 flex-1 transition-all duration-300 ease-in-out">
           <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
             <Link to="/" className="text-[var(--secondary-text)] transition hover:text-[#c53938]">
-              {tr.breadcrumbHome}
+              {tr?.breadcrumbHome || 'Home'}
             </Link>
-            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain" />
-            <span aria-current="page">{tr.breadcrumbCart}</span>
+            <img src={chevronRightIcon} alt="" width="16" height="16" className="h-4 w-4 object-contain rtl:rotate-180" />
+            <span aria-current="page">{tr?.breadcrumbCart || 'Cart'}</span>
           </nav>
 
-          <h1 className="mb-0 mt-4 text-[40px] font-bold leading-tight text-[var(--primary-text)]">
-            {tr.pageTitle}
+          <h1 className="mb-0 mt-4 text-[32px] sm:text-[40px] font-bold leading-tight text-[var(--primary-text)]">
+            {tr?.pageTitle || 'Your Cart'}
           </h1>
 
           <section
             aria-label="Cart products"
-            className="mt-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-0"
+            className="mt-3 rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] px-4 sm:px-6 py-0"
           >
             {cartItems.length > 0 ? (
               cartItems.map((item, index) => (
@@ -86,13 +129,13 @@ export default function Cart() {
               ))
             ) : (
               <div className="px-6 py-16 text-center">
-                <h2 className="m-0 text-2xl font-semibold">{tr.emptyTitle}</h2>
-                <p className="mt-3 text-[var(--secondary-text)]">{tr.emptySubtitle}</p>
+                <h2 className="m-0 text-2xl font-semibold">{tr?.emptyTitle || 'Your cart is empty'}</h2>
+                <p className="mt-3 text-[var(--secondary-text)]">{tr?.emptySubtitle || 'Add some products before continuing to checkout.'}</p>
                 <Link
                   to="/"
                   className="mt-6 inline-flex h-12 items-center justify-center rounded-full bg-[#c94545] px-7 text-white transition hover:bg-[#ef5350]"
                 >
-                  {tr.continueShopping}
+                  {tr?.continueShopping || 'Continue Shopping'}
                 </Link>
               </div>
             )}

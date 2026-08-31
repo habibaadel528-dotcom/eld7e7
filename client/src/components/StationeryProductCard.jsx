@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -37,11 +36,7 @@ export default function StationeryProductCard({
       </span>
 
       <div className="relative flex h-[205px] items-center justify-center overflow-hidden rounded-[15px] bg-[var(--page-bg)]">
-        <Link
-          to={`/products/${product.slug}`}
-          aria-label={`View ${product.name}`}
-          className="flex h-full w-full items-center justify-center"
-        >
+        <div className="flex h-full w-full items-center justify-center">
           <img
             src={imageSrc}
             alt={`${product.name} product`}
@@ -51,7 +46,7 @@ export default function StationeryProductCard({
             height="182"
             className="h-[182px] w-[130px] object-contain transition duration-300 group-hover:scale-105"
           />
-        </Link>
+        </div>
 
         {/* Wishlist Heart Icon */}
         <button
@@ -77,12 +72,9 @@ export default function StationeryProductCard({
           {product.category}
         </p>
 
-        <Link
-          to={`/products/${product.slug}`}
-          className="mt-1 min-h-[40px] text-[15px] leading-5 text-[var(--primary-text)] transition hover:text-[#c94545]"
-        >
+        <h3 className="mt-1 min-h-[40px] text-[15px] font-medium leading-5 text-[var(--primary-text)]">
           {product.name}
-        </Link>
+        </h3>
 
         <div className="mb-2 flex items-center gap-2">
           <span

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import WishlistCard from './WishlistCard';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -24,12 +25,12 @@ export default function WishlistGrid({ products = [], loading = false, onRemove,
         <p className="mt-1 text-xs text-[var(--secondary-text)] max-w-sm mx-auto">
           {tr.emptySubtitle}
         </p>
-        <a
-          href="/stationery"
+        <Link
+          to="/stationery"
           className="mt-5 inline-flex items-center rounded-xl bg-[#C53938] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#a82d2c]"
         >
           {tr.exploreProducts}
-        </a>
+        </Link>
       </div>
     );
   }

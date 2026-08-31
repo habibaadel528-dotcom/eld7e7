@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
+import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 
 /* ── Mock data — replace with real API data later ── */
 const grades = [
@@ -59,10 +62,26 @@ function formatEGP(n) {
 
 export default function SchoolProjectsModal({ isOpen, onClose }) {
   const [activeGrade, setActiveGrade] = useState('primary');
+  const { addToCart } = useCart();
+  const { lang } = useLanguage();
 
   if (!isOpen) return null;
 
   const kits = kitsByGrade[activeGrade] ?? [];
+
+  const handleAddKitToCart = (kit) => {
+    addToCart({
+      id: kit.id,
+      name: kit.name,
+      price: kit.price,
+      quantity: 1,
+    });
+    toast.success(
+      lang === 'ar'
+        ? `تمت إضافة "${kit.name}" إلى عربة التسوق!`
+        : `Added "${kit.name}" to cart!`
+    );
+  };
 
   return (
     <div
@@ -165,14 +184,15 @@ export default function SchoolProjectsModal({ isOpen, onClose }) {
                     <span className="text-base font-bold text-[#c53938]">{formatEGP(kit.price)}</span>
                     <button
                       type="button"
-                      className="flex items-center gap-1.5 rounded-full border border-[#c53938]/40 bg-[#c53938]/10 px-3.5 py-2 text-xs font-semibold text-[#ef5350] transition hover:bg-[#c53938]/20"
+                      onClick={() => handleAddKitToCart(kit)}
+                      className="flex items-center gap-1.5 rounded-full border border-[#c53938]/40 bg-[#c53938]/10 px-3.5 py-2 text-xs font-semibold text-[#ef5350] transition hover:bg-[#c53938]/20 cursor-pointer active:scale-95"
                     >
                       <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <circle cx="9" cy="21" r="1" />
                         <circle cx="19" cy="21" r="1" />
                         <path strokeLinecap="round" strokeLinejoin="round" d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
                       </svg>
-                      Add to Cart
+                      {lang === 'ar' ? 'أضف للسلة' : 'Add to Cart'}
                     </button>
                   </div>
                 </div>

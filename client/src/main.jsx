@@ -7,6 +7,7 @@ import App from './App.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import { WishlistProvider } from './context/WishlistContext.jsx';
 import { LanguageProvider } from './context/LanguageContext.jsx';
+import ErrorBoundary from './components/common/ErrorBoundary.jsx';
 import './styles/global.css';
 
 const savedTheme = localStorage.getItem('theme');
@@ -22,17 +23,19 @@ document.documentElement.dataset.theme = initialTheme;
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <LanguageProvider>
-      <BrowserRouter>
-        <HelmetProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <App />
-              <Toaster position="top-right" richColors closeButton duration={3500} />
-            </CartProvider>
-          </WishlistProvider>
-        </HelmetProvider>
-      </BrowserRouter>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider>
+        <BrowserRouter>
+          <HelmetProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <App />
+                <Toaster position="top-right" richColors closeButton duration={3500} />
+              </CartProvider>
+            </WishlistProvider>
+          </HelmetProvider>
+        </BrowserRouter>
+      </LanguageProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );
