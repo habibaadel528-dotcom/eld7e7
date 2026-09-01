@@ -35,21 +35,29 @@ function FormField({ label, ...inputProps }) {
 
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
+  const { lang } = useLanguage();
+  const isAr = lang === 'ar';
+
   const handleCopy = () => {
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
   return (
     <button
       type="button"
       onClick={handleCopy}
-      title="Copy"
-      className="btn-outline-custom flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
+      title={isAr ? 'نسخ' : 'Copy'}
+      className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-95 ${
+        copied
+          ? 'bg-emerald-600 text-white border border-emerald-600'
+          : 'bg-black text-white hover:bg-neutral-800 border border-black dark:bg-black dark:text-white dark:hover:bg-neutral-800 dark:border-neutral-700'
+      }`}
     >
-      {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
-      {copied ? '✓' : 'Copy'}
+      {copied ? <CheckCheck size={13} className="text-white" /> : <Copy size={13} className="text-white" />}
+      <span>{copied ? (isAr ? 'تم النسخ' : 'Copied!') : (isAr ? 'نسخ' : 'Copy')}</span>
     </button>
   );
 }
@@ -175,13 +183,18 @@ export default function Checkout() {
     setSubmitError('');
     try {
       const data = await orderApi.createOrder({
-        items: cartItems.map((item) => ({
-          product:  item.id || item._id,
-          name:     item.name,
-          price:    item.price,
-          quantity: item.quantity,
-          image:    item.image || '',
-        })),
+        items: cartItems.map((item) => {
+          const rawId = item._id || item.id;
+          const isHexObjectId = typeof rawId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawId);
+          return {
+            product:   isHexObjectId ? rawId : null,
+            productId: rawId ? String(rawId) : '',
+            name:      item.name,
+            price:     item.price,
+            quantity:  item.quantity,
+            image:     item.image || '',
+          };
+        }),
         shippingAddress: {
           recipientName: formData.fullName.trim(),
           street:        formData.address.trim(),

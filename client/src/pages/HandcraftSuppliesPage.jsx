@@ -257,9 +257,9 @@ export default function HandcraftSuppliesPage() {
                         type="button"
                         onClick={() => addToCart(p)}
                         aria-label={`Add ${displayName} to cart`}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--page-bg)] text-[var(--primary-text)] transition hover:bg-[#c53938] hover:text-white cursor-pointer"
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white shadow-xs transition hover:bg-neutral-800 active:scale-90 cursor-pointer"
                       >
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                           <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                         </svg>
                       </button>

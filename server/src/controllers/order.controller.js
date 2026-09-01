@@ -21,9 +21,26 @@ export async function createOrder(req, res, next) {
 
     const isManualPayment = MANUAL_PAYMENT_METHODS.includes(paymentMethod);
 
+    const sanitizedItems = items.map((item) => {
+      const rawId = item.product || item.productId || item.id || item._id;
+      const isValidObjectId =
+        rawId &&
+        typeof rawId === 'string' &&
+        /^[0-9a-fA-F]{24}$/.test(rawId);
+
+      return {
+        product: isValidObjectId ? rawId : null,
+        productId: rawId ? String(rawId) : '',
+        name: item.name || 'Product',
+        price: Number(item.price) || 0,
+        quantity: Math.max(1, Number(item.quantity) || 1),
+        image: item.image || '',
+      };
+    });
+
     const order = await Order.create({
       user: req.user._id,
-      items,
+      items: sanitizedItems,
       shippingAddress,
       paymentMethod: paymentMethod || 'cash_on_delivery',
       paymentStatus: isManualPayment ? 'pending_verification' : 'pending',
