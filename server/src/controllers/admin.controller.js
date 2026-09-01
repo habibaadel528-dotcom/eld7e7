@@ -44,19 +44,64 @@ export async function getStats(req, res, next) {
 export async function getCustomers(req, res, next) {
   try {
     const page   = Math.max(1, Number(req.query.page)  || 1);
-    const limit  = Math.min(100, Number(req.query.limit) || 20);
+    const limit  = Math.min(100, Number(req.query.limit) || 50);
     const skip   = (page - 1) * limit;
     const search = req.query.search?.trim();
 
-    const filter = { role: 'user' };
+    const matchFilter = { role: 'user' };
     if (search) {
       const re = new RegExp(search, 'i');
-      filter.$or = [{ firstName: re }, { lastName: re }, { email: re }];
+      matchFilter.$or = [{ firstName: re }, { lastName: re }, { email: re }];
     }
 
     const [users, total] = await Promise.all([
-      User.find(filter).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit),
-      User.countDocuments(filter),
+      User.aggregate([
+        { $match: matchFilter },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'orders',
+            localField: '_id',
+            foreignField: 'user',
+            as: 'userOrders',
+          },
+        },
+        {
+          $project: {
+            password: 0,
+            firstName: 1,
+            lastName: 1,
+            email: 1,
+            role: 1,
+            isActive: 1,
+            avatar: 1,
+            phone: 1,
+            addresses: 1,
+            loyaltyPoints: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            ordersCount: { $size: '$userOrders' },
+            totalSpent: {
+              $sum: {
+                $map: {
+                  input: '$userOrders',
+                  as: 'ord',
+                  in: {
+                    $cond: [
+                      { $ne: ['$$ord.status', 'cancelled'] },
+                      '$$ord.totalAmount',
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ]),
+      User.countDocuments(matchFilter),
     ]);
 
     res.json({
@@ -76,7 +121,22 @@ export async function getCustomerById(req, res, next) {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) return res.status(404).json({ success: false, message: 'Customer not found.' });
-    res.json({ success: true, customer: user });
+
+    const orders = await Order.find({ user: req.params.id }).sort({ createdAt: -1 });
+    const ordersCount = orders.length;
+    const totalSpent = orders
+      .filter((o) => o.status !== 'cancelled')
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+    res.json({
+      success: true,
+      customer: {
+        ...user.toObject(),
+        ordersCount,
+        totalSpent,
+        orders,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -146,9 +206,18 @@ export async function updateOrderStatus(req, res, next) {
       return res.status(400).json({ success: false, message: 'Invalid status value.' });
     }
 
-    const order = await Order.findByIdAndUpdate(req.params.id, { status }, { new: true })
+    const existingOrder = await Order.findById(req.params.id);
+    if (!existingOrder) return res.status(404).json({ success: false, message: 'Order not found.' });
+
+    const updateFields = { status };
+
+    // When cash on delivery order is marked delivered, payment is collected -> set paymentStatus to 'paid'
+    if (status === 'delivered' && existingOrder.paymentMethod === 'cash_on_delivery') {
+      updateFields.paymentStatus = 'paid';
+    }
+
+    const order = await Order.findByIdAndUpdate(req.params.id, updateFields, { new: true })
       .populate('user', 'firstName lastName email');
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
 
     /* Dispatch status lifecycle email */
     if (order.user) {

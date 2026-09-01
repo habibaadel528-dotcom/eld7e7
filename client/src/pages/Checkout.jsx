@@ -50,13 +50,17 @@ function CopyButton({ text }) {
       type="button"
       onClick={handleCopy}
       title={isAr ? 'نسخ' : 'Copy'}
-      className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all duration-150 cursor-pointer shadow-xs active:scale-95 ${
+      className={`group flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all duration-200 cursor-pointer active:scale-95 ${
         copied
-          ? 'bg-emerald-600 text-white border border-emerald-600'
-          : 'bg-black text-white hover:bg-neutral-800 border border-black dark:bg-black dark:text-white dark:hover:bg-neutral-800 dark:border-neutral-700'
+          ? 'bg-emerald-600 text-white border border-emerald-600 shadow-xs'
+          : 'bg-white text-zinc-800 border border-gray-300 shadow-2xs hover:border-[#c53938] hover:bg-[#c53938] hover:text-white hover:shadow-xs dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-[#c53938] dark:hover:border-[#c53938]'
       }`}
     >
-      {copied ? <CheckCheck size={13} className="text-white" /> : <Copy size={13} className="text-white" />}
+      {copied ? (
+        <CheckCheck size={13} className="stroke-[2.5]" />
+      ) : (
+        <Copy size={13} className="stroke-[2.2] text-zinc-700 transition-colors group-hover:text-white dark:text-zinc-300" />
+      )}
       <span>{copied ? (isAr ? 'تم النسخ' : 'Copied!') : (isAr ? 'نسخ' : 'Copy')}</span>
     </button>
   );
@@ -66,9 +70,10 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { cartItems, subtotal, clearCart } = useCart();
   const fileInputRef = useRef(null);
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const tr = t('checkout');
   const trSidebar = t('sidebar');
+  const isAr = lang === 'ar';
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -174,49 +179,75 @@ export default function Checkout() {
     return Object.keys(errs).length === 0;
   };
 
-  /* ── Step 1: Place order ── */
+  /* ── Place order & upload proof in one step ── */
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     if (!cartItems.length || !validate()) return;
 
+    if (isManual && !proofFile) {
+      setProofError(
+        isAr
+          ? 'يرجى إرفاق لقطة شاشة تأكيد التحويل لإتمام الطلب.'
+          : 'Please upload your payment screenshot before placing the order.'
+      );
+      toast.error(
+        isAr
+          ? 'يرجى إرفاق لقطة شاشة إثبات الدفع.'
+          : 'Please upload your payment screenshot.'
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
+    setProofError('');
+
     try {
-      const data = await orderApi.createOrder({
-        items: cartItems.map((item) => {
-          const rawId = item._id || item.id;
-          const isHexObjectId = typeof rawId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawId);
-          return {
-            product:   isHexObjectId ? rawId : null,
-            productId: rawId ? String(rawId) : '',
-            name:      item.name,
-            price:     item.price,
-            quantity:  item.quantity,
-            image:     item.image || '',
-          };
-        }),
-        shippingAddress: {
-          recipientName: formData.fullName.trim(),
-          street:        formData.address.trim(),
-          city:          formData.city.trim(),
-          phone:         formData.phone.trim(),
-        },
-        paymentMethod: selectedPayment === 'cod' ? 'cash_on_delivery' : selectedPayment,
-        totalAmount:   total,
+      const itemsPayload = cartItems.map((item) => {
+        const rawId = item._id || item.id;
+        const isHexObjectId = typeof rawId === 'string' && /^[0-9a-fA-F]{24}$/.test(rawId);
+        return {
+          product:   isHexObjectId ? rawId : null,
+          productId: rawId ? String(rawId) : '',
+          name:      item.name,
+          price:     item.price,
+          quantity:  item.quantity,
+          image:     item.image || '',
+        };
       });
+
+      const shippingAddressPayload = {
+        recipientName: formData.fullName.trim(),
+        street:        formData.address.trim(),
+        city:          formData.city.trim(),
+        phone:         formData.phone.trim(),
+      };
+
+      let resData;
+
+      if (isManual && proofFile) {
+        const fd = new FormData();
+        fd.append('items', JSON.stringify(itemsPayload));
+        fd.append('shippingAddress', JSON.stringify(shippingAddressPayload));
+        fd.append('paymentMethod', selectedPayment);
+        fd.append('totalAmount', String(total));
+        fd.append('proof', proofFile);
+        resData = await orderApi.createOrder(fd);
+      } else {
+        resData = await orderApi.createOrder({
+          items: itemsPayload,
+          shippingAddress: shippingAddressPayload,
+          paymentMethod: selectedPayment === 'cod' ? 'cash_on_delivery' : selectedPayment,
+          totalAmount: total,
+        });
+      }
 
       clearCart();
 
-      if (MANUAL_METHODS.includes(selectedPayment)) {
-        setPlacedOrder(data.order || data);
-        toast.success('Order placed! Please upload your payment proof.');
-      } else {
-        toast.success('Order placed successfully!');
-        const orderNum = data.order?.orderNumber || data.orderNumber || `D7E7-${Math.floor(100000 + Math.random() * 900000)}`;
-        navigate('/order-success', {
-          state: { orderNumber: orderNum, total, fullName: formData.fullName },
-        });
-      }
+      const orderObj = resData.order || resData;
+      setPlacedOrder(orderObj);
+      setProofSubmitted(true);
+      toast.success(isAr ? 'تم تأكيد طلبك بنجاح!' : 'Order placed successfully!');
     } catch (err) {
       setSubmitError(err.message || 'Could not place order. Please try again.');
       toast.error(err.message || 'Could not place order. Please try again.');
@@ -232,11 +263,15 @@ export default function Checkout() {
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
-      setProofError('Only JPG, JPEG, and PNG images are accepted.');
+      setProofError(
+        isAr ? 'الصيغ المقبولة فقط هي JPG و JPEG و PNG.' : 'Only JPG, JPEG, and PNG images are accepted.'
+      );
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
-      setProofError('File size must be less than 5MB.');
+      setProofError(
+        isAr ? 'يجب أن يكون حجم الصورة أقل من 5 ميجابايت.' : 'File size must be less than 5MB.'
+      );
       return;
     }
 
@@ -251,33 +286,10 @@ export default function Checkout() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  /* ── Step 2: Submit proof ── */
-  const handleSubmitProof = async (e) => {
-    e.preventDefault();
-    if (!proofFile) { setProofError('Please upload a payment screenshot.'); return; }
-    const orderId = placedOrder?._id || placedOrder?.id;
-    if (!orderId) return;
-
-    setIsUploadingProof(true);
-    setProofError('');
-    try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('proof', proofFile);
-      await orderApi.submitPaymentProof(orderId, formDataUpload);
-      setProofSubmitted(true);
-      toast.success('Payment proof submitted successfully!');
-    } catch (err) {
-      setProofError(err.message || 'Upload failed. Please try again.');
-      toast.error(err.message || 'Upload failed. Please try again.');
-    } finally {
-      setIsUploadingProof(false);
-    }
-  };
-
   const isManual = MANUAL_METHODS.includes(selectedPayment);
   const paymentAccount = selectedPayment === 'instapay' ? INSTAPAY_ACCOUNT : VODAFONE_CASH_NUM;
-  const paymentLabel   = selectedPayment === 'instapay' ? 'InstaPay Address' : 'Vodafone Cash Number';
-  const paymentName    = selectedPayment === 'instapay' ? 'InstaPay' : 'Vodafone Cash';
+  const paymentLabel   = selectedPayment === 'instapay' ? (isAr ? 'عنوان إنستاباي' : 'InstaPay Address') : (isAr ? 'رقم فودافون كاش' : 'Vodafone Cash Number');
+  const paymentName    = selectedPayment === 'instapay' ? (isAr ? 'إنستاباي' : 'InstaPay') : (isAr ? 'فودافون كاش' : 'Vodafone Cash');
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[var(--page-bg)] text-[var(--primary-text)]">
@@ -331,137 +343,27 @@ export default function Checkout() {
 
         <main className="min-w-0 flex-1">
           {placedOrder ? (
-            /* ── Upload proof state (after order placed) ── */
-            proofSubmitted ? (
-              <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-8 sm:p-12 text-center">
-                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
-                  <Check size={40} className="text-emerald-600" />
-                </div>
-                <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">{tr?.proofSubmittedTitle || 'Payment Proof Submitted!'}</h1>
-                <p className="mb-2 text-sm font-semibold text-[var(--secondary-text)]">Order #{placedOrder.orderNumber}</p>
-                <p className="mb-8 max-w-md text-sm text-[var(--muted-text)] leading-relaxed">
-                  {tr?.proofSubmittedText || "Your payment proof has been submitted. Your order is under review. We'll notify you once payment is verified."}
-                </p>
-                <Link
-                  to="/account/orders"
-                  className="rounded-full bg-[#c53938] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#ef5350]"
-                >
-                  {tr?.viewMyOrders || 'View My Orders'}
-                </Link>
+            /* ── Order placed & proof submitted success view ── */
+            <div className="flex flex-col items-center justify-center rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-8 sm:p-12 text-center animate-in fade-in duration-300">
+              <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100">
+                <Check size={40} className="text-emerald-600" />
               </div>
-            ) : (
-              <div className="max-w-xl space-y-6">
-                <div className="rounded-[20px] border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="text-sm font-semibold text-emerald-700">
-                    ✅ Order #{placedOrder.orderNumber} placed successfully!
-                  </p>
-                  <p className="mt-1 text-xs text-emerald-600">
-                    Now complete your payment and upload the screenshot below.
-                  </p>
-                </div>
-
-                <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                  <h2 className="mb-4 text-lg font-bold text-[var(--primary-text)]">
-                    {paymentName} {tr?.paymentInstructions || 'Payment Instructions'}
-                  </h2>
-
-                  <div className="space-y-4">
-                    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-4">
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[var(--muted-text)]">
-                        {paymentLabel}
-                      </p>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-lg font-bold text-[var(--primary-text)] tracking-wider">
-                          {paymentAccount}
-                        </span>
-                        <CopyButton text={paymentAccount} />
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-[#c53938]/20 bg-[#c53938]/5 p-4">
-                      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-[#c53938]/70">
-                        {tr?.amountToTransfer || 'Amount to Transfer'}
-                      </p>
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="text-xl font-bold text-[#c53938]">
-                          EGP {placedOrder.totalAmount?.toFixed(2)}
-                        </span>
-                        <CopyButton text={String(placedOrder.totalAmount)} />
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] p-6">
-                  <h2 className="mb-1 text-lg font-bold text-[var(--primary-text)]">
-                    {tr?.uploadTitle || 'Upload Payment Screenshot'}
-                  </h2>
-                  <p className="mb-5 text-xs text-[var(--muted-text)]">
-                    {tr?.uploadFormats || 'Accepted formats: JPG, JPEG, PNG — Max size: 5MB'}
-                  </p>
-
-                  {!proofPreview ? (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] py-10 transition hover:border-[#c53938] hover:bg-[#c53938]/5 cursor-pointer"
-                    >
-                      <Upload size={28} className="text-[var(--muted-text)]" />
-                      <span className="text-sm font-medium text-[var(--secondary-text)]">
-                        {tr?.uploadClick || 'Click to upload screenshot'}
-                      </span>
-                      <span className="text-xs text-[var(--muted-text)]">JPG, JPEG, PNG up to 5MB</span>
-                    </button>
-                  ) : (
-                    <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)]">
-                      <img src={proofPreview} alt="Payment proof preview" className="w-full object-contain max-h-72" />
-                      <button
-                        type="button"
-                        onClick={handleRemoveFile}
-                        className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 cursor-pointer"
-                        title="Remove"
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  )}
-
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".jpg,.jpeg,.png"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-
-                  {proofError && (
-                    <p className="mt-3 text-xs text-[#c53938] font-medium">{proofError}</p>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={handleSubmitProof}
-                    disabled={isUploadingProof || !proofFile}
-                    className="mt-5 flex h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[#c53938] text-sm font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-                  >
-                    {isUploadingProof ? (
-                      <>
-                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
-                        </svg>
-                        {tr?.uploading || 'Uploading…'}
-                      </>
-                    ) : (
-                      <>
-                        <Upload size={16} />
-                        {tr?.submitProof || 'Submit Payment Proof'}
-                      </>
-                    )}
-                  </button>
-                </section>
-              </div>
-            )
+              <h1 className="mb-3 text-2xl font-bold text-[var(--primary-text)]">
+                {isManual ? (tr?.proofSubmittedTitle || 'Payment Proof Submitted!') : (tr?.orderPlaced || 'Order Placed Successfully!')}
+              </h1>
+              <p className="mb-2 text-sm font-bold text-[#c53938]">Order #{placedOrder.orderNumber}</p>
+              <p className="mb-8 max-w-md text-sm text-[var(--muted-text)] leading-relaxed">
+                {isManual
+                  ? (tr?.proofSubmittedText || "Your payment proof has been submitted. Your order is under review. We'll notify you once payment is verified.")
+                  : (lang === 'ar' ? 'تم استلام طلبك بنجاح وسنقوم بشحنه في أقرب وقت.' : "Your order has been placed successfully and will be processed shortly.")}
+              </p>
+              <Link
+                to="/account/orders"
+                className="rounded-full bg-[#c53938] px-8 py-3 text-sm font-bold text-white transition hover:bg-[#ef5350]"
+              >
+                {tr?.viewMyOrders || 'View My Orders'}
+              </Link>
+            </div>
           ) : (
             /* ── Normal checkout form ── */
             <>
@@ -567,10 +469,91 @@ export default function Checkout() {
                     </div>
 
                     {isManual && (
-                      <div className="mt-3.5 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3.5 py-2.5">
-                        <p className="text-xs font-medium text-amber-600 dark:text-amber-300 leading-relaxed m-0">
-                          📋 After placing your order, you'll be asked to transfer <strong>EGP {total.toFixed(2)}</strong> to our {paymentName} account and upload a screenshot as payment proof.
-                        </p>
+                      <div className="mt-4 space-y-4 rounded-2xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-4 sm:p-5 animate-in fade-in duration-200">
+                        <div>
+                          <h3 className="m-0 text-sm sm:text-base font-bold text-[var(--primary-text)]">
+                            {paymentName} {tr?.paymentInstructions || 'Payment Instructions'}
+                          </h3>
+                          <p className="mt-1 text-xs text-[var(--muted-text)]">
+                            {isAr
+                              ? `يرجى تحويل المبلغ إلى حساب ${paymentName} ثم رفع لقطة شاشة التحويل لإتمام طلبك في خطوة واحدة.`
+                              : `Transfer the amount to our ${paymentName} account and upload the screenshot to complete your order in one step.`}
+                          </p>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-3.5">
+                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted-text)]">
+                              {paymentLabel}
+                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-base sm:text-lg font-bold text-[var(--primary-text)] tracking-wider">
+                                {paymentAccount}
+                              </span>
+                              <CopyButton text={paymentAccount} />
+                            </div>
+                          </div>
+
+                          <div className="rounded-xl border border-[#c53938]/20 bg-[#c53938]/5 p-3.5">
+                            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#c53938]/70">
+                              {tr?.amountToTransfer || 'Amount to Transfer'}
+                            </p>
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-base sm:text-lg font-bold text-[#c53938]">
+                                EGP {total.toFixed(2)}
+                              </span>
+                              <CopyButton text={total.toFixed(2)} />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Upload box */}
+                        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-4">
+                          <p className="mb-1 text-xs font-bold text-[var(--primary-text)]">
+                            {tr?.uploadTitle || 'Upload Payment Screenshot'} <span className="text-[#c53938]">*</span>
+                          </p>
+                          <p className="mb-3 text-[11px] text-[var(--muted-text)]">
+                            {tr?.uploadFormats || 'Accepted formats: JPG, JPEG, PNG — Max size: 5MB'}
+                          </p>
+
+                          {!proofPreview ? (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] py-6 transition hover:border-[#c53938] hover:bg-[#c53938]/5 cursor-pointer"
+                            >
+                              <Upload size={22} className="text-[var(--muted-text)]" />
+                              <span className="text-xs sm:text-sm font-semibold text-[var(--secondary-text)]">
+                                {tr?.uploadClick || 'Click to upload screenshot'}
+                              </span>
+                              <span className="text-[10px] text-[var(--muted-text)]">JPG, JPEG, PNG up to 5MB</span>
+                            </button>
+                          ) : (
+                            <div className="relative overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)]">
+                              <img src={proofPreview} alt="Payment proof preview" className="w-full object-contain max-h-60" />
+                              <button
+                                type="button"
+                                onClick={handleRemoveFile}
+                                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80 cursor-pointer"
+                                title={isAr ? 'إزالة' : 'Remove'}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          )}
+
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".jpg,.jpeg,.png"
+                            className="hidden"
+                            onChange={handleFileChange}
+                          />
+
+                          {proofError && (
+                            <p className="mt-2 text-xs text-[#c53938] font-bold">{proofError}</p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </section>

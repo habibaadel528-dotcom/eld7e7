@@ -274,6 +274,7 @@ export default function OrderManagementPage() {
                          : o.paymentMethod === 'instapay'         ? 'InstaPay'
                          : o.paymentMethod === 'vodafone_cash'    ? 'Vodafone Cash'
                          : o.paymentMethod,
+            rawPaymentMethod: o.paymentMethod,
             paymentStatus: o.paymentStatus || 'pending',
             paymentProof:  o.paymentProof || '',
             status:        o.status.charAt(0).toUpperCase() + o.status.slice(1),
@@ -288,10 +289,25 @@ export default function OrderManagementPage() {
 
   const updateStatus = async (id, status) => {
     const target = orders.find((o) => o.id === id);
+    const isCod = target?.rawPaymentMethod === 'cash_on_delivery' || target?.payment === 'Cash on Delivery' || target?.payment === 'الدفع عند الاستلام' || target?.payment === 'Cash';
+    const autoPaid = status.toLowerCase() === 'delivered' && isCod;
+
+    setOrders((prev) =>
+      prev.map((o) => (o.id === id ? { ...o, status, ...(autoPaid ? { paymentStatus: 'paid' } : {}) } : o))
+    );
+
     if (target?.rawId) {
-      await adminApi.updateOrderStatus(target.rawId, status.toLowerCase()).catch(() => {});
+      try {
+        const res = await adminApi.updateOrderStatus(target.rawId, status.toLowerCase());
+        if (res?.order?.paymentStatus) {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === id ? { ...o, status, paymentStatus: res.order.paymentStatus } : o))
+          );
+        }
+      } catch {
+        // keep optimistic update
+      }
     }
-    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o)));
   };
 
   const handleVerified = (orderId, action) => {

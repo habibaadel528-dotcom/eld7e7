@@ -1,22 +1,14 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+import { X, Mail, Phone, Calendar } from 'lucide-react';
 import { adminApi } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 
-/* ── Mock data — fallback if backend empty ── */
-const initialCustomers = [
-  { id: 1, name: 'Eman Mohamed', email: 'eman.m@gmail.com', orders: 24, spent: 89420, status: 'Active', joined: 'Jan 12, 2025', color: 'bg-rose-100 text-rose-600' },
-  { id: 2, name: 'Ahmed Sayed', email: 'ahmed.s@outlook.com', orders: 8, spent: 42100, status: 'Active', joined: 'Mar 5, 2025', color: 'bg-amber-100 text-amber-600' },
-  { id: 3, name: 'Mariam Khalil', email: 'mariam.k@gmail.com', orders: 16, spent: 61240, status: 'Active', joined: 'Feb 18, 2025', color: 'bg-emerald-100 text-emerald-600' },
-  { id: 4, name: 'Youssef Hassan', email: 'youssef.h@gmail.com', orders: 5, spent: 18990, status: 'Inactive', joined: 'May 2, 2025', color: 'bg-sky-100 text-sky-600' },
-  { id: 5, name: 'Nour El-Din', email: 'nour.e@gmail.com', orders: 11, spent: 35670, status: 'Active', joined: 'Apr 14, 2025', color: 'bg-violet-100 text-violet-600' },
-  { id: 6, name: 'Sara Mostafa', email: 'sara.m@yahoo.com', orders: 3, spent: 8920, status: 'Active', joined: 'Jun 1, 2025', color: 'bg-pink-100 text-pink-600' },
-  { id: 7, name: 'Omar Fathy', email: 'omar.f@gmail.com', orders: 7, spent: 24500, status: 'Inactive', joined: 'Mar 29, 2025', color: 'bg-orange-100 text-orange-600' },
-  { id: 8, name: 'Dina Ramzy', email: 'dina.r@gmail.com', orders: 19, spent: 75300, status: 'Active', joined: 'Jan 30, 2025', color: 'bg-teal-100 text-teal-600' },
-];
-
 function initials(name) {
+  if (!name) return 'U';
   return name
     .split(' ')
+    .filter(Boolean)
     .map((p) => p[0])
     .slice(0, 2)
     .join('')
@@ -24,7 +16,7 @@ function initials(name) {
 }
 
 function formatEGP(n) {
-  return `EGP ${n.toLocaleString('en-US')}`;
+  return `EGP ${Number(n || 0).toLocaleString('en-US')}`;
 }
 
 /* ── Small icon set ── */
@@ -64,31 +56,187 @@ function StatCard({ icon, iconBg, value, label }) {
   );
 }
 
+/* ── Customer Details Modal ── */
+function CustomerDetailsModal({ customerId, onClose, lang }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!customerId) return;
+    setLoading(true);
+    adminApi.getCustomerById(customerId)
+      .then((res) => {
+        if (res.success && res.customer) {
+          setData(res.customer);
+        }
+      })
+      .catch(() => {
+        toast.error(lang === 'ar' ? 'تعذر جلب تفاصيل العميل' : 'Failed to load customer details');
+      })
+      .finally(() => setLoading(false));
+  }, [customerId, lang]);
+
+  if (!customerId) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[var(--border-color)] bg-[var(--surface-bg)] p-6 shadow-2xl text-start">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute ltr:right-4 rtl:left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-soft)] text-[var(--secondary-text)] hover:text-[var(--primary-text)] cursor-pointer"
+        >
+          <X size={16} />
+        </button>
+
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <svg className="h-6 w-6 animate-spin text-[#c53938]" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+            </svg>
+            <p className="text-xs text-[var(--secondary-text)]">
+              {lang === 'ar' ? 'جارٍ تحميل بيانات العميل…' : 'Loading customer details…'}
+            </p>
+          </div>
+        ) : data ? (
+          <div className="space-y-6">
+            {/* Header info */}
+            <div className="flex items-center gap-4">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#c53938]/10 text-lg font-bold text-[#c53938]">
+                {initials(`${data.firstName} ${data.lastName}`)}
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-[var(--primary-text)]">
+                  {data.firstName} {data.lastName}
+                </h2>
+                <p className="text-xs text-[var(--secondary-text)]">{data.email}</p>
+              </div>
+            </div>
+
+            {/* Quick stats badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
+                <p className="text-[11px] text-[var(--secondary-text)]">{lang === 'ar' ? 'إجمالي الطلبات' : 'Total Orders'}</p>
+                <p className="text-lg font-bold text-[var(--primary-text)]">{data.ordersCount || 0}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
+                <p className="text-[11px] text-[var(--secondary-text)]">{lang === 'ar' ? 'إجمالي الإنفاق' : 'Total Spent'}</p>
+                <p className="text-lg font-bold text-[#c53938]">{formatEGP(data.totalSpent || 0)}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
+                <p className="text-[11px] text-[var(--secondary-text)]">{lang === 'ar' ? 'نقاط الولاء' : 'Loyalty Points'}</p>
+                <p className="text-lg font-bold text-amber-600">{data.loyaltyPoints || 0}</p>
+              </div>
+              <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-3">
+                <p className="text-[11px] text-[var(--secondary-text)]">{lang === 'ar' ? 'حالة الحساب' : 'Status'}</p>
+                <p className={`text-xs font-bold mt-1 ${data.isActive !== false ? 'text-emerald-600' : 'text-slate-500'}`}>
+                  {data.isActive !== false ? (lang === 'ar' ? 'نشط' : 'Active') : (lang === 'ar' ? 'معطل' : 'Inactive')}
+                </p>
+              </div>
+            </div>
+
+            {/* Contact details */}
+            <div className="rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] p-4 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-[var(--primary-text)]">
+                <Mail size={14} className="text-[var(--secondary-text)]" />
+                <span>{data.email}</span>
+              </div>
+              {data.phone && (
+                <div className="flex items-center gap-2 text-[var(--primary-text)]">
+                  <Phone size={14} className="text-[var(--secondary-text)]" />
+                  <span>{data.phone}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2 text-[var(--secondary-text)]">
+                <Calendar size={14} />
+                <span>
+                  {lang === 'ar' ? 'تاريخ الانضمام: ' : 'Joined: '}
+                  {new Date(data.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { dateStyle: 'medium' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Orders list */}
+            <div>
+              <h3 className="text-sm font-bold text-[var(--primary-text)] mb-3">
+                {lang === 'ar' ? 'سجل طلبات العميل' : 'Customer Orders'} ({data.orders?.length || 0})
+              </h3>
+              {!data.orders || data.orders.length === 0 ? (
+                <p className="text-xs text-[var(--secondary-text)] py-4 text-center">
+                  {lang === 'ar' ? 'لا توجد طلبات لهذا العميل بعد.' : 'No orders placed by this customer yet.'}
+                </p>
+              ) : (
+                <div className="divide-y divide-[var(--border-color)] max-h-52 overflow-y-auto rounded-xl border border-[var(--border-color)]">
+                  {data.orders.map((ord) => (
+                    <div key={ord._id} className="flex items-center justify-between p-3 text-xs bg-[var(--surface-bg)] hover:bg-[var(--surface-soft)] transition">
+                      <div>
+                        <p className="font-bold text-[var(--primary-text)]">#{ord.orderNumber || ord._id.slice(-6)}</p>
+                        <p className="text-[10px] text-[var(--secondary-text)]">
+                          {new Date(ord.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · {ord.items?.length || 1} {lang === 'ar' ? 'منتجات' : 'items'}
+                        </p>
+                      </div>
+                      <div className="text-end">
+                        <p className="font-bold text-[#c53938]">{formatEGP(ord.totalAmount)}</p>
+                        <span className="text-[10px] uppercase font-semibold text-slate-500">
+                          {ord.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export default function CustomerManagementPage() {
-  const [customers, setCustomers] = useState(initialCustomers);
+  const [customers, setCustomers] = useState([]);
   const [query, setQuery] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const { lang, t } = useLanguage();
   const tr = t('admin').customers;
 
-  useEffect(() => {
+  const fetchCustomers = useCallback(() => {
+    setLoading(true);
     adminApi.getCustomers()
       .then((data) => {
         if (data.customers && data.customers.length > 0) {
           const mapped = data.customers.map((c, i) => ({
             id: c._id,
-            name: `${c.firstName} ${c.lastName}`,
+            name: `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'Customer',
             email: c.email,
-            orders: 0,
-            spent: 0,
-            status: c.isActive ? tr.active : tr.inactive,
+            phone: c.phone || 'N/A',
+            orders: c.ordersCount ?? 0,
+            spent: c.totalSpent ?? 0,
+            status: c.isActive !== false ? tr.active : tr.inactive,
+            rawIsActive: c.isActive !== false,
             joined: new Date(c.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-            color: ['bg-rose-100 text-rose-600', 'bg-amber-100 text-amber-600', 'bg-emerald-100 text-emerald-600'][i % 3],
+            color: [
+              'bg-rose-100 text-rose-600',
+              'bg-amber-100 text-amber-600',
+              'bg-emerald-100 text-emerald-600',
+              'bg-sky-100 text-sky-600',
+              'bg-violet-100 text-violet-600',
+            ][i % 5],
           }));
           setCustomers(mapped);
+        } else {
+          setCustomers([]);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [tr.active, tr.inactive, lang]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -100,18 +248,53 @@ export default function CustomerManagementPage() {
 
   const stats = useMemo(() => {
     const total = customers.length;
-    const active = customers.filter((c) => c.status === tr.active).length;
+    const active = customers.filter((c) => c.rawIsActive).length;
     const inactive = total - active;
-    const avgOrders = Math.round(customers.reduce((s, c) => s + c.orders, 0) / total);
+    const totalOrdersCount = customers.reduce((s, c) => s + (Number(c.orders) || 0), 0);
+    const avgOrders = total > 0 ? Math.round(totalOrdersCount / total) : 0;
     return { total, active, inactive, avgOrders };
-  }, [customers, tr.active]);
+  }, [customers]);
 
-  const toggleStatus = (id) => {
+  const toggleStatus = async (id) => {
+    const target = customers.find((c) => c.id === id);
+    if (!target) return;
+    const nextActive = !target.rawIsActive;
+
+    // Optimistic UI update
     setCustomers((prev) =>
       prev.map((c) =>
-        c.id === id ? { ...c, status: c.status === tr.active ? tr.inactive : tr.active } : c
+        c.id === id
+          ? {
+              ...c,
+              rawIsActive: nextActive,
+              status: nextActive ? tr.active : tr.inactive,
+            }
+          : c
       )
     );
+
+    try {
+      await adminApi.updateCustomer(id, { isActive: nextActive });
+      toast.success(
+        lang === 'ar'
+          ? (nextActive ? 'تم تفعيل حساب العميل' : 'تم تعطيل حساب العميل')
+          : (nextActive ? 'Customer account activated' : 'Customer account deactivated')
+      );
+    } catch (err) {
+      // Rollback
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                rawIsActive: !nextActive,
+                status: !nextActive ? tr.active : tr.inactive,
+              }
+            : c
+        )
+      );
+      toast.error(err.message || 'Failed to update customer status');
+    }
   };
 
   return (
@@ -172,7 +355,19 @@ export default function CustomerManagementPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--border-color)]">
-            {filtered.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan="6" className="px-5 py-8 text-center text-sm text-[var(--secondary-text)]">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="h-4 w-4 animate-spin text-[#c53938]" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z"/>
+                    </svg>
+                    <span>{lang === 'ar' ? 'جارٍ تحميل العملاء…' : 'Loading customers…'}</span>
+                  </div>
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan="6" className="px-5 py-8 text-center text-sm text-[var(--secondary-text)]">
                   {tr.noResults}
@@ -191,12 +386,12 @@ export default function CustomerManagementPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-5 py-3 text-[var(--primary-text)]">{c.orders}</td>
-                <td className="px-5 py-3 font-semibold text-[var(--primary-text)]">{formatEGP(c.spent)}</td>
+                <td className="px-5 py-3 font-bold text-[var(--primary-text)]">{c.orders}</td>
+                <td className="px-5 py-3 font-bold text-[#c53938]">{formatEGP(c.spent)}</td>
                 <td className="px-5 py-3">
                   <span
                     className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                      c.status === tr.active
+                      c.rawIsActive
                         ? 'bg-emerald-100 text-emerald-600'
                         : 'bg-slate-100 text-slate-500'
                     }`}
@@ -207,7 +402,12 @@ export default function CustomerManagementPage() {
                 <td className="px-5 py-3 text-[var(--secondary-text)]">{c.joined}</td>
                 <td className="px-5 py-3">
                   <div className="flex items-center justify-end gap-2">
-                    <button type="button" title="View customer" className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCustomerId(c.id)}
+                      title={lang === 'ar' ? 'عرض تفاصيل العميل والطلبات' : 'View customer & order history'}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--secondary-text)] transition hover:bg-[var(--surface-soft)] hover:text-[var(--primary-text)] cursor-pointer"
+                    >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7Z" />
                         <circle cx="12" cy="12" r="3" />
@@ -216,14 +416,14 @@ export default function CustomerManagementPage() {
                     <button
                       type="button"
                       onClick={() => toggleStatus(c.id)}
-                      title={c.status === tr.active ? 'Deactivate customer' : 'Activate customer'}
+                      title={c.rawIsActive ? 'Deactivate customer' : 'Activate customer'}
                       className={`flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-[var(--surface-soft)] cursor-pointer ${
-                        c.status === tr.active ? 'text-emerald-500' : 'text-[var(--secondary-text)]'
+                        c.rawIsActive ? 'text-emerald-500' : 'text-[var(--secondary-text)]'
                       }`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <rect x="2" y="7" width="20" height="10" rx="5" />
-                        <circle cx={c.status === tr.active ? '17' : '7'} cy="12" r="3" fill="currentColor" stroke="none" />
+                        <circle cx={c.rawIsActive ? '17' : '7'} cy="12" r="3" fill="currentColor" stroke="none" />
                       </svg>
                     </button>
                   </div>
@@ -233,6 +433,15 @@ export default function CustomerManagementPage() {
           </tbody>
         </table>
       </div>
+
+      {/* ── Customer Details Modal ── */}
+      {selectedCustomerId && (
+        <CustomerDetailsModal
+          customerId={selectedCustomerId}
+          onClose={() => setSelectedCustomerId(null)}
+          lang={lang}
+        />
+      )}
     </div>
   );
 }

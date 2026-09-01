@@ -87,7 +87,12 @@ export const userApi = {
 
 /* ── Orders ── */
 export const orderApi = {
-  createOrder:        (body)         => apiFetch('/orders',    { method: 'POST', body: JSON.stringify(body) }),
+  createOrder: (body) => {
+    if (typeof FormData !== 'undefined' && body instanceof FormData) {
+      return apiFetchFormData('/orders', body);
+    }
+    return apiFetch('/orders', { method: 'POST', body: JSON.stringify(body) });
+  },
   getMyOrders:        (params)       => apiFetch(`/orders?${new URLSearchParams(params || {})}`),
   getOrderById:       (id)           => apiFetch(`/orders/${id}`),
   cancelOrder:        (id)           => apiFetch(`/orders/${id}/cancel`, { method: 'PATCH' }),
@@ -111,6 +116,7 @@ export const sessionApi = {
 export const adminApi = {
   getStats:           ()           => apiFetch('/admin/stats'),
   getCustomers:       (params)     => apiFetch(`/admin/customers?${new URLSearchParams(params || {})}`),
+  getCustomerById:    (id)         => apiFetch(`/admin/customers/${id}`),
   updateCustomer:     (id, body)   => apiFetch(`/admin/customers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   getOrders:          (params)     => apiFetch(`/admin/orders?${new URLSearchParams(params || {})}`),
   updateOrderStatus:  (id, status) => apiFetch(`/admin/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Heart } from 'lucide-react';
+import { Heart, Plus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -119,11 +119,9 @@ function GradeLevelSection({ icon, title, titleAr, subtitle, subtitleAr, accent,
                     type="button"
                     onClick={() => addToCart(book)}
                     aria-label={`Add ${displayName} to cart`}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white shadow-xs transition hover:bg-neutral-800 active:scale-90 cursor-pointer"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-2xs transition-all duration-200 hover:scale-105 hover:border-[#c53938] hover:bg-[#c53938] hover:text-white active:scale-95 cursor-pointer dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-[#c53938] dark:hover:bg-[#c53938]"
                   >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                    </svg>
+                    <Plus size={14} className="stroke-[2.5]" />
                   </button>
                 </div>
               </div>

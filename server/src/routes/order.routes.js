@@ -7,7 +7,7 @@ const router = Router();
 
 router.use(protect);
 
-router.post('/',                                          createOrder);
+router.post('/', uploadProof.single('proof'), createOrder);
 router.get('/',                                           getMyOrders);
 router.get('/:id',                                        getOrderById);
 router.patch('/:id/cancel',                               cancelOrder);

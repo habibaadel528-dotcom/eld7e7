@@ -9,7 +9,17 @@ const MANUAL_PAYMENT_METHODS = ['instapay', 'vodafone_cash'];
    ──────────────────────────────── */
 export async function createOrder(req, res, next) {
   try {
-    const { items, shippingAddress, paymentMethod, totalAmount } = req.body;
+    let { items, shippingAddress, paymentMethod, totalAmount } = req.body;
+
+    if (typeof items === 'string') {
+      try { items = JSON.parse(items); } catch { items = []; }
+    }
+    if (typeof shippingAddress === 'string') {
+      try { shippingAddress = JSON.parse(shippingAddress); } catch { shippingAddress = {}; }
+    }
+    if (typeof totalAmount === 'string') {
+      totalAmount = Number(totalAmount) || 0;
+    }
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Order must contain at least one item.' });
@@ -20,6 +30,11 @@ export async function createOrder(req, res, next) {
     }
 
     const isManualPayment = MANUAL_PAYMENT_METHODS.includes(paymentMethod);
+
+    let paymentProof = '';
+    if (req.file) {
+      paymentProof = `payment-proofs/${req.file.filename}`;
+    }
 
     const sanitizedItems = items.map((item) => {
       const rawId = item.product || item.productId || item.id || item._id;
@@ -44,6 +59,7 @@ export async function createOrder(req, res, next) {
       shippingAddress,
       paymentMethod: paymentMethod || 'cash_on_delivery',
       paymentStatus: isManualPayment ? 'pending_verification' : 'pending',
+      paymentProof,
       totalAmount,
     });
 
