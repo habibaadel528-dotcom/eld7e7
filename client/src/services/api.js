@@ -1,5 +1,5 @@
 export const API_BASE =
-  import.meta.env.VITE_API_URL || 'https://eld7e7-production.up.railway.app/api';
+  import.meta.env.VITE_API_URL || (import.meta.env.DEV ? '/api' : 'https://eld7e7-production.up.railway.app/api');
 
 /* ── Health check ── */
 export async function checkHealth() {

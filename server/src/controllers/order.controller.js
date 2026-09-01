@@ -58,7 +58,7 @@ export async function createOrder(req, res, next) {
       items: sanitizedItems,
       shippingAddress,
       paymentMethod: paymentMethod || 'cash_on_delivery',
-      paymentStatus: isManualPayment ? 'pending_verification' : 'pending',
+      paymentStatus: 'pending',
       paymentProof,
       totalAmount,
     });
