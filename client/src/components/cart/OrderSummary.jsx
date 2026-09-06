@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import tagIcon from '../../assets/icons/cart/tag.svg';
-import arrowRightIcon from '../../assets/icons/cart/arrow-right.svg';
+import { ArrowRight, Tag } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function OrderSummary({ subtotal }) {
@@ -26,7 +25,7 @@ export default function OrderSummary({ subtotal }) {
   return (
     <section
       aria-labelledby="order-summary-heading"
-      className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-5"
+      className="rounded-[20px] border border-[var(--border-color)] bg-[var(--surface-bg)] px-6 py-5 text-start"
     >
       <h2 id="order-summary-heading" className="m-0 text-2xl font-normal text-[var(--primary-text)]">
         {tr.orderSummary}
@@ -53,7 +52,7 @@ export default function OrderSummary({ subtotal }) {
       <form onSubmit={handlePromoSubmit} className="mt-6 flex flex-col gap-3 sm:flex-row">
         <label className="relative min-w-0 flex-1">
           <span className="sr-only">{tr.promoCodeLabel}</span>
-          <img src={tagIcon} alt="" width="24" height="24" className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 object-contain" />
+          <Tag size={18} className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[var(--muted-text)] rtl:right-4 rtl:left-auto" />
           <input
             type="text"
             value={promoCode}
@@ -61,13 +60,13 @@ export default function OrderSummary({ subtotal }) {
             maxLength={30}
             autoComplete="off"
             placeholder={tr.promoPlaceholder}
-            className="h-12 w-full rounded-full border border-transparent bg-[var(--surface-soft)] pl-12 pr-5 text-base text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#c94545]"
+            className="h-12 w-full rounded-full border border-transparent bg-[var(--surface-soft)] pl-12 pr-5 text-base text-[var(--primary-text)] outline-none placeholder:text-[var(--muted-text)] focus:border-[#c94545] rtl:pr-12 rtl:pl-5"
           />
         </label>
 
         <button
           type="submit"
-          className="btn-outline-custom h-12 rounded-full px-8 text-base font-bold cursor-pointer active:scale-95 shadow-xs shrink-0"
+          className="btn-outline-custom h-12 rounded-full px-8 text-base font-normal cursor-pointer active:scale-95 shadow-xs shrink-0"
         >
           {tr.apply}
         </button>
@@ -86,7 +85,7 @@ export default function OrderSummary({ subtotal }) {
         className="mx-auto mt-6 flex h-[60px] w-full max-w-[656px] items-center justify-center gap-3 rounded-full bg-[#c94545] px-8 text-xl font-bold text-white transition hover:bg-[#ef5350] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-md"
       >
         <span>{tr.goToCheckout}</span>
-        <img src={arrowRightIcon} alt="" width="24" height="24" className="h-6 w-6 object-contain" />
+        <ArrowRight size={22} className="stroke-[2.5] text-white rtl:rotate-180" />
       </button>
     </section>
   );

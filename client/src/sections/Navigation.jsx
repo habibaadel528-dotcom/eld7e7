@@ -40,7 +40,7 @@ export default function Navigation() {
                 <img
                   src={iconChevronDown}
                   alt=""
-                  className="h-4 w-4 object-contain opacity-80"
+                  className="h-4 w-4 object-contain opacity-80 dark:brightness-0 dark:invert"
                 />
               )}
             </li>

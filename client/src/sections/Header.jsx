@@ -292,12 +292,13 @@ export default function Header({ cartCount: propCartCount }) {
           </Link>
 
           {/* Desktop Search */}
+          {/* Desktop Search */}
           <div ref={desktopSearchRef} className="relative hidden w-full max-w-[520px] flex-1 md:block xl:max-w-[672px]">
             <form onSubmit={handleSearchSubmit} className="relative">
               <img
                 src={iconSearch}
                 alt=""
-                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain ltr:left-4 rtl:right-4 rtl:left-auto"
+                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain ltr:left-4 rtl:right-4 rtl:left-auto dark:brightness-0 dark:invert"
               />
 
               <input
@@ -336,7 +337,7 @@ export default function Header({ cartCount: propCartCount }) {
               <img
                 src={iconChevronDown}
                 alt=""
-                className="h-4 w-4 object-contain"
+                className="h-4 w-4 object-contain dark:brightness-0 dark:invert"
               />
             </button>
 
@@ -362,7 +363,7 @@ export default function Header({ cartCount: propCartCount }) {
                 <img
                   src={iconShoppingCart}
                   alt=""
-                  className="h-6 w-6 object-contain"
+                  className="h-6 w-6 object-contain dark:brightness-0 dark:invert"
                 />
 
                 {cartCount > 0 && (
@@ -389,13 +390,13 @@ export default function Header({ cartCount: propCartCount }) {
                   <img
                     src={iconUser}
                     alt=""
-                    className="h-6 w-6 object-contain"
+                    className="h-6 w-6 object-contain dark:brightness-0 dark:invert"
                   />
 
                   <img
                     src={iconChevronDown}
                     alt=""
-                    className={`hidden h-4 w-4 object-contain transition-transform sm:block ${isAccountMenuOpen ? 'rotate-180' : ''
+                    className={`hidden h-4 w-4 object-contain transition-transform sm:block dark:brightness-0 dark:invert ${isAccountMenuOpen ? 'rotate-180' : ''
                       }`}
                   />
                 </button>
@@ -416,7 +417,7 @@ export default function Header({ cartCount: propCartCount }) {
             <img
               src={iconSearch}
               alt=""
-              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain rtl:right-4 rtl:left-auto"
+              className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 object-contain rtl:right-4 rtl:left-auto dark:brightness-0 dark:invert"
             />
 
             <input

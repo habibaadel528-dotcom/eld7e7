@@ -44,7 +44,7 @@ export default function CartItem({ item, onIncrease, onDecrease, onRemove }) {
           aria-label={tr.removeItem(item.name)}
           className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#ef5350] text-[#c53938] transition hover:bg-[#c53938] hover:text-white"
         >
-          <img src={trashIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
+          <img src={trashIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain dark:brightness-0 dark:invert" />
         </button>
 
         <div className="flex items-center gap-5 rounded-full bg-[var(--surface-soft)] px-5 py-3">
@@ -55,7 +55,7 @@ export default function CartItem({ item, onIncrease, onDecrease, onRemove }) {
             aria-label={tr.decreaseQty(item.name)}
             className="flex h-5 w-5 items-center justify-center disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <img src={minusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
+            <img src={minusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain dark:brightness-0 dark:invert" />
           </button>
 
           <span aria-live="polite" className="min-w-4 text-center text-sm text-[var(--primary-text)]">
@@ -68,7 +68,7 @@ export default function CartItem({ item, onIncrease, onDecrease, onRemove }) {
             aria-label={tr.increaseQty(item.name)}
             className="flex h-5 w-5 items-center justify-center"
           >
-            <img src={plusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain" />
+            <img src={plusIcon} alt="" width="20" height="20" className="h-5 w-5 object-contain dark:brightness-0 dark:invert" />
           </button>
         </div>
       </div>

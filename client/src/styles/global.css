@@ -162,9 +162,24 @@ img {
 }
 
 /* In dark mode, SVG icons loaded as <img> via src= won't auto-invert.
-   We use a CSS filter trick for those that are known dark icons. */
-:root[data-theme="dark"] .icon-invert {
-  filter: invert(1) brightness(1.4);
+   We use a CSS filter trick for all icons to make them crisp white. */
+:root[data-theme="dark"] .icon-invert,
+:root[data-theme="dark"] img[src*="/assets/icons/"]:not([src*="google"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]),
+:root[data-theme="dark"] img[src$=".svg"]:not([src*="google"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]) {
+  filter: brightness(0) invert(1);
+}
+
+:root[data-theme="dark"] svg.text-black,
+:root[data-theme="dark"] svg.text-zinc-900,
+:root[data-theme="dark"] svg.text-zinc-800,
+:root[data-theme="dark"] svg.text-zinc-700,
+:root[data-theme="dark"] svg.text-gray-900,
+:root[data-theme="dark"] svg.text-gray-800,
+:root[data-theme="dark"] svg.text-gray-700,
+:root[data-theme="dark"] svg.text-slate-900,
+:root[data-theme="dark"] svg.text-slate-800 {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 input,

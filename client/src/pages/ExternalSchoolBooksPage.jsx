@@ -119,7 +119,7 @@ function GradeLevelSection({ icon, title, titleAr, subtitle, subtitleAr, accent,
                     type="button"
                     onClick={() => addToCart(book)}
                     aria-label={`Add ${displayName} to cart`}
-                    className="flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-800 shadow-2xs transition-all duration-200 hover:scale-105 hover:border-[#c53938] hover:bg-[#c53938] hover:text-white active:scale-95 cursor-pointer dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:border-[#c53938] dark:hover:bg-[#c53938]"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-[#c53938] text-white shadow-2xs transition-all duration-200 hover:bg-[#a82e2d] hover:scale-110 active:scale-95 cursor-pointer"
                   >
                     <Plus size={14} className="stroke-[2.5]" />
                   </button>

@@ -81,7 +81,7 @@ export default function HeroSection() {
               <img
                 src={iconPenTool}
                 alt=""
-                className="h-12 w-12 object-contain"
+                className="h-12 w-12 object-contain dark:brightness-0 dark:invert"
               />
             </div>
 
