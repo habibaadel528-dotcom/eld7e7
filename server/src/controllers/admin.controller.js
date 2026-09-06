@@ -48,10 +48,10 @@ export async function getCustomers(req, res, next) {
     const skip   = (page - 1) * limit;
     const search = req.query.search?.trim();
 
-    const matchFilter = { role: 'user' };
+    const matchFilter = { role: { $ne: 'admin' } };
     if (search) {
       const re = new RegExp(search, 'i');
-      matchFilter.$or = [{ firstName: re }, { lastName: re }, { email: re }];
+      matchFilter.$or = [{ firstName: re }, { lastName: re }, { email: re }, { phone: re }];
     }
 
     const [users, total] = await Promise.all([
@@ -156,6 +156,46 @@ export async function updateCustomer(req, res, next) {
     if (!user) return res.status(404).json({ success: false, message: 'Customer not found.' });
 
     res.json({ success: true, customer: user });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ────────────────────────────────
+   POST /api/admin/customers
+   ──────────────────────────────── */
+export async function createCustomer(req, res, next) {
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+      return res.status(400).json({ success: false, message: 'First name, last name, and email are required.' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'A customer with this email already exists.' });
+    }
+
+    const user = await User.create({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
+      password: password || 'Customer@123456',
+      phone: phone?.trim() || '',
+      role: 'user',
+      isActive: true,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Customer created successfully.',
+      customer: {
+        ...user.toObject(),
+        ordersCount: 0,
+        totalSpent: 0,
+      },
+    });
   } catch (error) {
     next(error);
   }

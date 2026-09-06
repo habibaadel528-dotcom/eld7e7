@@ -117,6 +117,7 @@ export const adminApi = {
   getStats:           ()           => apiFetch('/admin/stats'),
   getCustomers:       (params)     => apiFetch(`/admin/customers?${new URLSearchParams(params || {})}`),
   getCustomerById:    (id)         => apiFetch(`/admin/customers/${id}`),
+  createCustomer:     (body)       => apiFetch('/admin/customers', { method: 'POST', body: JSON.stringify(body) }),
   updateCustomer:     (id, body)   => apiFetch(`/admin/customers/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   getOrders:          (params)     => apiFetch(`/admin/orders?${new URLSearchParams(params || {})}`),
   updateOrderStatus:  (id, status) => apiFetch(`/admin/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) }),
