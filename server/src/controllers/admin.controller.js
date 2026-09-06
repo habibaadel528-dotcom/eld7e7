@@ -48,10 +48,10 @@ export async function getCustomers(req, res, next) {
     const skip   = (page - 1) * limit;
     const search = req.query.search?.trim();
 
-    const matchFilter = { role: 'user' };
+    const matchFilter = { role: { $ne: 'admin' } };
     if (search) {
       const re = new RegExp(search, 'i');
-      matchFilter.$or = [{ firstName: re }, { lastName: re }, { email: re }];
+      matchFilter.$or = [{ firstName: re }, { lastName: re }, { email: re }, { phone: re }];
     }
 
     const [users, total] = await Promise.all([
@@ -162,6 +162,46 @@ export async function updateCustomer(req, res, next) {
 }
 
 /* ────────────────────────────────
+   POST /api/admin/customers
+   ──────────────────────────────── */
+export async function createCustomer(req, res, next) {
+  try {
+    const { firstName, lastName, email, phone, password } = req.body;
+    if (!firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+      return res.status(400).json({ success: false, message: 'First name, last name, and email are required.' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existing = await User.findOne({ email: normalizedEmail });
+    if (existing) {
+      return res.status(409).json({ success: false, message: 'A customer with this email already exists.' });
+    }
+
+    const user = await User.create({
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: normalizedEmail,
+      password: password || 'Customer@123456',
+      phone: phone?.trim() || '',
+      role: 'user',
+      isActive: true,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Customer created successfully.',
+      customer: {
+        ...user.toObject(),
+        ordersCount: 0,
+        totalSpent: 0,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/* ────────────────────────────────
    GET /api/admin/orders
    ──────────────────────────────── */
 export async function getAllOrders(req, res, next) {
@@ -211,9 +251,13 @@ export async function updateOrderStatus(req, res, next) {
 
     const updateFields = { status };
 
-    // When cash on delivery order is marked delivered, payment is collected -> set paymentStatus to 'paid'
-    if (status === 'delivered' && existingOrder.paymentMethod === 'cash_on_delivery') {
+    // When order is shipped or delivered -> paymentStatus is 'paid'. Any other status -> paymentStatus is 'pending'
+    if (status === 'shipped' || status === 'delivered') {
       updateFields.paymentStatus = 'paid';
+      updateFields.paymentVerifiedAt = new Date();
+      if (req.user?._id) updateFields.paymentVerifiedBy = req.user._id;
+    } else if (existingOrder.paymentStatus !== 'rejected') {
+      updateFields.paymentStatus = 'pending';
     }
 
     const order = await Order.findByIdAndUpdate(req.params.id, updateFields, { new: true })
@@ -249,19 +293,17 @@ export async function verifyPayment(req, res, next) {
     const order = await Order.findById(req.params.id).populate('user', 'firstName lastName email');
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
 
-    if (!order.paymentProof) {
-      return res.status(400).json({ success: false, message: 'No payment proof has been submitted for this order yet.' });
-    }
-
-    if (order.paymentStatus === 'paid') {
-      return res.status(400).json({ success: false, message: 'This payment has already been approved.' });
-    }
-
     if (action === 'approve') {
+      if (order.paymentStatus === 'paid') {
+        return res.status(400).json({ success: false, message: 'This payment has already been approved.' });
+      }
+
       order.paymentStatus = 'paid';
       order.paymentVerifiedAt = new Date();
-      order.paymentVerifiedBy = req.user._id;
-      order.status = 'processing';
+      if (req.user?._id) order.paymentVerifiedBy = req.user._id;
+      if (!order.status || order.status === 'cancelled') {
+        order.status = 'processing';
+      }
       await order.save();
 
       /* Send order confirmation email */
@@ -274,12 +316,10 @@ export async function verifyPayment(req, res, next) {
     }
 
     /* reject */
-    if (!rejectionReason?.trim()) {
-      return res.status(400).json({ success: false, message: 'Please provide a rejection reason.' });
-    }
+    const reason = rejectionReason?.trim() || 'لم يتم إرفاق إثبات الدفع أو الإيصال غير صالح (Payment proof missing or invalid)';
 
     order.paymentStatus = 'rejected';
-    order.paymentRejectionReason = rejectionReason.trim();
+    order.paymentRejectionReason = reason;
     await order.save();
 
     /* Send payment rejection notification email */

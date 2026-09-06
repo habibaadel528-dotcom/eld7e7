@@ -4,6 +4,7 @@ import {
   getStats,
   getCustomers,
   getCustomerById,
+  createCustomer,
   updateCustomer,
   getAllOrders,
   updateOrderStatus,
@@ -25,6 +26,7 @@ router.get('/stats', getStats);
 
 /* Customers */
 router.get('/customers',      getCustomers);
+router.post('/customers',     createCustomer);
 router.get('/customers/:id',  getCustomerById);
 router.patch('/customers/:id', updateCustomer);
 
