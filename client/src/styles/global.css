@@ -164,8 +164,8 @@ img {
 /* In dark mode, SVG icons loaded as <img> via src= won't auto-invert.
    We use a CSS filter trick for all icons to make them crisp white. */
 :root[data-theme="dark"] .icon-invert,
-:root[data-theme="dark"] img[src*="/assets/icons/"]:not([src*="google"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]),
-:root[data-theme="dark"] img[src$=".svg"]:not([src*="google"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]) {
+:root[data-theme="dark"] img[src*="/assets/icons/"]:not([src*="google"]):not([src*="app-store"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]):not(.no-invert),
+:root[data-theme="dark"] img[src$=".svg"]:not([src*="google"]):not([src*="app-store"]):not([src*="facebook"]):not([src*="apple"]):not([src*="visa"]):not([src*="whatsapp"]):not([src*="category-"]):not([src*="logo-"]):not(.no-invert) {
   filter: brightness(0) invert(1);
 }
 

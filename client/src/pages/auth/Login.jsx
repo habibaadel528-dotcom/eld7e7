@@ -96,21 +96,21 @@ export default function Login() {
             </Helmet>
 
             <AuthLayout>
-                <div className="w-full">
+                <div className="w-full pt-1 sm:pt-2">
                     <Link to="/" aria-label="Return to El-D7E7 home page" className="inline-flex items-center gap-1">
-                        <img src={logoMascot} alt="" width="52" height="52" className="h-[52px] w-[52px] shrink-0 object-contain" />
-                        <img src={logoWordmark} alt="El-D7E7" width="125" height="42" className="h-[40px] w-auto object-contain" />
+                        <img src={logoMascot} alt="" width="48" height="48" className="h-[46px] w-[46px] shrink-0 object-contain" />
+                        <img src={logoWordmark} alt="El-D7E7" width="115" height="38" className="h-[36px] w-auto object-contain" />
                     </Link>
 
-                    <p className="mb-0 text-[13px] font-semibold tracking-[0.4px] text-[#535353]/70">
+                    <p className="mb-0 mt-2 text-[13px] font-semibold tracking-[0.4px] text-[#535353]/70">
                         {tr.welcomeBack}
                     </p>
 
-                    <h1 className="mb-0 mt-1 text-[40px] font-semibold leading-none text-[#535353]">
+                    <h1 className="mb-0 mt-0.5 text-[34px] font-semibold leading-none text-[#535353] sm:text-[38px]">
                         {tr.signIn}
                     </h1>
 
-                    <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-3.5">
+                    <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-3">
                         <AuthInput
                             id="login-email"
                             label={tr.emailLabel}
@@ -152,20 +152,20 @@ export default function Login() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mt-2 flex h-[44px] w-full items-center justify-center rounded-[14px] bg-[#535353] px-6 text-sm font-semibold text-white transition hover:bg-[#3f3f3f] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-1 flex h-[42px] w-full items-center justify-center rounded-[14px] bg-[#535353] px-6 text-sm font-semibold text-white transition hover:bg-[#3f3f3f] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSubmitting ? tr.loggingIn : tr.logIn}
                         </button>
                     </form>
 
-                    <p className="mb-0 mt-5 text-[13px] text-[#535353]/70">
+                    <p className="mb-0 mt-3 text-[13px] text-[#535353]/70">
                         {tr.noAccount}{' '}
                         <Link to="/signup" className="font-medium !text-[#c53938]">
                             {tr.signUp}
                         </Link>
                     </p>
 
-                    <div className="mt-6">
+                    <div className="mt-3 pb-0.5">
                         <SocialLogin />
                     </div>
                 </div>

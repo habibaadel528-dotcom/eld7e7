@@ -20,8 +20,8 @@ export default function AuthLayout({ children }) {
         className="pointer-events-none absolute -bottom-[250px] -left-[320px] hidden w-[700px] max-w-none opacity-55 md:block"
       />
 
-      <div className="relative z-10 grid h-[min(620px,calc(100vh-32px))] w-full max-w-[1180px] overflow-hidden rounded-[34px] bg-[#dad8d8] shadow-[18px_24px_0_rgba(0,0,0,0.08),0_18px_55px_rgba(0,0,0,0.14)] lg:grid-cols-[42%_58%]">
-        <section className="relative z-20 flex min-h-0 items-center bg-[#dad8d8] px-7 py-5 sm:px-10 lg:px-[58px]">
+      <div className="relative z-10 grid h-[min(660px,calc(100vh-24px))] w-full max-w-[1180px] overflow-hidden rounded-[34px] bg-[#dad8d8] shadow-[18px_24px_0_rgba(0,0,0,0.08),0_18px_55px_rgba(0,0,0,0.14)] lg:grid-cols-[42%_58%]">
+        <section className="relative z-20 flex min-h-0 items-center justify-center bg-[#dad8d8] px-7 py-6 sm:px-10 lg:px-[54px]">
           <div className="mx-auto w-full max-w-[350px]">
             {children}
           </div>

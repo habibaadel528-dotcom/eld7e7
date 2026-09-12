@@ -91,21 +91,21 @@ export default function SignUp() {
             </Helmet>
 
             <AuthLayout>
-                <div className="w-full">
+                <div className="w-full pt-1 sm:pt-2">
                     <Link to="/" aria-label="Return to El-D7E7 home page" className="inline-flex items-center gap-1">
-                        <img src={logoMascot} alt="" width="52" height="52" className="h-[52px] w-[52px] shrink-0 object-contain" />
-                        <img src={logoWordmark} alt="El-D7E7" width="125" height="42" className="h-[40px] w-auto object-contain" />
+                        <img src={logoMascot} alt="" width="48" height="48" className="h-[46px] w-[46px] shrink-0 object-contain" />
+                        <img src={logoWordmark} alt="El-D7E7" width="115" height="38" className="h-[36px] w-auto object-contain" />
                     </Link>
 
-                    <p className="mb-0 mt-3 text-[11px] font-semibold uppercase tracking-[0.7px] text-[#535353]/70">
+                    <p className="mb-0 mt-2 text-[11px] font-semibold uppercase tracking-[0.7px] text-[#535353]/70">
                         {tr.startFree}
                     </p>
 
-                    <h1 className="mb-0 mt-1 whitespace-nowrap text-[30px] font-semibold leading-tight text-[#535353] sm:text-[34px]">
+                    <h1 className="mb-0 mt-0.5 whitespace-nowrap text-[28px] font-semibold leading-tight text-[#535353] sm:text-[32px]">
                         {tr.createAccount}
                     </h1>
 
-                    <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-2.5">
+                    <form onSubmit={handleSubmit} noValidate className="mt-3.5 space-y-2">
                         <div className="grid grid-cols-2 gap-3">
                             <AuthInput
                                 id="signup-first-name"
@@ -168,20 +168,20 @@ export default function SignUp() {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mt-1 flex h-[42px] w-full items-center justify-center rounded-[14px] bg-[#535353] px-6 text-sm font-semibold text-white transition hover:bg-[#3f3f3f] disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-1 flex h-[40px] w-full items-center justify-center rounded-[14px] bg-[#535353] px-6 text-sm font-semibold text-white transition hover:bg-[#3f3f3f] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {isSubmitting ? tr.creatingAccount : tr.createBtn}
                         </button>
                     </form>
 
-                    <p className="mb-0 mt-3 text-[12px] text-[#535353]/70">
+                    <p className="mb-0 mt-2 text-[12px] text-[#535353]/70">
                         {tr.alreadyMember}{' '}
                         <Link to="/login" className="font-medium !text-[#c53938]">
                             {tr.logIn}
                         </Link>
                     </p>
 
-                    <div className="mt-3">
+                    <div className="mt-2 pb-0.5">
                         <SocialLogin />
                     </div>
                 </div>

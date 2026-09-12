@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import MyOrders from './pages/account/MyOrders';
 import Home from './pages/Home';
 import CulturalBooksClearance from './pages/CulturalBooksClearance';
@@ -27,9 +28,19 @@ import ExternalSchoolBooksPage from './pages/ExternalSchoolBooksPage';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       {/* Public pages */}
       <Route
         path="/"
@@ -81,9 +92,17 @@ export default function App() {
         path="/cultural-books-clearance"
         element={<CulturalBooksClearance />}
       />
+      <Route
+        path="/categories/cultural-books-clearance"
+        element={<CulturalBooksClearance />}
+      />
 
       <Route
         path="/stationery"
+        element={<Stationery />}
+      />
+      <Route
+        path="/categories/stationery"
         element={<Stationery />}
       />
 
@@ -91,9 +110,17 @@ export default function App() {
         path="/external-school-books"
          element={<ExternalSchoolBooksPage />}
       />
+      <Route
+        path="/categories/external-school-books"
+        element={<ExternalSchoolBooksPage />}
+      />
 
       <Route
         path="/handcraft-supplies"
+        element={<HandcraftSuppliesPage />}
+      />
+      <Route
+        path="/categories/handcraft-supplies"
         element={<HandcraftSuppliesPage />}
       />
 
@@ -201,5 +228,6 @@ export default function App() {
         element={<NotFoundPage />}
       />
     </Routes>
+    </>
   );
 }

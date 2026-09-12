@@ -1,6 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 //  translations.js  —  All UI strings for EN & AR
 // ═══════════════════════════════════════════════════════════════
+const toArabicDigits = (val) =>
+  String(val ?? '').replace(/[0-9]/g, (d) => ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'][Number(d)]);
 
 const translations = {
   en: {
@@ -162,6 +164,7 @@ const translations = {
       brandName: 'El D7e7',
       tagline: '- HTML Ecommerce Template',
       allRights: 'All rights reserved',
+      phone: '01005535668',
       workingHours: 'Working 10:00 AM - 11:00 PM',
       exceptNote: 'Except',
       thursdayNote: 'Thursday',
@@ -181,10 +184,10 @@ const translations = {
         { label: 'Payment Methods', href: '/payment-methods' },
       ],
       categoryLinks: [
-        { label: 'Cultural Books Clearance', href: '/categories/cultural-books-clearance' },
-        { label: 'Stationery', href: '/categories/stationery' },
-        { label: 'External School Books', href: '/categories/external-school-books' },
-        { label: 'Handcraft Supplies', href: '/categories/handcraft-supplies' },
+        { label: 'Cultural Books Clearance', href: '/cultural-books-clearance' },
+        { label: 'Stationery', href: '/stationery' },
+        { label: 'External School Books', href: '/external-school-books' },
+        { label: 'Handcraft Supplies', href: '/handcraft-supplies' },
       ],
     },
 
@@ -832,18 +835,19 @@ const translations = {
       categories: 'الفئات',
       installApp: 'حمّل التطبيق',
       securedPayment: 'بوابات دفع آمنة',
-      copyright: (year) => `© ${year}،`,
+      copyright: (year) => `© ${toArabicDigits(year)}،`,
       brandName: 'الدحيح',
       tagline: '- متجر إلكتروني',
       allRights: 'جميع الحقوق محفوظة',
-      workingHours: 'من 10 ص إلى 11 م',
+      phone: '٠١٠٠٥٥٣٥٦٦٨',
+      workingHours: 'من ١٠:٠٠ ص إلى ١١:٠٠ م',
       exceptNote: 'ماعدا',
       thursdayNote: 'الخميس',
-      thursdayClose: 'يغلق الساعة 5 م',
+      thursdayClose: 'يغلق الساعة ٥ م',
       fridayNote: 'الجمعة',
-      fridayOpen: 'يفتح الساعة 2 م',
+      fridayOpen: 'يفتح الساعة ٢ م',
       followUs: 'تابعنا',
-      discount: 'خصم يصل إلى 10% على أول اشتراك',
+      discount: 'خصم يصل إلى ١٠٪ على أول اشتراك',
       aboutLinks: [
         { label: 'قصتنا', href: '/about' },
         { label: 'المدونة', href: '/blogs' },
@@ -855,10 +859,10 @@ const translations = {
         { label: 'طرق الدفع', href: '/payment-methods' },
       ],
       categoryLinks: [
-        { label: 'تصفية الكتب الثقافية', href: '/categories/cultural-books-clearance' },
-        { label: 'أدوات مكتبية', href: '/categories/stationery' },
-        { label: 'كتب مدرسية خارجية', href: '/categories/external-school-books' },
-        { label: 'مستلزمات الحرف اليدوية', href: '/categories/handcraft-supplies' },
+        { label: 'تصفية الكتب الثقافية', href: '/cultural-books-clearance' },
+        { label: 'أدوات مكتبية', href: '/stationery' },
+        { label: 'كتب مدرسية خارجية', href: '/external-school-books' },
+        { label: 'مستلزمات الحرف اليدوية', href: '/handcraft-supplies' },
       ],
     },
 

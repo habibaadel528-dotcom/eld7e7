@@ -29,25 +29,25 @@ export default function SocialLogin() {
 
   return (
     <div>
-      <p className="mb-4 text-center text-xs text-[#535353]/60">
+      <p className="mb-2 text-center text-xs text-[#535353]/60">
         Or continue with
       </p>
 
-      <div className="flex items-center justify-center gap-8">
+      <div className="flex items-center justify-center gap-6">
         {socialProviders.map((provider) => (
           <button
             key={provider.name}
             type="button"
             onClick={() => handleSocialLogin(provider.name)}
             aria-label={`Continue with ${provider.name}`}
-            className="flex h-11 w-11 items-center justify-center rounded-xl transition hover:-translate-y-0.5 hover:bg-white/30"
+            className="flex h-10 w-10 items-center justify-center rounded-xl transition hover:-translate-y-0.5 hover:bg-white/30 cursor-pointer"
           >
             <img
               src={provider.icon}
               alt=""
-              width="40"
-              height="40"
-              className="h-10 w-10 object-contain"
+              width="36"
+              height="36"
+              className="h-8 w-8 object-contain"
             />
           </button>
         ))}
