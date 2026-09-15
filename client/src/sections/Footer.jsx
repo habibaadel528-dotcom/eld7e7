@@ -4,6 +4,7 @@ import googlePlayLogo from '../assets/icons/google-play.png';
 
 import phoneIcon from '../assets/icons/phone.svg';
 import { useLanguage } from '../context/LanguageContext';
+import { SOCIAL_LINKS } from '../data/socialLinks';
 
 function FooterLinks({ title, links }) {
   return (
@@ -44,31 +45,46 @@ export default function Footer() {
       <div className="mx-auto w-full max-w-[1280px]">
         {/* Top footer */}
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-[150px_1fr_1.1fr_1.25fr_1.35fr]">
-          {/* Instagram + LinkedIn */}
-          <div className="flex items-start gap-2.5 pt-6">
+          {/* Social icons: Facebook + Instagram + TikTok + WhatsApp */}
+          <div className="flex flex-wrap items-start gap-2 pt-6">
+            {/* Facebook */}
             <a
-              href="https://www.instagram.com/"
+              href={SOCIAL_LINKS.facebook.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Follow El-D7E7 on Facebook"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#1877F2] hover:border-[#1877F2] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
+            >
+              <svg className="h-4 w-4 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
+
+            {/* Instagram */}
+            <a
+              href={SOCIAL_LINKS.instagram.url}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Follow El-D7E7 on Instagram"
-              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#E4405F] hover:border-[#E4405F] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
             >
-              <svg className="h-5 w-5 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="h-4.5 w-4.5 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                 <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </a>
 
+            {/* TikTok */}
             <a
-              href="https://www.linkedin.com/"
+              href={SOCIAL_LINKS.tiktok.url}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Follow El-D7E7 on LinkedIn"
-              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
+              aria-label="Follow El-D7E7 on TikTok"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-black hover:border-black hover:!text-white dark:hover:border-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350] cursor-pointer shadow-2xs"
             >
-              <svg className="h-5 w-5 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 0H5C2.239 0 0 2.239 0 5V19C0 21.761 2.239 24 5 24H19C21.762 24 24 21.761 24 19V5C24 2.239 21.762 0 19 0ZM8 19H5V8H8V19ZM6.5 6.732C5.534 6.732 4.75 5.942 4.75 4.968C4.75 3.994 5.534 3.204 6.5 3.204C7.466 3.204 8.25 3.994 8.25 4.968C8.25 5.942 7.467 6.732 6.5 6.732ZM20 19H17V13.396C17 10.028 13 10.283 13 13.396V19H10V8H13V9.765C14.396 7.179 20 6.988 20 12.241V19Z" />
+              <svg className="h-4 w-4 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
               </svg>
             </a>
           </div>
@@ -172,7 +188,7 @@ export default function Footer() {
           {/* Hotline */}
           <div className="flex flex-col items-center text-center">
             <a
-              href="tel:+201005535668"
+              href={`tel:+20${SOCIAL_LINKS.whatsapp.phone}`}
               className="flex items-center gap-2.5 text-[19px] font-bold leading-[26px] text-[#c53938] transition-colors hover:text-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350]"
             >
               <img
@@ -182,7 +198,7 @@ export default function Footer() {
               />
 
               <span className="text-[#c53938]" dir="ltr">
-                {tr.phone || (lang === 'ar' ? '٠١٠٠٥٥٣٥٦٦٨' : '01005535668')}
+                {tr.phone || (lang === 'ar' ? SOCIAL_LINKS.whatsapp.phoneAr : SOCIAL_LINKS.whatsapp.phone)}
               </span>
             </a>
 
@@ -206,11 +222,11 @@ export default function Footer() {
 
               {/* Facebook */}
               <a
-                href="https://www.facebook.com/"
+                href={SOCIAL_LINKS.facebook.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on Facebook"
-                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#1877F2] hover:border-[#1877F2] hover:!text-white cursor-pointer shadow-2xs"
               >
                 <svg className="h-4 w-4 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -219,11 +235,11 @@ export default function Footer() {
 
               {/* Instagram */}
               <a
-                href="https://www.instagram.com/"
+                href={SOCIAL_LINKS.instagram.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on Instagram"
-                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#E4405F] hover:border-[#E4405F] hover:!text-white cursor-pointer shadow-2xs"
               >
                 <svg className="h-4 w-4 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -234,11 +250,11 @@ export default function Footer() {
 
               {/* TikTok */}
               <a
-                href="https://www.tiktok.com/"
+                href={SOCIAL_LINKS.tiktok.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Follow El-D7E7 on TikTok"
-                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:!text-white cursor-pointer shadow-2xs"
+                className="group flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-black hover:border-black hover:!text-white dark:hover:border-white cursor-pointer shadow-2xs"
               >
                 <svg className="h-3.5 w-3.5 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />

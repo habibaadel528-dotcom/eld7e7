@@ -27,6 +27,7 @@ import HandcraftSuppliesPage from './pages/HandcraftSuppliesPage';
 import ExternalSchoolBooksPage from './pages/ExternalSchoolBooksPage';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
+import FloatingWhatsAppButton from './components/common/FloatingWhatsAppButton';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <>
       <ScrollToTop />
+      <FloatingWhatsAppButton />
       <Routes>
       {/* Public pages */}
       <Route

@@ -1,5 +1,6 @@
 import React from 'react';
 import { PhoneCall } from 'lucide-react';
+import { SOCIAL_LINKS } from '../data/socialLinks';
 
 export const Footer = () => {
   return (
@@ -11,27 +12,43 @@ export const Footer = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-6 gap-8 items-start">
           
           {/* Social Links Col */}
-          <div className="md:col-span-1 flex items-start gap-2.5 pt-1">
+          <div className="md:col-span-1 flex flex-wrap items-start gap-2 pt-1">
+            {/* Facebook */}
+            <a
+              href={SOCIAL_LINKS.facebook.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 transition-all hover:bg-[#1877F2] hover:border-[#1877F2] hover:text-white cursor-pointer shadow-2xs"
+            >
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+            </a>
             {/* Instagram */}
             <a
-              href="#"
+              href={SOCIAL_LINKS.instagram.url}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="Instagram"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white cursor-pointer shadow-2xs"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 transition-all hover:bg-[#E4405F] hover:border-[#E4405F] hover:text-white cursor-pointer shadow-2xs"
             >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
                 <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                 <circle cx="12" cy="12" r="4.5"></circle>
                 <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"></circle>
               </svg>
             </a>
-            {/* LinkedIn */}
+            {/* TikTok */}
             <a
-              href="#"
-              aria-label="LinkedIn"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 transition-all hover:bg-[#c53938] hover:border-[#c53938] hover:text-white cursor-pointer shadow-2xs"
+              href={SOCIAL_LINKS.tiktok.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 transition-all hover:bg-black hover:border-black hover:text-white dark:hover:border-white cursor-pointer shadow-2xs"
             >
-              <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 0H5C2.239 0 0 2.239 0 5V19C0 21.761 2.239 24 5 24H19C21.762 24 24 21.761 24 19V5C24 2.239 21.762 0 19 0ZM8 19H5V8H8V19ZM6.5 6.732C5.534 6.732 4.75 5.942 4.75 4.968C4.75 3.994 5.534 3.204 6.5 3.204C7.466 3.204 8.25 3.994 8.25 4.968C8.25 5.942 7.467 6.732 6.5 6.732ZM20 19H17V13.396C17 10.028 13 10.283 13 13.396V19H10V8H13V9.765C14.396 7.179 20 6.988 20 12.241V19Z"/>
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
               </svg>
             </a>
           </div>
@@ -150,7 +167,9 @@ export const Footer = () => {
           <div className="flex items-center gap-2.5">
             <PhoneCall className="w-4 h-4 text-[#C23434]" />
             <div className="text-left">
-              <div className="text-sm font-bold text-[#C23434]">01005535668</div>
+              <a href={`tel:+20${SOCIAL_LINKS.whatsapp.phone}`} className="text-sm font-bold text-[#C23434] hover:underline">
+                {SOCIAL_LINKS.whatsapp.phone}
+              </a>
               <div className="text-[9px] text-gray-400 leading-tight">
                 Working: 10:00 AM - 11:00 PM <br />
                 Except Thursday Close on 5 PM | Friday Open on 2 PM
@@ -163,21 +182,24 @@ export const Footer = () => {
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-700 text-xs">Follow Us</span>
               <div className="flex gap-1.5">
-                <a href="#" aria-label="Facebook" className="w-5 h-5 rounded-full bg-[#C23434] text-white flex items-center justify-center hover:opacity-90 transition-opacity">
+                {/* Facebook */}
+                <a href={SOCIAL_LINKS.facebook.url} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-5 h-5 rounded-full bg-[#1877F2] text-white flex items-center justify-center hover:opacity-90 transition-opacity">
                   <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                   </svg>
                 </a>
-                <a href="#" aria-label="Instagram" className="w-5 h-5 rounded-full bg-[#C23434] text-white flex items-center justify-center hover:opacity-90 transition-opacity">
+                {/* Instagram */}
+                <a href={SOCIAL_LINKS.instagram.url} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-5 h-5 rounded-full bg-[#E4405F] text-white flex items-center justify-center hover:opacity-90 transition-opacity">
                   <svg className="w-3 h-3 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                   </svg>
                 </a>
-                <a href="#" aria-label="Twitter" className="w-5 h-5 rounded-full bg-[#C23434] text-white flex items-center justify-center hover:opacity-90 transition-opacity">
-                  <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24">
-                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                {/* TikTok */}
+                <a href={SOCIAL_LINKS.tiktok.url} target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center hover:opacity-90 transition-opacity">
+                  <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
                   </svg>
                 </a>
               </div>

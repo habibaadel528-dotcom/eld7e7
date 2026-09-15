@@ -2,6 +2,7 @@ import deliveryImage from '../assets/images/delivery-man.png';
 import paymentImage from '../assets/images/payment-hands.png';
 import supportImage from '../assets/images/support-girl.png';
 import { useLanguage } from '../context/LanguageContext';
+import { SOCIAL_LINKS } from '../data/socialLinks';
 
 const images = [deliveryImage, paymentImage, supportImage];
 const alts = [
@@ -44,31 +45,47 @@ export default function WhyChooseUs() {
         </div>
 
         <div className="mt-16 grid grid-cols-1 gap-16 md:grid-cols-3 md:gap-8 lg:gap-12">
-          {tr.features.map((feature, index) => (
-            <article
-              key={index}
-              className="flex flex-col items-center text-center"
-            >
-              <h3 className="m-0 mb-8 text-[20px] font-bold leading-8 text-[var(--primary-text)] sm:text-2xl">
-                {feature.firstWord}{' '}
-                <span className="text-[#ef5350]">
-                  {feature.highlightedWord}
-                </span>
-              </h3>
+          {tr.features.map((feature, index) => {
+            const isWhatsApp = index === 2;
+            const CardTag = isWhatsApp ? 'a' : 'article';
+            const cardProps = isWhatsApp
+              ? {
+                  href: SOCIAL_LINKS.whatsapp.url,
+                  target: '_blank',
+                  rel: 'noopener noreferrer',
+                  'aria-label': 'Contact us on WhatsApp',
+                  className: 'group flex flex-col items-center text-center cursor-pointer transition-transform hover:-translate-y-1',
+                }
+              : {
+                  className: 'flex flex-col items-center text-center',
+                };
 
-              <div className="relative aspect-square w-full max-w-[320px] overflow-hidden">
-                <div
-                  className={`absolute bottom-0 left-[5%] right-[5%] top-1/4 bg-[var(--surface-bg)] ${backgroundShapes[index]}`}
-                />
+            return (
+              <CardTag
+                key={index}
+                {...cardProps}
+              >
+                <h3 className="m-0 mb-8 text-[20px] font-bold leading-8 text-[var(--primary-text)] sm:text-2xl transition-colors group-hover:text-[#ef5350]">
+                  {feature.firstWord}{' '}
+                  <span className="text-[#ef5350]">
+                    {feature.highlightedWord}
+                  </span>
+                </h3>
 
-                <img
-                  src={images[index]}
-                  alt={alts[index]}
-                  className={`absolute max-w-none ${imageClasses[index]}`}
-                />
-              </div>
-            </article>
-          ))}
+                <div className="relative aspect-square w-full max-w-[320px] overflow-hidden">
+                  <div
+                    className={`absolute bottom-0 left-[5%] right-[5%] top-1/4 bg-[var(--surface-bg)] ${backgroundShapes[index]}`}
+                  />
+
+                  <img
+                    src={images[index]}
+                    alt={alts[index]}
+                    className={`absolute max-w-none ${imageClasses[index]}`}
+                  />
+                </div>
+              </CardTag>
+            );
+          })}
         </div>
       </div>
     </section>
