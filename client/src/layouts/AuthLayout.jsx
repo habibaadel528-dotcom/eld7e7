@@ -1,4 +1,4 @@
-import warehouseBackground from '../assets/images/auth/warehouse-bg.jpeg';
+import authBackground from '../assets/images/auth/image.png';
 import ellipseDecor1 from '../assets/images/auth/ellipse-decor-1.svg';
 import ellipseDecor2 from '../assets/images/auth/ellipse-decor-2.svg';
 import ellipseDecor3 from '../assets/images/auth/ellipse-decor-3.svg';
@@ -32,7 +32,7 @@ export default function AuthLayout({ children }) {
           className="relative hidden min-h-0 overflow-hidden lg:block"
         >
           <img
-            src={warehouseBackground}
+            src={authBackground}
             alt=""
             fetchPriority="high"
             decoding="async"
