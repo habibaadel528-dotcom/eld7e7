@@ -87,6 +87,19 @@ export default function Footer() {
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
               </svg>
             </a>
+
+            {/* WhatsApp */}
+            <a
+              href={SOCIAL_LINKS.whatsapp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with El-D7E7 on WhatsApp"
+              className="group flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border-color)] bg-[var(--surface-soft)] text-[var(--primary-text)] transition-all hover:bg-[#25D366] hover:border-[#25D366] hover:!text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366] cursor-pointer shadow-2xs"
+            >
+              <svg className="h-4.5 w-4.5 text-[var(--primary-text)] transition-colors group-hover:text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.311.045-.698.034-1.054-.082-.296-.097-.681-.237-1.174-.449-2.078-.893-3.432-3.003-3.535-3.144-.105-.141-.849-1.129-.849-2.153 0-1.025.538-1.529.73-1.74.192-.211.42-.264.56-.264.141 0 .281.002.404.008.13.006.304-.049.476.363.174.418.594 1.451.646 1.557.052.106.087.23.017.371-.07.141-.106.229-.211.353-.105.124-.221.277-.316.372-.106.106-.217.221-.093.433.123.212.548.905 1.174 1.463.805.717 1.485.939 1.697 1.045.212.106.337.094.462-.05.125-.145.534-.622.677-.834.144-.213.287-.177.483-.106.196.071 1.246.588 1.46.695.214.106.357.16.409.248.052.088.052.513-.092.918z" />
+              </svg>
+            </a>
           </div>
 
           <FooterLinks title={tr.aboutUs}      links={tr.aboutLinks} />
@@ -188,7 +201,7 @@ export default function Footer() {
           {/* Hotline */}
           <div className="flex flex-col items-center text-center">
             <a
-              href={`tel:+20${SOCIAL_LINKS.whatsapp.phone}`}
+              href={`tel:+20${SOCIAL_LINKS.phone?.number || '01005535668'}`}
               className="flex items-center gap-2.5 text-[19px] font-bold leading-[26px] text-[#c53938] transition-colors hover:text-[#ef5350] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef5350]"
             >
               <img
@@ -198,7 +211,7 @@ export default function Footer() {
               />
 
               <span className="text-[#c53938]" dir="ltr">
-                {tr.phone || (lang === 'ar' ? SOCIAL_LINKS.whatsapp.phoneAr : SOCIAL_LINKS.whatsapp.phone)}
+                {tr.phone || (lang === 'ar' ? (SOCIAL_LINKS.phone?.numberAr || '٠١٠٠٥٥٣٥٦٦٨') : (SOCIAL_LINKS.phone?.number || '01005535668'))}
               </span>
             </a>
 

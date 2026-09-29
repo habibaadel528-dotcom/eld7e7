@@ -1,8 +1,10 @@
 import React from 'react';
 import { PhoneCall } from 'lucide-react';
 import { SOCIAL_LINKS } from '../data/socialLinks';
+import { useLanguage } from '../context/LanguageContext';
 
 export const Footer = () => {
+  const { lang } = useLanguage();
   return (
     <footer className="w-full bg-[#F5F5F5] text-gray-800 text-xs sm:text-sm mt-auto">
       
@@ -167,8 +169,8 @@ export const Footer = () => {
           <div className="flex items-center gap-2.5">
             <PhoneCall className="w-4 h-4 text-[#C23434]" />
             <div className="text-left">
-              <a href={`tel:+20${SOCIAL_LINKS.whatsapp.phone}`} className="text-sm font-bold text-[#C23434] hover:underline">
-                {SOCIAL_LINKS.whatsapp.phone}
+              <a href={`tel:+20${SOCIAL_LINKS.phone?.number || '01005535668'}`} className="text-sm font-bold text-[#C23434] hover:underline" dir="ltr">
+                {lang === 'ar' ? (SOCIAL_LINKS.phone?.numberAr || '٠١٠٠٥٥٣٥٦٦٨') : (SOCIAL_LINKS.phone?.number || '01005535668')}
               </a>
               <div className="text-[9px] text-gray-400 leading-tight">
                 Working: 10:00 AM - 11:00 PM <br />

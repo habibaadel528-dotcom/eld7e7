@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { Truck, Upload, Check, Copy, CheckCheck, X } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { toArabicDigits } from '../utils/formatters';
 
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import DashboardSidebar from '../components/dashboard/DashboardSidebar';
@@ -13,8 +14,8 @@ import DashboardSidebar from '../components/dashboard/DashboardSidebar';
 import chevronRightIcon from '../assets/icons/cart/chevron-right.svg';
 
 /* ── Payment account details ── */
-const INSTAPAY_ACCOUNT   = '01111291542';
-const VODAFONE_CASH_NUM  = '012266251423';
+const INSTAPAY_ACCOUNT   = '01005535668';
+const VODAFONE_CASH_NUM  = '01005535668';
 
 const MANUAL_METHODS = ['instapay', 'vodafone_cash'];
 const MAX_FILE_SIZE  = 5 * 1024 * 1024; // 5MB
@@ -487,8 +488,8 @@ export default function Checkout() {
                               {paymentLabel}
                             </p>
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-base sm:text-lg font-bold text-[var(--primary-text)] tracking-wider">
-                                {paymentAccount}
+                              <span className="text-base sm:text-lg font-bold text-[var(--primary-text)] tracking-wider" dir="ltr">
+                                {isAr ? toArabicDigits(paymentAccount) : paymentAccount}
                               </span>
                               <CopyButton text={paymentAccount} />
                             </div>

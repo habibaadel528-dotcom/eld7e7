@@ -19,7 +19,9 @@ const PAYMENT_METHODS = [
   {
     id: 'instapay',
     label: 'InstaPay',
-    description: 'Transfer via InstaPay · Account: 01111291542',
+    labelAr: 'إنستاباي',
+    description: 'Transfer via InstaPay · Account: 01005535668',
+    descriptionAr: 'تحويل عبر إنستاباي · رقم الحساب: ٠١٠٠٥٥٣٥٦٦٨',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <rect width="24" height="24" rx="6" fill="#5C2D91" />
@@ -32,7 +34,9 @@ const PAYMENT_METHODS = [
   {
     id: 'vodafone_cash',
     label: 'Vodafone Cash',
-    description: 'Transfer via Vodafone Cash · Wallet: 012266251423',
+    labelAr: 'فودافون كاش',
+    description: 'Transfer via Vodafone Cash · Wallet: 01005535668',
+    descriptionAr: 'تحويل عبر فودافون كاش · رقم المحفظة: ٠١٠٠٥٥٣٥٦٦٨',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <rect width="24" height="24" rx="6" fill="#E60000" />
@@ -259,8 +263,12 @@ export default function PaymentsPage() {
                     {m.icon}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[var(--primary-text)]">{m.label}</p>
-                    <p className="truncate text-[11px] text-[var(--muted-text)]">{m.description}</p>
+                    <p className="text-sm font-semibold text-[var(--primary-text)]">
+                      {lang === 'ar' ? (m.labelAr || m.label) : m.label}
+                    </p>
+                    <p className="truncate text-[11px] text-[var(--muted-text)]" dir={lang === 'ar' ? 'rtl' : 'ltr'}>
+                      {lang === 'ar' ? (m.descriptionAr || m.description) : m.description}
+                    </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
                     {tr.active}

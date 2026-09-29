@@ -2,6 +2,15 @@ import { useMemo, useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { adminApi, uploadApi } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
+import {
+  SCHOOL_STAGES,
+  SCHOOL_SUBJECTS,
+  getGradeLabel,
+  getStageLabel,
+  getStageForGrade,
+  normalizeBookGrade,
+  normalizeBookStage,
+} from '../../data/schoolBooksData';
 
 const LOW_STOCK_THRESHOLD = 10;
 
@@ -63,6 +72,10 @@ export default function ProductManagementPage() {
     price: '',
     originalPrice: '',
     category: 'stationery',
+    subcategory: '',
+    stage: '',
+    grade: '',
+    subject: '',
     stock: '',
     image: '',
   });
@@ -79,6 +92,9 @@ export default function ProductManagementPage() {
           originalPrice: p.originalPrice || '',
           category: p.category,
           subcategory: p.subcategory || '',
+          stage: p.stage || '',
+          grade: p.grade || '',
+          subject: p.subject || '',
           price: p.price,
           stock: p.stock,
           sold: p.reviewCount || 0,
@@ -116,7 +132,13 @@ export default function ProductManagementPage() {
       const status = getStatus(p.stock);
       const matchesFilter = activeFilter === 'All' || status === activeFilter;
       const matchesQuery =
-        !q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
+        !q ||
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.stage && p.stage.toLowerCase().includes(q)) ||
+        (p.grade && p.grade.toLowerCase().includes(q)) ||
+        (p.subject && p.subject.toLowerCase().includes(q)) ||
+        (p.subcategory && p.subcategory.toLowerCase().includes(q));
       return matchesFilter && matchesQuery;
     });
   }, [products, query, activeFilter]);
@@ -131,6 +153,9 @@ export default function ProductManagementPage() {
       originalPrice: '',
       category: 'stationery',
       subcategory: '',
+      stage: '',
+      grade: '',
+      subject: '',
       stock: '',
       image: '',
     });
@@ -147,6 +172,10 @@ export default function ProductManagementPage() {
         (d) => d.value.toLowerCase() === sub.trim().toLowerCase()
       );
     setIsCustomSubcategory(isCustom);
+
+    const detectedGrade = p.grade || (p.category === 'school-books' ? normalizeBookGrade(p) : '');
+    const detectedStage = p.stage || (detectedGrade ? getStageForGrade(detectedGrade) : '');
+
     setFormData({
       name: p.name || '',
       description: p.description || '',
@@ -154,6 +183,9 @@ export default function ProductManagementPage() {
       originalPrice: p.originalPrice || '',
       category: p.category || 'stationery',
       subcategory: sub,
+      stage: detectedStage,
+      grade: detectedGrade,
+      subject: p.subject || '',
       stock: p.stock !== undefined ? p.stock : '',
       image: p.image || '',
     });
@@ -211,6 +243,17 @@ export default function ProductManagementPage() {
       return;
     }
 
+    if (formData.category === 'school-books') {
+      if (!formData.stage || !formData.grade) {
+        setModalError(
+          lang === 'ar'
+            ? 'يرجى اختيار المرحلة والصف الدراسي للكتاب الخارجي (مثال: المرحلة الإعدادية -> أولى إعدادي).'
+            : 'Please select educational stage and grade for the school book (e.g. Preparatory -> Prep 1).'
+        );
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setModalError('');
 
@@ -220,7 +263,13 @@ export default function ProductManagementPage() {
       price: Number(formData.price),
       originalPrice: formData.originalPrice ? Number(formData.originalPrice) : undefined,
       category: formData.category,
-      subcategory: formData.subcategory ? formData.subcategory.trim() : undefined,
+      subcategory:
+        formData.category === 'school-books'
+          ? (formData.grade || '')
+          : (formData.subcategory ? formData.subcategory.trim() : undefined),
+      stage: formData.category === 'school-books' ? formData.stage : undefined,
+      grade: formData.category === 'school-books' ? formData.grade : undefined,
+      subject: formData.category === 'school-books' ? (formData.subject ? formData.subject.trim() : undefined) : undefined,
       stock: Number(formData.stock) || 0,
       images: formData.image ? [formData.image] : [],
     };
@@ -351,15 +400,43 @@ export default function ProductManagementPage() {
                       )}
                       <div>
                         <p className="font-medium text-[var(--primary-text)]">{p.name}</p>
-                        {p.subcategory && (
-                          <p className="text-[11px] text-[var(--secondary-text)]">{p.subcategory}</p>
+                        {p.category === 'school-books' ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            {(p.stage || normalizeBookStage(p)) && (
+                              <span className="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                                {getStageLabel(p.stage || normalizeBookStage(p), lang)}
+                              </span>
+                            )}
+                            {(p.grade || normalizeBookGrade(p)) && (
+                              <span className="inline-flex items-center rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                                {getGradeLabel(p.grade || normalizeBookGrade(p), lang)}
+                              </span>
+                            )}
+                            {p.subject && (
+                              <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                                {p.subject}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          p.subcategory && (
+                            <p className="text-[11px] text-[var(--secondary-text)]">{p.subcategory}</p>
+                          )
                         )}
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-3">
-                    <span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs text-[var(--secondary-text)]">
-                      {p.category}
+                    <span className="rounded-full bg-[var(--surface-soft)] px-2.5 py-1 text-xs font-medium text-[var(--secondary-text)]">
+                      {p.category === 'school-books'
+                        ? (lang === 'ar' ? '📚 الكتب الخارجية' : '📚 School Books')
+                        : p.category === 'stationery'
+                        ? (lang === 'ar' ? '✏️ الأدوات المكتبية' : '✏️ Stationery')
+                        : p.category === 'cultural-books'
+                        ? (lang === 'ar' ? '📖 الكتب الثقافية' : '📖 Cultural Books')
+                        : p.category === 'handcraft'
+                        ? (lang === 'ar' ? '🎨 الأشغال اليدوية' : '🎨 Handcraft')
+                        : p.category}
                     </span>
                   </td>
                   <td className="px-5 py-3 font-semibold text-[var(--primary-text)]">{formatEGP(p.price)}</td>
@@ -630,6 +707,161 @@ export default function ProductManagementPage() {
                         {lang === 'ar' ? '➕ + كتابة تصنيف فرعي مخصص جديد...' : '➕ + Write new custom subcategory...'}
                       </option>
                     </select>
+                  )}
+                </div>
+              )}
+
+              {/* School Books Subcategory (Stage & Grade Selection) */}
+              {formData.category === 'school-books' && (
+                <div className="rounded-2xl border-2 border-dashed border-[#c53938]/30 bg-[#c53938]/5 p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#c53938] flex items-center gap-1.5">
+                        <span>📚</span>
+                        <span>{lang === 'ar' ? 'تصنيف الكتب الخارجية' : 'School Books Classification'}</span>
+                      </h4>
+                      <p className="text-[11px] text-[var(--secondary-text)] mt-0.5">
+                        {lang === 'ar'
+                          ? 'حدد المرحلة والصف الدراسي ليظهر الكتاب تلقائياً للعميل في القسم الصحيح'
+                          : 'Select educational stage & grade so this book appears in the right category'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 1. Stage Selection */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-[var(--primary-text)]">
+                      {lang === 'ar' ? '١. المرحلة الدراسية *' : '1. Educational Stage *'}
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {SCHOOL_STAGES.map((stg) => {
+                        const isSelected = formData.stage === stg.id;
+                        return (
+                          <button
+                            key={stg.id}
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                stage: stg.id,
+                                grade: '', // reset grade on stage change
+                                subcategory: '',
+                              }));
+                            }}
+                            className={`flex flex-col items-center justify-center gap-1.5 rounded-xl p-3 text-center transition cursor-pointer border ${
+                              isSelected
+                                ? 'border-[#c53938] bg-[#c53938] text-white shadow-sm ring-2 ring-[#c53938]/20'
+                                : 'border-[var(--border-color)] bg-[var(--surface-bg)] text-[var(--primary-text)] hover:border-[#c53938]/50 hover:bg-[var(--surface-soft)]'
+                            }`}
+                          >
+                            <span className="text-2xl">{stg.icon}</span>
+                            <span className="text-xs font-bold leading-tight">
+                              {lang === 'ar' ? stg.labelAr : stg.labelEn}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 2. Grade Selection (Conditional on Stage) */}
+                  {formData.stage ? (
+                    <div className="space-y-1.5 animate-fadeIn">
+                      <label className="block text-xs font-semibold text-[var(--primary-text)]">
+                        {lang === 'ar' ? '٢. الصف الدراسي *' : '2. Grade Level *'}
+                        <span className="text-[#c53938] mx-1">
+                          ({getStageLabel(formData.stage, lang)})
+                        </span>
+                      </label>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {SCHOOL_STAGES.find((s) => s.id === formData.stage)?.grades.map((grd) => {
+                          const isSelected = formData.grade === grd.id;
+                          return (
+                            <button
+                              key={grd.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  grade: grd.id,
+                                  subcategory: grd.id,
+                                }));
+                              }}
+                              className={`flex items-center justify-between gap-1.5 rounded-xl px-3 py-2.5 text-start transition cursor-pointer border ${
+                                isSelected
+                                  ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-500/20'
+                                  : 'border-[var(--border-color)] bg-[var(--surface-bg)] text-[var(--primary-text)] hover:border-emerald-400 hover:bg-[var(--surface-soft)]'
+                              }`}
+                            >
+                              <span className="text-xs font-semibold">
+                                {lang === 'ar' ? grd.labelAr : grd.labelEn}
+                              </span>
+                              {isSelected && (
+                                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                </svg>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-[var(--border-color)] p-3 text-center text-xs text-[var(--muted-text)] bg-[var(--surface-bg)]/50">
+                      {lang === 'ar'
+                        ? '👆 يرجى اختيار المرحلة أولاً لتحديد الصف الدراسي (ابتدائي، إعدادي، ثانوي...)'
+                        : '👆 Please select a stage above to view its grade levels'}
+                    </div>
+                  )}
+
+                  {/* 3. Subject Selection (Optional) */}
+                  <div className="space-y-1.5 pt-1">
+                    <label className="block text-xs font-semibold text-[var(--primary-text)]">
+                      {lang === 'ar' ? '٣. المادة الدراسية (اختياري)' : '3. Curriculum Subject (Optional)'}
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <select
+                        value={SCHOOL_SUBJECTS.some((s) => s.value === formData.subject) ? formData.subject : (formData.subject ? '__custom__' : '')}
+                        onChange={(e) => {
+                          if (e.target.value === '__custom__') {
+                            setFormData((prev) => ({ ...prev, subject: '' }));
+                          } else {
+                            setFormData((prev) => ({ ...prev, subject: e.target.value }));
+                          }
+                        }}
+                        className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-3 text-sm text-[var(--primary-text)] outline-none focus:border-[#c53938] cursor-pointer"
+                      >
+                        <option value="">{lang === 'ar' ? '— اختر المادة الدراسية —' : '— Select Subject —'}</option>
+                        {SCHOOL_SUBJECTS.map((sub) => (
+                          <option key={sub.value} value={sub.value}>
+                            {lang === 'ar' ? sub.labelAr : sub.labelEn}
+                          </option>
+                        ))}
+                      </select>
+
+                      <input
+                        type="text"
+                        value={formData.subject}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, subject: e.target.value }))}
+                        placeholder={lang === 'ar' ? 'أو اكتب اسم المادة يدوياً...' : 'Or type custom subject...'}
+                        className="h-10 w-full rounded-xl border border-[var(--border-color)] bg-[var(--surface-bg)] px-3 text-sm text-[var(--primary-text)] outline-none focus:border-[#c53938]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Visual confirmation badge */}
+                  {formData.stage && formData.grade && (
+                    <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 p-2.5 flex items-center justify-between gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                      <div className="flex items-center gap-1.5 font-medium">
+                        <span>✅</span>
+                        <span>
+                          {lang === 'ar' ? 'مكان ظهور الكتاب:' : 'Book location:'}{' '}
+                          <strong>{getStageLabel(formData.stage, lang)}</strong> ➔ <strong>{getGradeLabel(formData.grade, lang)}</strong>
+                          {formData.subject && ` • ${formData.subject}`}
+                        </span>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

@@ -10,11 +10,17 @@ export async function getProducts(req, res, next) {
     const limit    = Math.min(100, Number(req.query.limit) || 20);
     const skip     = (page - 1) * limit;
     const category = req.query.category;
+    const stage    = req.query.stage;
+    const grade    = req.query.grade;
+    const subcategory = req.query.subcategory;
     const search   = req.query.search?.trim();
 
     const filter = { isActive: true };
-    if (category) filter.category = category;
-    if (search)   filter.$text    = { $search: search };
+    if (category)    filter.category = category;
+    if (stage)       filter.stage = stage;
+    if (grade)       filter.grade = grade;
+    if (subcategory) filter.subcategory = subcategory;
+    if (search)      filter.$text    = { $search: search };
 
     const [products, total] = await Promise.all([
       Product.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
