@@ -242,6 +242,11 @@ function SchoolBookCard({ book, index, accent, lang }) {
             alt={displayName}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
+            onError={(e) => {
+              if (e.currentTarget.src !== bookImg) return;
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = 'https://placehold.co/200x200/f5f5f5/9ca3af?text=No+Image';
+            }}
           />
         ) : (
           <div className={`flex h-full w-full flex-col items-center justify-center gap-1.5 p-3 text-center ${palette.bg} ${palette.text}`}>

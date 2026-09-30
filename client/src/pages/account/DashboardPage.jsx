@@ -298,6 +298,7 @@ export default function DashboardPage() {
                         src={src}
                         alt=""
                         className="h-9 w-9 rounded-full border-2 border-[var(--surface-bg)] object-cover bg-white"
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/36x36/f5f5f5/9ca3af?text='; }}
                       />
                     ))}
                   </div>
@@ -385,6 +386,7 @@ export default function DashboardPage() {
                   src={p.image}
                   alt={p.name}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/200x200/f5f5f5/9ca3af?text=No+Image'; }}
                 />
               </div>
               <p className="truncate text-sm font-medium text-[var(--primary-text)] group-hover:text-[#c53938]">

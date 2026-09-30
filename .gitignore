@@ -1,3 +1,13 @@
 node_modules/
+dist/
+
+# Environment variables (لا ترفع الـ secrets أبداً)
 .env
-.env.*
+.env.local
+.env.*.local
+# لكن اسمح بـ example files
+!.env.example
+
+# Uploaded files — صور المنتجات الآن على Cloudinary (persistent)
+# هذا المجلد للـ payment-proofs المحلية فقط
+server/uploads/

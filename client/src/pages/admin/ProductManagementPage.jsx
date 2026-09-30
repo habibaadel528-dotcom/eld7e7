@@ -390,9 +390,14 @@ export default function ProductManagementPage() {
                           src={p.image}
                           alt={p.name}
                           className="h-10 w-10 shrink-0 rounded-lg object-cover border border-[var(--border-color)]"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.parentElement.querySelector('.img-fallback')?.classList.remove('hidden');
+                          }}
                         />
                       ) : (
-                        <div className="h-10 w-10 shrink-0 rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] flex items-center justify-center text-[var(--muted-text)]">
+                        <div className="img-fallback h-10 w-10 shrink-0 rounded-lg border border-[var(--border-color)] bg-[var(--surface-soft)] flex items-center justify-center text-[var(--muted-text)]">
                           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M6.75 21h10.5a2.25 2.25 0 0 0 2.25-2.25V5.25a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 6.75 21Z" />
                           </svg>
@@ -521,6 +526,10 @@ export default function ProductManagementPage() {
                       src={formData.image}
                       alt="Preview"
                       className="h-16 w-16 rounded-xl object-cover border border-[var(--border-color)]"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src = 'https://placehold.co/64x64/f5f5f5/9ca3af?text=No+Image';
+                      }}
                     />
                   ) : (
                     <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--surface-soft)] text-xs text-[var(--secondary-text)]">

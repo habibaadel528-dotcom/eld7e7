@@ -67,6 +67,7 @@ function OrderDetailsModal({ order, onClose, onCancelClick, tr }) {
                     src={item.image || orderHeadphones}
                     alt={item.name}
                     className="h-10 w-10 rounded-lg object-cover bg-white"
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = orderHeadphones; }}
                   />
                   <div>
                     <p className="text-sm font-semibold">{item.name}</p>
@@ -171,7 +172,8 @@ function OrderCard({ order, onViewDetails, onCancelClick, tr }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <div className="flex items-center gap-3">
           <div className="flex -space-x-1.5 shrink-0">
-            <img src={itemImage} alt="" className="h-11 w-11 rounded-[15px] border-2 border-[var(--surface-bg)] object-cover bg-white" />
+            <img src={itemImage} alt="" className="h-11 w-11 rounded-[15px] border-2 border-[var(--surface-bg)] object-cover bg-white"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = orderHeadphones; }} />
             {order.items?.length > 1 && (
               <div className="flex h-11 w-11 items-center justify-center rounded-[15px] border-2 border-[var(--surface-bg)] bg-[var(--surface-soft)] text-xs font-bold text-[var(--secondary-text)]">
                 +{order.items.length - 1}

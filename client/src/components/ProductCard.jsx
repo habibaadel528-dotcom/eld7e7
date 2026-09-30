@@ -27,6 +27,11 @@ export default function ProductCard({ product, onAddToCart }) {
             loading="lazy"
             decoding="async"
             className="h-[182px] w-auto object-contain transition duration-300 group-hover:scale-105"
+            onError={(e) => {
+              if (e.currentTarget.src !== FALLBACK_IMG) {
+                e.currentTarget.src = FALLBACK_IMG;
+              }
+            }}
           />
         </div>
 

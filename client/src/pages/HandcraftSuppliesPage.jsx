@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Heart, Plus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useLanguage } from '../context/LanguageContext';
+import { productApi } from '../services/api';
 
 import AnnouncementBar from '../sections/AnnouncementBar';
 import Header from '../sections/Header';
@@ -11,26 +12,18 @@ import Navigation from '../sections/Navigation';
 import Footer from '../sections/Footer';
 import SchoolProjectsModal from '../components/SchoolProjectsModal';
 
+const FALLBACK_IMG = 'https://placehold.co/200x200/f5f5f5/9ca3af?text=No+Image';
+
 /* ── Categories data ── */
 const categories = [
-  { id: 'paper-crafts', label: 'Paper Crafts', labelAr: 'أعمال ورقية', icon: 'gift' },
-  { id: 'drawing-painting', label: 'Drawing & Painting', labelAr: 'رسم وتلوين', icon: 'brush' },
-  { id: 'sewing-fabric', label: 'Sewing & Fabric', labelAr: 'خياطة وأقمشة', icon: 'shirt' },
-  { id: 'beads-jewelry', label: 'Beads & Jewelry', labelAr: 'خرز ومجوهرات', icon: 'gem' },
-  { id: 'clay-sculpting', label: 'Clay & Sculpting', labelAr: 'صلصال وتشكيل', icon: 'droplet' },
-  { id: 'tools', label: 'Tools', labelAr: 'أدوات الحرف', icon: 'wrench' },
+  { id: 'all',            label: 'All',                labelAr: 'الكل',               icon: 'box' },
+  { id: 'paper-crafts',   label: 'Paper Crafts',        labelAr: 'أعمال ورقية',        icon: 'gift' },
+  { id: 'drawing-painting', label: 'Drawing & Painting', labelAr: 'رسم وتلوين',        icon: 'brush' },
+  { id: 'sewing-fabric',  label: 'Sewing & Fabric',     labelAr: 'خياطة وأقمشة',       icon: 'shirt' },
+  { id: 'beads-jewelry',  label: 'Beads & Jewelry',     labelAr: 'خرز ومجوهرات',       icon: 'gem' },
+  { id: 'clay-sculpting', label: 'Clay & Sculpting',    labelAr: 'صلصال وتشكيل',       icon: 'droplet' },
+  { id: 'tools',          label: 'Tools',               labelAr: 'أدوات الحرف',        icon: 'wrench' },
 ];
-
-const productsByCategory = {
-  'paper-crafts': [
-    { id: 'cardstock-50', name: 'Cardstock Set 50pcs', nameAr: 'مجموعة ورق مقوى ٥٠ قطعة', description: 'Vivid colors, A4 size', descriptionAr: 'ألوان زاهية، مقاس A4', price: 85, badge: 'Best Seller' },
-    { id: 'origami-100', name: 'Origami Paper 100pcs', nameAr: 'ورق أوريغامي ١٠٠ ورقة', description: 'Classic, Japanese patterns', descriptionAr: 'نقوش يابانية كلاسيكية', price: 60, badge: null },
-    { id: 'scrapbook-kit', name: 'Scrapbook Kit', nameAr: 'طقم سجل القصاصات', description: 'Stickers, tape, and more', descriptionAr: 'ملصقات وأشرطة تزيين', price: 120, badge: 'New' },
-    { id: 'craft-foam', name: 'Craft Foam Sheets', nameAr: 'ألواح فوم للأعمال اليدوية', description: '10 colors, A4 pads', descriptionAr: '١٠ ألوان، مقاس A4', price: 45, badge: null },
-    { id: 'glitter-paper', name: 'Glitter Paper Roll', nameAr: 'رول ورق جليتر لامع', description: 'Gold, Silver, Rose Pink', descriptionAr: 'ذهبي، فضي، وردي', price: 55, badge: null },
-    { id: 'cardboard-panels', name: 'Cardboard Panels', nameAr: 'ألواح كرتون مقوى', description: 'Durable, sized, thick', descriptionAr: 'سميك وقوي للمجسمات', price: 70, badge: 'Sale' },
-  ],
-};
 
 const promoStrips = [
   {
@@ -61,12 +54,6 @@ const promoStrips = [
     iconBg: 'bg-emerald-500/15 text-emerald-400',
   },
 ];
-
-const badgeStyles = {
-  'Best Seller': 'bg-pink-500 text-white',
-  New: 'bg-[#c53938] text-white',
-  Sale: 'bg-[#c53938] text-white',
-};
 
 function CategoryIcon({ type }) {
   const paths = {
@@ -119,7 +106,7 @@ function PromoIcon({ type }) {
 }
 
 function formatEGP(n) {
-  return `EGP ${n.toLocaleString('en-US')}`;
+  return `EGP ${Number(n || 0).toLocaleString('en-US')}`;
 }
 
 export default function HandcraftSuppliesPage() {
@@ -127,15 +114,55 @@ export default function HandcraftSuppliesPage() {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const { lang } = useLanguage();
 
-  const [activeCategory, setActiveCategory] = useState('paper-crafts');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [isSchoolProjectsOpen, setIsSchoolProjectsOpen] = useState(false);
 
+  /* ── Fetch real products from API ── */
+  const [allProducts, setAllProducts] = useState([]);
+  const [isLoading, setIsLoading]     = useState(true);
+
+  useEffect(() => {
+    productApi.getProducts({ category: 'handcraft', limit: 200 })
+      .then((data) => {
+        setAllProducts((data.products || []).map((p) => ({
+          ...p,
+          id:     p._id || p.id,
+          image:  p.images?.[0] || p.image || '',
+          status: (p.stock ?? 1) > 0 ? 'in' : 'out',
+        })));
+      })
+      .catch(() => setAllProducts([]))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  /* ── Build dynamic subcategory pills from real products ── */
+  const dynamicCategories = useMemo(() => {
+    const subs = new Set();
+    allProducts.forEach((p) => {
+      if (p.subcategory) subs.add(p.subcategory);
+    });
+    const extra = Array.from(subs).map((s) => ({ id: s, label: s, labelAr: s, icon: 'box' }));
+    return [categories[0], ...extra, ...categories.slice(1)];
+  }, [allProducts]);
+
+  /* ── Filter products by active subcategory ── */
+  const products = useMemo(() => {
+    if (activeCategory === 'all') return allProducts;
+    // Match by subcategory OR by the static category id names
+    return allProducts.filter(
+      (p) =>
+        (p.subcategory || '').toLowerCase() === activeCategory.toLowerCase()
+    );
+  }, [allProducts, activeCategory]);
+
   const activeCategoryObj = useMemo(
-    () => categories.find((c) => c.id === activeCategory),
-    [activeCategory]
+    () => dynamicCategories.find((c) => c.id === activeCategory),
+    [dynamicCategories, activeCategory]
   );
-  const activeCategoryLabel = lang === 'ar' ? (activeCategoryObj?.labelAr || activeCategoryObj?.label) : activeCategoryObj?.label;
-  const products = productsByCategory[activeCategory] ?? [];
+  const activeCategoryLabel =
+    lang === 'ar'
+      ? activeCategoryObj?.labelAr || activeCategoryObj?.label
+      : activeCategoryObj?.label;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[var(--page-bg)] text-[var(--primary-text)]">
@@ -173,21 +200,37 @@ export default function HandcraftSuppliesPage() {
             }
           </p>
 
-          {/* Category filter pills */}
+          {/* Category filter pills — dynamic من الـ subcategories الموجودة */}
           <div className="mt-7 flex w-full max-w-full justify-center gap-2.5 overflow-x-auto pb-2">
-            {categories.map((cat) => (
+            {/* "All" pill دايماً */}
+            <button
+              key="all"
+              type="button"
+              onClick={() => setActiveCategory('all')}
+              className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition cursor-pointer ${
+                activeCategory === 'all'
+                  ? 'bg-[#c53938] text-white'
+                  : 'border border-[var(--soft-border-color)] text-[var(--secondary-text)] hover:text-[var(--primary-text)]'
+              }`}
+            >
+              <CategoryIcon type="box" />
+              {lang === 'ar' ? 'الكل' : 'All'}
+            </button>
+
+            {/* Subcategory pills من المنتجات الحقيقية */}
+            {Array.from(new Set(allProducts.map((p) => p.subcategory).filter(Boolean))).map((sub) => (
               <button
-                key={cat.id}
+                key={sub}
                 type="button"
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => setActiveCategory(sub)}
                 className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition cursor-pointer ${
-                  activeCategory === cat.id
+                  activeCategory === sub
                     ? 'bg-[#c53938] text-white'
                     : 'border border-[var(--soft-border-color)] text-[var(--secondary-text)] hover:text-[var(--primary-text)]'
                 }`}
               >
-                <CategoryIcon type={cat.icon} />
-                {lang === 'ar' ? cat.labelAr : cat.label}
+                <CategoryIcon type="box" />
+                {sub}
               </button>
             ))}
           </div>
@@ -204,68 +247,100 @@ export default function HandcraftSuppliesPage() {
                 <div>
                   <p className="text-sm font-semibold text-[var(--primary-text)]">{activeCategoryLabel}</p>
                   <p className="text-xs text-[var(--secondary-text)]">
-                    {lang === 'ar' ? `${products.length} منتجات متاحة` : `${products.length} products available`}
+                    {isLoading
+                      ? (lang === 'ar' ? 'جارٍ التحميل…' : 'Loading…')
+                      : (lang === 'ar' ? `${products.length} منتجات متاحة` : `${products.length} products available`)
+                    }
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-              {products.map((p) => {
-                const isSaved = isInWishlist(p._id || p.id);
-                const displayName = lang === 'ar' ? (p.nameAr || p.name) : p.name;
-                const displayDesc = lang === 'ar' ? (p.descriptionAr || p.description) : p.description;
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <span className="animate-pulse text-sm text-[var(--secondary-text)]">
+                  {lang === 'ar' ? 'جارٍ تحميل المنتجات…' : 'Loading products…'}
+                </span>
+              </div>
+            ) : products.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <svg className="h-12 w-12 text-[var(--muted-text)] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 8 12 3 3 8m18 0-9 5m9-5v9l-9 5m0-9L3 8m9 5v9M3 8v9l9 5" />
+                </svg>
+                <p className="text-sm font-medium text-[var(--primary-text)]">
+                  {lang === 'ar' ? 'لا توجد منتجات في هذا التصنيف بعد' : 'No products in this category yet'}
+                </p>
+                <p className="mt-1 text-xs text-[var(--muted-text)]">
+                  {lang === 'ar' ? 'ستظهر المنتجات هنا فور إضافتها من الـ Admin' : 'Products added from Admin will appear here automatically'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                {products.map((p) => {
+                  const isSaved = isInWishlist(p._id || p.id);
+                  const displayName = lang === 'ar' ? (p.nameAr || p.name) : p.name;
+                  const displayDesc = lang === 'ar' ? (p.descriptionAr || p.description) : p.description;
+                  const imgSrc = p.image || FALLBACK_IMG;
+                  const inStock = (p.stock ?? 1) > 0;
 
-                return (
-                  <div key={p.id} className="group flex flex-col">
-                    <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-gradient-to-br from-pink-100 to-pink-200">
-                      {p.badge && (
-                        <span
-                          className={`absolute ltr:left-2 rtl:right-2 top-2 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeStyles[p.badge]}`}
+                  return (
+                    <div key={p.id} className="group flex flex-col">
+                      <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-xl bg-[var(--surface-soft)]">
+                        {/* Stock badge */}
+                        {!inStock && (
+                          <span className="absolute left-2 top-2 z-10 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                            {lang === 'ar' ? 'نفذ' : 'Out'}
+                          </span>
+                        )}
+
+                        {/* Wishlist Heart Icon */}
+                        <button
+                          type="button"
+                          onClick={() => toggleWishlist(p)}
+                          aria-label={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
+                          title={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
+                          className="absolute ltr:right-2 rtl:left-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:scale-110 cursor-pointer"
                         >
-                          {p.badge}
-                        </span>
-                      )}
+                          <Heart
+                            size={14}
+                            className={isSaved ? 'fill-[#c53938] text-[#c53938]' : 'text-gray-500 hover:text-[#c53938]'}
+                          />
+                        </button>
 
-                      {/* Wishlist Heart Icon */}
-                      <button
-                        type="button"
-                        onClick={() => toggleWishlist(p)}
-                        aria-label={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
-                        title={isSaved ? (lang === 'ar' ? 'إزالة من المفضلة' : 'Remove from Wishlist') : (lang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Wishlist')}
-                        className="absolute ltr:right-2 rtl:left-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm transition hover:scale-110 cursor-pointer"
-                      >
-                        <Heart
-                          size={14}
-                          className={isSaved ? 'fill-[#c53938] text-[#c53938]' : 'text-gray-500 hover:text-[#c53938]'}
+                        {/* Product Image */}
+                        <img
+                          src={imgSrc}
+                          alt={displayName}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            if (e.currentTarget.src !== FALLBACK_IMG) {
+                              e.currentTarget.src = FALLBACK_IMG;
+                            }
+                          }}
                         />
-                      </button>
+                      </div>
 
-                      <div className="flex h-full w-full items-center justify-center text-amber-600">
-                        <svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8 12 3 3 8m18 0-9 5m9-5v9l-9 5m0-9L3 8m9 5v9M3 8v9l9 5" />
-                        </svg>
+                      <p className="truncate text-xs font-semibold text-[var(--primary-text)]">{displayName}</p>
+                      <p className="truncate text-[11px] text-[var(--secondary-text)]">{displayDesc}</p>
+
+                      <div className="mt-1.5 flex items-center justify-between">
+                        <span className="text-sm font-bold text-[#c53938]">{formatEGP(p.price)}</span>
+                        <button
+                          type="button"
+                          disabled={!inStock}
+                          onClick={() => inStock && addToCart({ ...p, id: p._id || p.id })}
+                          aria-label={`Add ${displayName} to cart`}
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-[#c53938] text-white shadow-2xs transition-all duration-200 hover:bg-[#a82e2d] hover:scale-110 active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Plus size={14} className="stroke-[2.5]" />
+                        </button>
                       </div>
                     </div>
-
-                    <p className="truncate text-xs font-semibold text-[var(--primary-text)]">{displayName}</p>
-                    <p className="truncate text-[11px] text-[var(--secondary-text)]">{displayDesc}</p>
-
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <span className="text-sm font-bold text-[#c53938]">{formatEGP(p.price)}</span>
-                      <button
-                        type="button"
-                        onClick={() => addToCart(p)}
-                        aria-label={`Add ${displayName} to cart`}
-                        className="flex h-7 w-7 items-center justify-center rounded-full bg-[#c53938] text-white shadow-2xs transition-all duration-200 hover:bg-[#a82e2d] hover:scale-110 active:scale-95 cursor-pointer"
-                      >
-                        <Plus size={14} className="stroke-[2.5]" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Trust strip */}
             <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[var(--soft-border-color)] pt-4 text-[11px] text-[var(--secondary-text)]">

@@ -1,34 +1,36 @@
 import multer from 'multer';
 import path from 'path';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary.js';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadsDir = path.join(__dirname, '../../uploads');
 
-// بينشئ مجلد uploads لو مش موجود
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${uniqueSuffix}${ext}`);
+/* ────────────────────────────────────────────────────────────────
+   Product Images → Cloudinary (Persistent Storage)
+   روابط الصور تبدأ بـ https:// دائماً ولا تختفي عند Redeploy
+   ──────────────────────────────────────────────────────────────── */
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:         'eld7e7/products',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+    public_id: (_req, file) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const name = path.parse(file.originalname).name
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase();
+      return `product_${name}_${uniqueSuffix}`;
+    },
   },
 });
 
-function fileFilter(_req, file, cb) {
+function imageFileFilter(_req, file, cb) {
   const allowedTypes = /jpeg|jpg|png|webp|gif/;
-  const isValidType = allowedTypes.test(
-    path.extname(file.originalname).toLowerCase()
-  );
-
-  if (isValidType) {
+  const isValid = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  if (isValid) {
     cb(null, true);
   } else {
     cb(new Error('الملف لازم يكون صورة (jpg, png, webp, gif)'));
@@ -36,12 +38,15 @@ function fileFilter(_req, file, cb) {
 }
 
 export const upload = multer({
-  storage,
-  fileFilter,
+  storage: cloudinaryStorage,
+  fileFilter: imageFileFilter,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-/* ── Payment Proof Upload ── */
+/* ────────────────────────────────────────────────────────────────
+   Payment Proof Upload → Local (admin-only, never exposed publicly)
+   إثباتات الدفع تبقى على الـ filesystem المحلي لأنها حساسة
+   ──────────────────────────────────────────────────────────────── */
 const paymentProofsDir = path.join(__dirname, '../../uploads/payment-proofs');
 if (!fs.existsSync(paymentProofsDir)) {
   fs.mkdirSync(paymentProofsDir, { recursive: true });
@@ -71,5 +76,4 @@ export const uploadProof = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
 });
 
-export { uploadsDir, paymentProofsDir };
-
+export { paymentProofsDir };

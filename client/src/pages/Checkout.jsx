@@ -568,7 +568,8 @@ export default function Checkout() {
                         <div key={item.id} className="flex items-center justify-between gap-3 py-2.5 sm:py-3 first:pt-0 last:pb-0 min-w-0">
                           <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-[var(--surface-soft)] border border-[var(--border-color)]">
                             {item.image ? (
-                              <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                              <img src={item.image} alt={item.name} className="h-full w-full object-cover"
+                                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://placehold.co/48x48/f5f5f5/9ca3af?text=📦'; }} />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center text-xs font-bold text-[var(--muted-text)]">📦</div>
                             )}

@@ -45,6 +45,11 @@ export default function StationeryProductCard({
             width="130"
             height="182"
             className="h-[182px] w-[130px] object-contain transition duration-300 group-hover:scale-105"
+            onError={(e) => {
+              if (e.currentTarget.src !== FALLBACK_IMG) {
+                e.currentTarget.src = FALLBACK_IMG;
+              }
+            }}
           />
         </div>
 

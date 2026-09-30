@@ -30,7 +30,13 @@ app.use('/api/admin',     adminRoutes);
 app.use('/api/shipping-zones', shippingZoneRoutes);
 app.use('/api/upload',    uploadRoutes);
 
-/* ── Static: product images only — payment proofs are served via admin API ── */
+/*
+ * ── Static: payment-proofs only (served via admin API, never publicly) ──
+ *
+ * ملاحظة: صور المنتجات أصبحت مخزنة على Cloudinary (persistent CDN)
+ * ولم تعد بحاجة إلى خادم static هنا. الـ /uploads route يخدم
+ * فقط مجلد payment-proofs وهو محمي عبر الـ admin API.
+ */
 app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
   setHeaders: (res, filePath) => {
     /* Block direct access to payment-proofs folder */

@@ -16,4 +16,9 @@ export const env = {
   smtpPort: Number(process.env.SMTP_PORT) || 587,
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
+
+  /* Cloudinary — Persistent Image Storage */
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  cloudinaryApiKey:    process.env.CLOUDINARY_API_KEY    || '',
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || '',
 };
